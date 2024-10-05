@@ -153,6 +153,10 @@ def authenticate():
         if request.cookies.get('username') in users:
             if users[request.cookies.get('username')]['password'] == request.cookies.get('token'):
                 return request.cookies.get('username')
+            else:
+                app.logger.debug('Invalid token')
+        else:
+            app.logger.debug('Invalid username')
     else:
         if 'Authorization' in request.headers:
             authorization = request.headers['Authorization']
@@ -161,6 +165,10 @@ def authenticate():
             if username in users:
                 if users[username]['password'] == token:
                     return username
+                else:
+                    app.logger.debug('Invalid token: ' + token)
+            else:
+                app.logger.debug('Invalid username: ' + username)
     return None
 
 def createuser(username, password, createdby='server', email=None, dobackup=True):
@@ -693,6 +701,7 @@ def reset_password():
         server.quit()
     else:
         app.logger.info(f'Password reset link: https://class.trey7658.com/reset-password/{emailid}')
+        return jsonify({'status': 'success', 'message': 'Email sent if account exists', 'emailid': emailid})
     return jsonify({'status': 'success', 'message': 'Email sent if account exists'})
 
 @app.route('/reset-password/<emailid>/', methods=['POST', 'GET'])
