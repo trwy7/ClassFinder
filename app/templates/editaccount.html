@@ -12,7 +12,8 @@
         <h1>Editing user: {{user.username}}</h1>
         <form onsubmit="attemptEdit(event)"></form>
             <label for="username">Username</label>
-            <input type="text" id="username" name="username" value="{{user.username}}"><br>
+            <input type="text" id="username" name="username" value="{{user.username}}">
+            <button onclick="generateUsername(event)">Gen</button><br>
             <label for="role">Role</label>
             <select id="role" name="role">
                 <option value="">Dont change</option>
@@ -60,6 +61,12 @@
             .catch(error => {
                 document.getElementById('status').innerText = 'An error occurred: ' + error.message;
             });
+        }
+        function generateUsername(event) {
+            event.preventDefault();
+            // For now, just generates "Anon" + random number
+            const randomNumber = Math.floor(Math.random() * 100000);
+            document.getElementById('username').value = 'anon' + randomNumber;
         }
     </script>
 </body>
