@@ -12,7 +12,7 @@
         <h1>Editing user: {{user.username}}</h1>
         <form onsubmit="attemptEdit(event)"></form>
             <label for="username">Username</label>
-            <input type="text" id="username" name="username" value="{{user.username}}">
+            <input type="text" id="username" name="username" value="{{user.username}}" maxlength="15">
             <button onclick="generateUsername(event)">Gen</button><br>
             <label for="role">Role</label>
             <select id="role" name="role">
@@ -28,6 +28,8 @@
             <input type="password" id="password" name="password"><br>
             <label for="userchange">Request username change</label>
             <input type="checkbox" id="userchange" name="userchange" {% if user.requires_username_change %}checked{%endif%}><br>
+            <label for="bypass">Bypass username requirements</label>
+            <input type="checkbox" id="bypass" name="bypass"><br>
             <button onclick="attemptEdit(event)">Submit</button><br>
         </form>
         <p id="status"></p>
@@ -45,7 +47,8 @@
                     email: document.getElementById('email').value,
                     password: document.getElementById('password').value,
                     requires_username_change: document.getElementById('userchange').checked,
-                    username: document.getElementById('username').value
+                    username: document.getElementById('username').value,
+                    bypass_username_requirements: document.getElementById('bypass').checked
                 }),
                 credentials: 'include'
             })

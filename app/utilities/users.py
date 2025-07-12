@@ -39,6 +39,8 @@ def create_user(
         User: The user that was created.
     """
     hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
+    if len(username) > 15:
+        raise ValueError("Username must be below 15 characters long")
     user = User(
         username=username,
         email=email,

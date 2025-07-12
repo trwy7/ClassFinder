@@ -95,7 +95,7 @@ def create_account_post():
     app.logger.info(
         f"Creating account for {username} with email {email} by {user.username}."
     )
-    if not validate_username(username):
+    if request.json.get("bypass_username_requirements") or not validate_username(username):
         return error_response("Invalid username."), 400
     # if not validate_email(email):
     #     return error_response("Invalid email."), 400

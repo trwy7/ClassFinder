@@ -4,8 +4,19 @@ Provides functions to validate user input.
 
 import re
 import better_profanity
+from app import app
 
 profanity = better_profanity.Profanity()
+try:
+    with open("profanity.txt", "r", encoding="UTF-8") as f:
+        words = f.read().splitlines()
+except FileNotFoundError:
+    try:
+        with open("/profanity.txt", "r", encoding="UTF-8") as f:
+            words = f.read().splitlines()
+    except FileNotFoundError:
+        app.logger.warning("profanity.txt not found, using basic matching.")
+        words = []
 
 def validate_email(email: str):
     """
@@ -33,6 +44,20 @@ def validate_username(username: str):
         return False
     if username.lower().startswith("admin"):
         return False
+    pusername = username.strip() \
+        .replace("3", "e") \
+        .replace("0", "o") \
+        .replace("1", "i") \
+        .replace("4", "a") \
+        .replace("5", "s") \
+        .replace("7", "t") \
+        .replace("8", "b") \
+        .replace("9", "g") \
+        .replace("6", "b")
+    for word in words:
+        if word.lower() in pusername.lower():
+            app.logger.warning(f"Username '{username}' ({pusername}) contains a profane word: {word}")
+            return False
     return re.fullmatch(r"[a-z0-9_]{3,15}", username)
 
 

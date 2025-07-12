@@ -172,3 +172,6 @@ after-build.sh
 # Other
 data
 data/
+
+# Specific to the instance
+profanity.txt
