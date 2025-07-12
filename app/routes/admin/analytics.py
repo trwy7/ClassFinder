@@ -88,6 +88,9 @@ def calculate_analytics(request_logs):
             path = "/resetpassword/final"
         elif path.startswith("/register") and path != "/register":
             path = "/register/final"
+        elif path.startswith("/admin/"):
+            continue  # Skip admin paths for now, this can be expanded later
+            
 
         path_method = f"{method} {path}"
         path_count[path_method] += 1
