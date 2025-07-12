@@ -23,7 +23,7 @@ user_class_association = db.Table(
     "user_class",
     db.Model.metadata,
     db.Column(
-        "user_id", db.String(20), db.ForeignKey("user.userid"), primary_key=True
+        "user_id", db.String(20), db.ForeignKey("user.id"), primary_key=True
     ),
     db.Column("class_id", db.String(20), db.ForeignKey("class.id"), primary_key=True),
 )
@@ -34,7 +34,7 @@ class User(db.Model):
     A user of the application.
 
     Attributes:
-        userid (str): The UUID of the user.
+        id (str): The UUID of the user.
         username (str): The username of the user.
         email (str): The email of the user.
         password (str): The hashed password of the user.
@@ -44,7 +44,7 @@ class User(db.Model):
         role (str): The role of the user.
         tokens (list): The tokens the user has.
     """
-    userid = db.Column(db.String(36), primary_key=True, unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
     password = db.Column(db.String(500), nullable=False)
@@ -106,6 +106,7 @@ class Token(db.Model):
     type = db.Column(db.String(20), nullable=False)
     expire = db.Column(db.DateTime, nullable=True, default=lambda: datetime.now() + timedelta(days=8))
     scopes = db.Column(db.Text, nullable=True, default=None)
+    granted_to = db.Column(db.String(50), nullable=True, default=None)
 
     def __str__(self):
         return self.token + " for " + self.user_id

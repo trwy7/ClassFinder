@@ -14,6 +14,9 @@ def external_auth():
     This is the main entry point for external authentication.
     It verifies the user and redirects them to the appropriate page.
     """
+    # TODO: Prevent sites from creating multiple tokens, if more scopes are required they should
+    # be added to the existing token instead, returning the existing token. This should also
+    # show users what scopes they have already granted, and what scopes they are requesting
     scopes = request.args.get('scopes')
     if scopes:
         scopes = scopes.strip().split(',')
@@ -35,6 +38,8 @@ def external_auth():
     if redirect_url:
         parsed_url = urlparse(redirect_url)
         redirect_domain = parsed_url.netloc
+        if len(redirect_domain) > 50:
+            return error_response("Redirect domain is too long", {"redirect_url": redirect_url})
         if not redirect_domain:
             return error_response("Invalid redirect URL", {"redirect_url": redirect_url})
     else:
@@ -74,7 +79,7 @@ def external_auth_post():
         # Check if redirect_url is a valid URL
         parsed_url = urlparse(redirect_url)
         if parsed_url.scheme and parsed_url.netloc:
-            token = create_token(request.user.username, 'ext', None, scopes)
+            token = create_token(request.user.username, 'ext', None, scopes, granted_to=parsed_url.netloc)
             #return redirect(f"{redirect_url}?token={token.token}")
             return success_response(
                 "Redirecting to external application",

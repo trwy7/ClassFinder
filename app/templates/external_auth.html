@@ -12,7 +12,7 @@
         <h1>Authorize {{redirect_domain}}</h1>
         <p>{{redirect_domain}} will get access to:</p>
         <ul>
-            <li>See your username ({{user.username}}) and role ({{user.role}})</li>
+            <li>Identify you</li>
             {% for scope in scopes_readable %}
                 <li>{{scope}}</li>
             {% endfor %}

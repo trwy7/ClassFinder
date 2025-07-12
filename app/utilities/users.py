@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 import os
 import functools
 import base64
-import uuid
 from flask_bcrypt import Bcrypt
 from flask import request, redirect
 from app.db import db, User, Token, Class
@@ -16,7 +15,8 @@ from app import app
 
 bcrypt = Bcrypt()
 # TODO: Move most of these functions to a function within the user class, but keep the decorators here
-readable_scopes = { # Any token can read a user's username, DO NOT add a scope for this, unless we implement a userid, which is not planned
+readable_scopes = {
+    "read-username": "See your username",
     "read-email": "See your email",
     "read-classes": "See your classes",
     "read-misc": "See general data about your account (like when your account was created)",
@@ -81,12 +81,13 @@ def check_password(username: str, password: str):
         return True
     return False
 
-def create_token(
+def create_token( # pylint: disable=too-many-arguments, too-many-positional-arguments
     username: str, # TODO: Change this to user: User
     tokentype: Literal["api", "refresh", "system", "app", "admin", "ext"],
     expiry: datetime = None,
     scopes: list = None,
-    noexpiry: bool = False
+    noexpiry: bool = False,
+    granted_to: str = None, # This is used for external tokens, like those created through /auth
 ):
     """
     Create a token for a user
@@ -118,7 +119,12 @@ def create_token(
             else:
                 nexpiry += timedelta(days=1)
     token = Token(
-        token=os.urandom(30).hex(), user_id=username, type=tokentype, expire=expiry, scopes=" ".join(scopes) if scopes is not None else None
+        token=os.urandom(30).hex(),
+        user_id=username,
+        type=tokentype,
+        expire=expiry,
+        scopes=" ".join(scopes) if scopes is not None else None,
+        granted_to=granted_to
     )
     db.session.add(token)
     db.session.commit()
