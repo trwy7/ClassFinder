@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import os
 import functools
 import base64
+import uuid
 from flask_bcrypt import Bcrypt
 from flask import request, redirect
 from app.db import db, User, Token, Class
@@ -81,7 +82,7 @@ def check_password(username: str, password: str):
     return False
 
 def create_token(
-    username: str,
+    username: str, # TODO: Change this to user: User
     tokentype: Literal["api", "refresh", "system", "app", "admin", "ext"],
     expiry: datetime = None,
     scopes: list = None,
