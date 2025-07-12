@@ -95,7 +95,7 @@ def create_account_post():
     app.logger.info(
         f"Creating account for {username} with email {email} by {user.username}."
     )
-    if request.json.get("bypass_username_requirements") or not validate_username(username):
+    if not request.json.get("bypass_username_requirements") and not validate_username(username):
         return error_response("Invalid username."), 400
     # if not validate_email(email):
     #     return error_response("Invalid email."), 400
@@ -142,7 +142,7 @@ def edit_account_post(username):
             app.logger.info(f"{user.username} has changed {edituser.username}'s role to {role}.")
             edituser.role = role
         if nusername != edituser.username and nusername:
-            if request.json.get("bypass_username_requirements") or not validate_username(nusername):
+            if not request.json.get("bypass_username_requirements") and not validate_username(nusername):
                 return error_response("Invalid username."), 400
             if get_user(nusername):
                 return error_response("Username already exists."), 400
