@@ -4,7 +4,7 @@ Account routes
 
 from flask import render_template, request
 from app import app
-from app.utilities.users import verify_user, delete_user, change_username
+from app.utilities.users import verify_user, delete_user, change_username, revoke_external_token
 from app.utilities.responses import success_response
 from app.utilities.classes import (
     get_today_courses,
@@ -26,6 +26,11 @@ def account():
         if course.canvasid is None:
             needcanvaslink = True
             break
+    has_external_tokens = False
+    for token in user.tokens:
+        if token.granted_to is not None:
+            has_external_tokens = True
+            break
     return render_template(
         "account.html",
         user=user,
@@ -39,6 +44,7 @@ def account():
         canvasurl=canvas_url,
         needcanvaslink=needcanvaslink,
         allow_leave=allow_leave,
+        has_external_tokens=has_external_tokens,
     )
 
 @app.route("/account/delete", methods=["GET"])
@@ -80,3 +86,15 @@ def account_changeusername():
         return {"error": "No username provided"}, 400
     change_username(request.user, newusername, require_change=False)
     return success_response("Username changed successfully")
+
+@app.route("/account/revoke_token", methods=["POST"])
+@verify_user
+def account_revoke_token():
+    """
+    This route revokes an external token granted to the user.
+    """
+    token_granted_to = request.json.get("granted_to")
+    if not token_granted_to:
+        return {"error": "No token provided"}, 400
+    revoke_external_token(request.user, token_granted_to)
+    return success_response("Token revoked successfully")

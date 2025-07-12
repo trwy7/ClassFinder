@@ -146,7 +146,7 @@ a {
 ul {
     list-style: none;
 }
-#classes, #users, ul.actions, #schedules {
+#classes, #users, ul.actions, #schedules, #tokens {
     /* margin-top: 20px; */
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -156,7 +156,7 @@ ul {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 2px;
 }
-.class, .user, .classuser, .schedule, li.action {
+.class, .user, .classuser, .schedule, li.action, .token {
     padding: 7px;
     background-color: var(--secondary-color);
     border-radius: 5px;

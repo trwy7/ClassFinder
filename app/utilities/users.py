@@ -285,6 +285,23 @@ def get_user_by_email(email: str):
     """
     return User.query.filter_by(email=email).first()
 
+def revoke_external_token(user: User, granted_to: str):
+    """
+    Revoke an external token for a user
+
+    Args:
+        user (User): The user to revoke the token for.
+        granted_to (str): The identifier of the external service.
+
+    Returns:
+        None
+    """
+    token = Token.query.filter_by(user_id=user.username, granted_to=granted_to).first()
+    if token:
+        delete_token(token)
+    else:
+        raise ValueError("No external token found for this user and granted_to value.")
+
 def delete_user(user: User):
     """
     Delete a user
