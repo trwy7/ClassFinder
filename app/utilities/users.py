@@ -14,7 +14,7 @@ from app.utilities.responses import error_response
 from app import app
 
 bcrypt = Bcrypt()
-
+# TODO: Move most of these functions to a function within the user class, but keep the decorators here
 readable_scopes = { # Any token can read a user's username, DO NOT add a scope for this, unless we implement a userid, which is not planned
     "read-email": "See your email",
     "read-classes": "See your classes",

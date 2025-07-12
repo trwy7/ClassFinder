@@ -2,7 +2,7 @@
 Hosts the dashboard route.
 """
 
-from datetime import datetime, time
+from datetime import datetime
 from flask import render_template, request, make_response
 from app import app
 from app.utilities.users import verify_user

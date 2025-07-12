@@ -9,6 +9,7 @@ from app import app
 
 neededperiods = ["2", "3", "4", "5", "6", "7", "8", "9", "Access"]
 
+# TODO: Move most of these functions to a function within a course class
 
 def get_current_period():
     """
