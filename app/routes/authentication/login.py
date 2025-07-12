@@ -7,14 +7,14 @@ from app.utilities.config import devmode
 from app.utilities.users import check_password, create_token
 from app.addons.limiter import limiter
 from app.utilities.responses import error_response, success_response
-
+from app.utilities.config import status
 
 @app.route("/login")
 def login():
     """
     Display the login page.
     """
-    return render_template("login.html")
+    return render_template("login.html", status=status, devmode=devmode)
 
 @app.route("/login", methods=["POST"])
 @limiter.limit("40/minute")

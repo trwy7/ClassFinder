@@ -15,6 +15,12 @@
             <input type="email" id="email" name="email" required><br>
             <button onclick="attemptRegister(event, this)">Register</button><br>
         </form>
+        {% if status is not none %}
+        <p>{{status}}</p>
+        {% endif %}
+        {% if devmode %}
+        <p>Data may be randomly deleted</p>
+        {% endif %}
         <p id="status"></p>
         <p>Already have an account? <a href="/login">Log in</a></p>
     </main>

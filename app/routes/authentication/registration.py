@@ -8,14 +8,14 @@ from app.utilities.users import create_user, check_email, get_user_count, create
 from app.utilities.validation import validate_email, validate_username
 from app.addons.limiter import limiter
 from app.utilities.responses import error_response, success_response
-
+from app.utilities.config import status, devmode
 
 @app.route("/register")
 def register():
     """
     Display the registration page.
     """
-    return render_template("register.html")
+    return render_template("register.html", status=status, devmode=devmode)
 
 
 @app.route("/register", methods=["POST"])
@@ -78,7 +78,7 @@ def register_confirm_post(emailid):
             newtoken,
             httponly=True,
             samesite="Lax",
-            secure=True,
+            secure=not devmode,
             max_age=604800,
         )
         return response, 200

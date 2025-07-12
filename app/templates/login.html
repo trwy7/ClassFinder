@@ -20,11 +20,18 @@
             <button type="submit">Login</button><br>
         </form>
         <div>
-            <button onclick="getLinkCode()">Login with another device</button>
+            <!-- <button onclick="getLinkCode()">Login with another device</button> -->
             <button onclick="window.location.href = '/register'">Sign up</button>
             <button onclick="window.location.href = '/resetpassword'">Reset password</button>
         </div>
+        {% if status is not none %}
+        <p>{{status}}</p>
+        {% endif %}
+        {% if devmode %}
+        <p>Data may be randomly deleted</p>
+        {% endif %}
         <p id="status"></p>
+
     </main>
     <p style="position: absolute; bottom:20px;left:20px;">Cookies are used to store login data, by logging in, you consent to this.</p>
     <script>
