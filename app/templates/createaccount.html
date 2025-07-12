@@ -24,6 +24,8 @@
                 <option value="admin">Admin</option>
                 <option value="testing">Test account</option>
             </select><br>
+            <label for="bypass">Bypass username requirements</label>
+            <input type="checkbox" id="bypass" name="bypass"><br>
             <button onclick="attemptRegister(event)">Create</button><br>
         </form>
         <p id="status"></p>
@@ -37,7 +39,8 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username: document.getElementById('username').value, password: document.getElementById('password').value, email: document.getElementById('email').value, role: document.getElementById('role').value
+                body: JSON.stringify({
+                    username: document.getElementById('username').value, password: document.getElementById('password').value, email: document.getElementById('email').value, role: document.getElementById('role').value, bypass_username_requirements: document.getElementById('bypass').checked
                 }),
                 credentials: 'include'
             })
