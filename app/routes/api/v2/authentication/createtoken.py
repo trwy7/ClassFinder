@@ -26,6 +26,7 @@ def api_v2_createtoken():
 def api_v2_createscopedtoken():
     """
     This route creates an API token for the user with specific scopes.
+    If the scope is calendar, the token will not expire, and there should only ever be one such token per user.
     """
     user = request.user
     scopes = request.json.get("scopes", None)
@@ -33,6 +34,10 @@ def api_v2_createscopedtoken():
         return jsonify({"error": "No scopes provided"}), 400
     if not isinstance(scopes, list):
         return jsonify({"error": "Scopes must be a list"}), 400
+    if scopes == ["calendar"]:
+        for token in user.tokens:
+            if token.scopes == "calendar":
+                return jsonify(token.token)
     token = create_token(
         user.username,
         "api",
