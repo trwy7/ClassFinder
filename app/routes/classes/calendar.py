@@ -11,7 +11,7 @@ from app.utilities.users import verify_user
 from app.utilities.times import get_current_day, get_classtime_by_period, readable_days, get_lunchtimes
 from app.utilities.classes import get_today_courses
 
-GEN_CAL_LENGTH = 91  # Number of days to generate calendar for
+#GEN_CAL_LENGTH = 91  # Number of days to generate calendar for
 
 @app.route('/classes/calendar')
 @verify_user()
@@ -33,7 +33,8 @@ def calendar_req(authtoken=None): # pylint: disable=unused-argument
     cal.name = f"{request.user.username}'s Calendar"
 
     # Generate events
-    generate_events_for_date_range(cal, GEN_CAL_LENGTH)
+    gen_cal_length = (app.config.get("END_OF_SEMESTER") - date.today()).days if app.config.get("END_OF_SEMESTER") else 91
+    generate_events_for_date_range(cal, gen_cal_length + 5)
     add_end_of_calendar_event(cal)
 
     # Export the calendar
@@ -256,7 +257,8 @@ def add_passing_period_event(calendar, course, current_date, current_day):
 
 def add_end_of_calendar_event(calendar):
     """Add an event marking the end of the calendar."""
-    final_date = date.today() + timedelta(days=GEN_CAL_LENGTH)
+    gen_cal_length = (app.config.get("END_OF_SEMESTER") - date.today()).days if app.config.get("END_OF_SEMESTER") else 91
+    final_date = date.today() + timedelta(days=gen_cal_length + 5)
     event = Event()
     event.name = "End of calendar"
     event.begin = datetime.combine(final_date, datetime.min.time())

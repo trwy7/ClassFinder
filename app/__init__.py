@@ -20,6 +20,9 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 
 if 'pytest' in sys.modules:
     app.config['TESTING'] = True
+app.config['END_OF_SEMESTER'] = os.environ.get('END_OF_SEMESTER', None)
+if app.config['END_OF_SEMESTER'] is not None:
+    app.config['END_OF_SEMESTER'] = datetime.strptime(app.config['END_OF_SEMESTER'], '%Y-%m-%d')
 
 @app.before_request
 def beforerequest():
