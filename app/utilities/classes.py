@@ -7,7 +7,7 @@ from app.utilities.times import get_classtimes, get_lunchtimes
 from app.db import User, Class, db
 from app import app
 
-neededperiods = ["2", "3", "4", "5", "6", "7", "8", "9", "Access"]
+neededperiods = ["1", "2", "3", "4", "5", "6", "7", "8", "Access"]
 
 # TODO: Move most of these functions to a function within a course class
 

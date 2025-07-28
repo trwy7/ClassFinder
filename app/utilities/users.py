@@ -348,7 +348,11 @@ def verify_user( # pylint: disable=dangerous-default-value, too-many-statements
                     app.logger.debug("Trying bearer authentication for " + func.__name__)
                     token = auth.split(" ")[1]
                 elif auth.startswith("Basic "):
-                    auth = base64.b64decode(auth.split(" ")[1]).decode("utf-8")
+                    try:
+                        auth = base64.b64decode(auth.split(" ")[1]).decode("utf-8")
+                    except (ValueError, UnicodeDecodeError):
+                        app.logger.debug("Failed to decode basic authentication for " + func.__name__)
+                        return error_response("Invalid basic authentication format"), 400
                     username, password = auth.split(":")
                     app.logger.debug("Trying basic authentication for " + func.__name__ + " with " + username)
                     if app.config.get("TESTING"):
@@ -367,6 +371,9 @@ def verify_user( # pylint: disable=dangerous-default-value, too-many-statements
                             )
                             request.user = user
                             return func(*args, **kwargs)
+                    else:
+                        app.logger.debug("Basic authentication failed for " + func.__name__)
+                        return error_response("Invalid username or password"), 401
                 else:
                     if auth != "":
                         app.logger.debug("Trying legacy authentication for " + func.__name__)

@@ -1,21 +1,21 @@
 DAY: T
 
-    3
+    2
     Class1
     Time
     Teacher
     Room: MS Cafe
-    5
+    4
     Class2
     Time
     Teacher
     Room: 111B
-    7
+    6
     Class3
     Time
     Teacher
     Room: E222B
-    9
+    8
     Class4
     Time
     Teacher
@@ -23,12 +23,12 @@ DAY: T
 
 Day: W
 
-    2
+    1
     Class 5
     Time
     Teacher
     Room: 333
-    4
+    3
     Class 1, 2, & 3
     Time
     Teacher
@@ -38,12 +38,12 @@ Day: W
     Time
     Teacher
     Room: E555
-    6
+    5
     Class 6
     Time
     Teacher
     Room: 177
-    8
+    7
     Class 7
     Time
     Teacher

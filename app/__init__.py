@@ -148,6 +148,7 @@ def log_request():
         params = request.get_json() or {}
     else:
         params = request.args.to_dict()
+    params = params.copy()
     if isinstance(params, dict):
         if params.get("password"):
             params["password"] = ("*" * len(params["password"])) if len(params["password"]) < 25 else "*****"

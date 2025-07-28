@@ -7,6 +7,7 @@ import sys
 import os
 import pytest
 import freezegun
+import base64
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app import app # pylint: disable=wrong-import-position, import-error, cyclic-import
 
@@ -128,10 +129,30 @@ def test_export_data(client, token):
     assert response.json.get('email') == "a.a@s.stemk12.org"
     assert response.json.get('role') == "user"
     assert len(response.json.get('classes')) == 9
-    assert {"canvasid": None,"lunch": None,"name":"Class 5","period":"2","room":"333"} in response.json.get('classes')
+    assert {"canvasid": None,"lunch": None,"name":"Class 5","period":"1","room":"333"} in response.json.get('classes')
     assert len(response.json.get('sessions')) == 1
 
-# I cant get basic authentication to be testable.
+def test_basic_auth(client, token):
+    """
+    Tests the dashboard route with basic auth
+    """
+    response = client.get("/dashboard", headers={"Authorization": f"Basic {base64.b64encode(b'pytest:password123').decode()}"})
+    assert response.status_code == 200
+    assert response.content_type == 'text/html; charset=utf-8'
+
+def test_dashboard_invalid_basic_auth(client):
+    """
+    Tests the dashboard route with invalid basic auth
+    """
+    response = client.get("/dashboard", headers={"Authorization": "Basic invalidtoken"})
+    assert response.status_code == 400
+
+def test_dashboard_incorrect_basic_auth(client):
+    """
+    Tests the dashboard route with incorrect basic auth
+    """
+    response = client.get("/dashboard", headers={"Authorization": "Basic " + base64.b64encode(b"pytest:password823").decode()})
+    assert response.status_code == 401
 
 def test_dashboard_legacy_auth(client, token):
     """
@@ -242,3 +263,15 @@ def test_calendar(client, token):
     assert response.content_type == 'text/calendar; charset=utf-8'
     assert b"BEGIN:VCALENDAR" in response.data
     assert b"END:VCALENDAR" in response.data
+
+def test_delete_user(client, token):
+    """
+    Tests the delete user route
+    """
+    response = client.post("/account/delete", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.json.get('status') == "success"
+    # Check if the user is actually deleted
+    response = client.get("/dashboard", headers={"Authorization": f"Bearer {token}"}, follow_redirects=False)
+    assert response.status_code == 302
+    assert response.location == "/login"  # Should redirect to login after deletion
