@@ -48,7 +48,24 @@
 
                     const calLink = `${window.location.origin}/${token}/calendar.ics${params.toString() ? '?' + params.toString() : ''}`;
                     
-                    document.getElementById('cal-link').textContent = 'Calendar URL: ' + calLink;
+                    // Create HTML with URL and copy button
+                    document.getElementById('cal-link').innerHTML = `
+                        Calendar URL: <span id="cal-url">${calLink}</span>
+                        <button id="copy-btn">Copy</button>
+                    `;
+                    
+                    // Add click handler for copy button
+                    document.getElementById('copy-btn').addEventListener('click', function() {
+                        navigator.clipboard.writeText(calLink)
+                            .then(() => {
+                                this.textContent = 'Copied!';
+                                setTimeout(() => {
+                                    this.textContent = 'Copy';
+                                }, 2000);
+                            })
+                            .catch(err => console.error('Failed to copy:', err));
+                    });
+                    
                     document.getElementById('cal-info').style.display = 'block';
                     document.getElementById('spinner').style.display = 'none';
                 })

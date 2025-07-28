@@ -28,7 +28,7 @@ def register_post():
     if check_email(email):
         return error_response("Already taken"), 400
     if not validate_email(email):
-        return error_response("Invalid email"), 400
+        return error_response("Invalid email, use your school provided email."), 400
     emailid = create_email_id(email)
     send_email(
         email=email,
