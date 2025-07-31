@@ -10,12 +10,15 @@
     <!-- NOTE: This is still the old code, might need to be updated -->
     <div style="background-color: black; color: white; justify-content: center; align-items: center;"></div>
         <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
-            <div style="padding: 20px; border-radius: 20px; backdrop-filter: blur(25px);" id="shadowbox">
+            <div style="padding: 20px; border-radius: 20px; backdrop-filter: blur(25px); display: flex; align-items: center; flex-direction: column;" id="shadowbox">
                 <div style="width: 100%; text-align: center; font-size: 1.2em;" id="time">
                     
                 </div>
                 <div style="width: 100%; text-align: center; font-size: 6em;" id="timel">
                     
+                </div>
+                <div class="progress-container" id="progressContainer" style="display: none; width: 0vw;">
+                    <div class="progress-bar" id="progressBar"></div>
                 </div>
                 {% if status is not none %}
                 <div style="width: 100%; text-align: center; font-size: 2em;" id="status">
@@ -27,10 +30,15 @@
     </div>
     <script>
         var nextclass = "{{nextclass}}";
+        var startclass = "{{startclass}}";
+        var animfinished = false;
+        var targetprogress = 0;
+        var progstart = new Date().getTime();
         if (nextclass == "nothing") {
             document.getElementById("shadowbox").remove();
         } else {
             var countDownDate = new Date(nextclass).getTime();
+            var startDate = new Date(startclass).getTime();
         }
 
         function updatetimer(first=false) {
@@ -40,6 +48,19 @@
             var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            // Update progress bar
+            if (startDate && countDownDate) {
+                var totalDuration = countDownDate - startDate;
+                var elapsed = now - startDate;
+                var progress = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
+                targetprogress = progress;
+                if (animfinished && progstart && (new Date().getTime() - progstart) < 1000) {
+                    document.getElementById("progressBar").style.width = progress + "%";
+                    progstart = new Date().getTime();
+                }
+            }
+            
             if (hours === 0 && minutes === 0) {
                 document.getElementById("timel").innerHTML = seconds;
             } else if (hours === 0) {
@@ -86,48 +107,6 @@
             } else {
                 document.exitFullscreen();
             }
-            } else if (event.code === 'KeyI') {
-                var timel = document.getElementById("timel");
-                var currentSize = parseFloat(window.getComputedStyle(timel, null).getPropertyValue('font-size'));
-                var newSize = currentSize - 10;
-                var url = new URL(window.location);
-                url.searchParams.set("timersize", newSize + "px");
-                window.history.pushState({}, '', url);
-            timel.style.fontSize = newSize + 'px';
-            } else if (event.code === 'KeyO') {
-                var timel = document.getElementById("timel");
-                var currentSize = parseFloat(window.getComputedStyle(timel, null).getPropertyValue('font-size'));
-                var newSize = currentSize + 10;
-                timel.style.fontSize = newSize + 'px';
-                var url = new URL(window.location);
-                url.searchParams.set("timersize", newSize + "px");
-                window.history.pushState({}, '', url);
-            timel.style.fontSize = newSize + 'px';
-            } else if (event.code === 'KeyY') {
-                var time = document.getElementById("time");
-                var currentSize = parseFloat(window.getComputedStyle(time, null).getPropertyValue('font-size'));
-                var newSize = currentSize - 2;
-                time.style.fontSize = newSize + 'px';
-                var url = new URL(window.location);
-                url.searchParams.set("timesize", newSize + "px");
-                window.history.pushState({}, '', url);
-            } else if (event.code === 'KeyU') {
-                var time = document.getElementById("time");
-                var currentSize = parseFloat(window.getComputedStyle(time, null).getPropertyValue('font-size'));
-                var newSize = currentSize + 2;
-                time.style.fontSize = newSize + 'px';
-                var url = new URL(window.location);
-                url.searchParams.set("timesize", newSize + "px");
-                window.history.pushState({}, '', url);
-            } else if (event.code === 'KeyN') {
-                var timel = document.getElementById("timel");
-                var time = document.getElementById("time");
-                timel.style.fontSize = '6em';
-                time.style.fontSize = '1.2em';
-                var url = new URL(window.location);
-                url.searchParams.delete("timesize");
-                url.searchParams.delete("timersize");
-                window.history.pushState({}, '', url);
             }
         });
         var urlParams = new URLSearchParams(window.location.search);
@@ -159,6 +138,50 @@
         if (timerSize) {
             document.getElementById("timel").style.fontSize = timerSize;
         }
+
+        var hideProgress = urlParams.get('hideprogress');
+        if (hideProgress === 'true') {
+            document.getElementById("progressContainer").style.display = "none";
+        } else {
+            document.getElementById("progressContainer").style.display = "flex";
+        }
+
+        var progressWidth = urlParams.get('progresswidth');
+        if (progressWidth) {
+            finalwidth = progressWidth;
+        } else {
+            finalwidth = "33vw";
+        }
+        // Animate the progress bar container width, sadly copilot as I did not know how to do an ease animation, and could not figure it out
+        let animationStart = null;
+        const containerDuration = 800; // milliseconds
+        
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+        
+        function animateContainerWidth(timestamp) {
+            if (!animationStart) animationStart = timestamp;
+            const elapsed = timestamp - animationStart;
+            const progress = Math.min(elapsed / containerDuration, 1);
+            const easedProgress = easeOutCubic(progress);
+            
+            const width = easedProgress * parseFloat(finalwidth);
+            document.getElementById("progressContainer").style.width = width + "vw";
+            
+            if (progress < 1) {
+            requestAnimationFrame(animateContainerWidth);
+            } else {
+                animfinished = true;
+                document.getElementById("progressBar").style.width = targetprogress + "%";
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                requestAnimationFrame(animateContainerWidth);
+            }, 10);
+        });
     </script>
 </body>
 </html>

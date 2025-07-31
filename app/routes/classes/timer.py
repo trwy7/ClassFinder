@@ -22,26 +22,16 @@ def timer():
             if request.args.get('noredirect', "false") != "false":
                 return render_template('timer.html', nextclass="nothing")
             return redirect(url_for('dashboard'))
-        formatted_time = datetime.combine(datetime.now().date(), period['end']).strftime('%m/%d/%Y %I:%M:%S %p')
-        response = make_response(render_template('timer.html', nextclass=formatted_time, status=status))
-        # if period is not None:
-        #     end_time = datetime.combine(datetime.today(), period['end'])
-        # else:
-        #     end_time = datetime.combine(datetime.today(), datetime.strptime("06:00", "%H:%M").time())
-        #     end_time += timedelta(days=1)
-        # response.headers["Cache-Control"] = f"max-age={round((end_time - datetime.now()).total_seconds())}, immutable, must-revalidate, private"
+        formatted_end_time = datetime.combine(datetime.now().date(), period['end']).strftime('%m/%d/%Y %I:%M:%S %p')
+        formatted_start_time = datetime.combine(datetime.now().date(), period['start']).strftime('%m/%d/%Y %I:%M:%S %p')
+        response = make_response(render_template('timer.html', nextclass=formatted_end_time, startclass=formatted_start_time, status=status))
         return response
     period = get_user_current_period(user)
     if period is None:
         if request.args.get('noredirect', "false") != "false":
             return render_template('timer.html', nextclass="nothing")
         return redirect(url_for('dashboard'))
-    formatted_time = datetime.combine(datetime.now().date(), period['end']).strftime('%m/%d/%Y %I:%M:%S %p')
-    response = make_response(render_template('timer.html', nextclass=formatted_time, status=status))
-    # if period is not None:
-    #     end_time = datetime.combine(datetime.today(), period['end'])
-    # else:
-    #     end_time = datetime.combine(datetime.today(), datetime.strptime("06:00", "%H:%M").time())
-    #     end_time += timedelta(days=1)
-    # response.headers["Cache-Control"] = f"max-age={round((end_time - datetime.now()).total_seconds())}, immutable, must-revalidate, private"
+    formatted_end_time = datetime.combine(datetime.now().date(), period['end']).strftime('%m/%d/%Y %I:%M:%S %p')
+    formatted_start_time = datetime.combine(datetime.now().date(), period['start']).strftime('%m/%d/%Y %I:%M:%S %p')
+    response = make_response(render_template('timer.html', nextclass=formatted_end_time, startclass=formatted_start_time, status=status))
     return response
