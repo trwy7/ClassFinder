@@ -3,17 +3,18 @@
 This file tests the user functions, like login and registration, and general user actions.
 """
 
-import sys
 import os
+import base64
+from datetime import datetime, timedelta
 import pytest
 import freezegun
-import base64
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+os.environ["END_OF_SEMESTER"] = (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d")
 from app import app # pylint: disable=wrong-import-position, import-error, cyclic-import
 
 # If anyone can help me split this into test_users and test_classes, that would be great. I'm not sure how to do that.
 
 app.config['TESTING'] = True
+app.config['END_OF_SEMESTER'] = datetime.strptime(os.environ["END_OF_SEMESTER"], '%Y-%m-%d').date()
 
 @pytest.fixture(scope="session")
 def client():
@@ -132,7 +133,7 @@ def test_export_data(client, token):
     assert {"canvasid": None,"lunch": None,"name":"Class 5","period":"1","room":"333"} in response.json.get('classes')
     assert len(response.json.get('sessions')) == 1
 
-def test_basic_auth(client, token):
+def test_basic_auth(client, token): # pylint: disable=unused-argument
     """
     Tests the dashboard route with basic auth
     """

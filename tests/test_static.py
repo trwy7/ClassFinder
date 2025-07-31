@@ -2,10 +2,7 @@
 """
 This file tests the static files, like CSS and favicon.
 """
-import sys
-import os
 import pytest
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app import app # pylint: disable=wrong-import-position, import-error
 
 app.config['TESTING'] = True
