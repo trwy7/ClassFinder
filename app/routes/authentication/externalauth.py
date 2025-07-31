@@ -84,7 +84,7 @@ def external_auth_post():
             return success_response(
                 "Redirecting to external application",
                 {
-                    "redirect_to": f"{redirect_url}?token={token.token}",
+                    "redirect_to": f"{redirect_url}?token={token.token}" if "?" not in redirect_url else f"{redirect_url}&token={token.token}"
                 }
             )
         return error_response("Invalid redirect URL", {"redirect_url": redirect_url})
