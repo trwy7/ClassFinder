@@ -10,7 +10,7 @@
     {% include 'header.html' %}
     <main id="login">
         <h1>Login</h1>
-        <form onsubmit="attemptLogin(event)">
+        <form onsubmit="attemptLogin(event)" method="get">
             <label for="username">Username</label>
             <input type="text" id="username" name="username" required><br>
             <label for="password">Password</label>

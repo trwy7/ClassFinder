@@ -59,8 +59,8 @@ def before_request():
             request.origin_remote_addr,
             request.proxy_remote_addr
         )
-        return {"message": "You seem to be bypassing CloudFlare, or your IP is using IPv6.", "status": "error"}, 403
-        #return None
+        # return {"message": "You seem to be bypassing CloudFlare, or your IP is using IPv6.", "status": "error"}, 403
+        return None
     app.logger.warning("CLOUDFLARE_IP_RANGES not set. ClassFinder cannot access https://www.cloudflare.com/ips-v4.")
     app.logger.warning("People may be able to bypass rate limits.")
     return None
@@ -148,9 +148,17 @@ def log_request():
     }
     method_color = method_colors.get(request.method, "\033[97m")  # white
     if request.content_type == "application/json":
-        params = request.get_json() or {}
+        try:
+            params = request.get_json() or {}
+        except Exception as e: # pylint: disable=broad-exception-caught
+            app.logger.error("Failed to parse JSON request body: %s", e)
+            params = {}
     else:
-        params = request.args.to_dict()
+        try:
+            params = request.args.to_dict()
+        except Exception as e: # pylint: disable=broad-exception-caught
+            app.logger.error("Failed to parse query parameters: %s", e)
+            params = {}
     params = params.copy()
     if isinstance(params, dict):
         if params.get("password"):
@@ -213,7 +221,7 @@ def log_response(response):
         req_url = "/calendar.ics"
     try:
         request_logs.append({
-            "time": request.start_time,
+            "time": request.start_time if hasattr(request, 'start_time') else datetime.now(),
             "returntime": datetime.now(),
             "method": request.method,
             "url": req_url,
@@ -306,15 +314,27 @@ logging.basicConfig(handlers=[werkzeug_handler], level=app.logger.level)
 
 # Request CloudFlare IP ranges
 if not devmode and not app.config.get("TESTING"):
-    cf_ip_ranges_req = requests.get("https://www.cloudflare.com/ips-v4", timeout=10)
-    if cf_ip_ranges_req.status_code != 200:
-        app.logger.critical("Failed to get CloudFlare IP ranges. Status code: %s", cf_ip_ranges_req.status_code)
+    cf_ip_ranges = []
+    # Get IPv4 ranges
+    cf_ip_ranges_req_v4 = requests.get("https://www.cloudflare.com/ips-v4", timeout=10)
+    if cf_ip_ranges_req_v4.status_code != 200:
+        app.logger.critical("Failed to get CloudFlare IPv4 IP ranges. Status code: %s", cf_ip_ranges_req_v4.status_code)
         sys.exit(1)
     else:
-        cf_ip_ranges = cf_ip_ranges_req.text.splitlines()
-        app.logger.debug("CloudFlare IP ranges request successful")
-        cf_ip_ranges = [ip for ip in cf_ip_ranges if not ip.startswith("#")]
-        app.logger.debug(f"CloudFlare IP ranges: {cf_ip_ranges}")
+        v4_ranges = [ip for ip in cf_ip_ranges_req_v4.text.splitlines() if not ip.startswith("#")]
+        cf_ip_ranges.extend(v4_ranges)
+        app.logger.debug("CloudFlare IPv4 IP ranges request successful")
+        app.logger.debug(f"CloudFlare IPv4 IP ranges: {v4_ranges}")
+    # Get IPv6 ranges
+    cf_ip_ranges_req_v6 = requests.get("https://www.cloudflare.com/ips-v6", timeout=10)
+    if cf_ip_ranges_req_v6.status_code != 200:
+        app.logger.critical("Failed to get CloudFlare IPv6 IP ranges. Status code: %s", cf_ip_ranges_req_v6.status_code)
+        sys.exit(1)
+    else:
+        v6_ranges = [ip for ip in cf_ip_ranges_req_v6.text.splitlines() if not ip.startswith("#")]
+        cf_ip_ranges.extend(v6_ranges)
+        app.logger.debug("CloudFlare IPv6 IP ranges request successful")
+        app.logger.debug(f"CloudFlare IPv6 IP ranges: {v6_ranges}")
 else:
     app.logger.debug("Running in dev/test mode, not requesting CloudFlare IP ranges")
     cf_ip_ranges = []

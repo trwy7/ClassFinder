@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import os
 import functools
 import base64
+import random
 from flask_bcrypt import Bcrypt
 from flask import request, redirect
 from app.db import db, User, Token, Class
@@ -21,6 +22,8 @@ readable_scopes = {
     "read-classes": "See your classes",
     "read-misc": "See general data about your account (like when your account was created)",
 }
+
+temp_passcodes = {}
 
 def create_user(
     username: str, email: str, password: str, created_by="system", role="user"
@@ -81,6 +84,15 @@ def check_password(username: str, password: str):
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
         return True
+    if temp_passcodes.get(username):
+        if temp_passcodes[username]['code'] == password:
+            if temp_passcodes[username]['expires'] > datetime.now():
+                del temp_passcodes[username]
+                return True
+            del temp_passcodes[username]
+            app.logger.debug("Temporary passcode expired for user " + username)
+            return False
+    app.logger.debug("Password check failed for user " + username)
     return False
 
 def create_token( # pylint: disable=too-many-arguments, too-many-positional-arguments
@@ -316,6 +328,42 @@ def delete_user(user: User):
         delete_token(token)
     db.session.delete(user)
     db.session.commit()
+
+def create_temp_passcode(user: User, length: int=6):
+    """
+    Create a temporary passcode for a user
+
+    Args:
+        user (User): The user to create the passcode for.
+        length (int): The length of the passcode.
+
+    Returns:
+        str: The temporary passcode.
+    """
+    temp_passcodes[user.username] = {
+        'code': "".join(
+            random.choice("0123456789") for _ in range(length)
+        ),
+        'expires': datetime.now() + timedelta(minutes=5)
+    }
+    return temp_passcodes[user.username]['code']
+
+def set_color(user: User, color_hue: int):
+    """
+    Set the user's preferred color.
+
+    Args:
+        user (User): The user to set the color for.
+        color_hue (int): The hue of the color to set.
+
+    Returns:
+        User: The user with the updated color.
+    """
+    if not (0 <= color_hue <= 360):
+        raise ValueError("Color hue must be between 0 and 360")
+    user.color_hue = color_hue
+    db.session.commit()
+    return user
 
 def verify_user( # pylint: disable=dangerous-default-value, too-many-statements
     func=None,

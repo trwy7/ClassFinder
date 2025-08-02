@@ -25,6 +25,31 @@
                     {{status}}
                 </div>
                 {% endif %}
+                {% if period.passing %}
+                <div style="width: 100%; text-align: center; font-size: 1.2em;" id="nextclassalert">
+                    Get to {{period.course.name}} in room {{period.course.room}}
+                </div>
+                {% endif %}
+                <div id="settings" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
+                    <label for="timersizeSlider">End time Size:</label>
+                    <input type="range" id="timersizeSlider" min="0" max="5" step="0.1" value="1.2" style="width: 200px;">
+                    <label for="timelSize">Timer Size:</label>
+                    <input type="range" id="timelSize" min="0" max="20" step="0.1" value="6" style="width: 200px;">
+                    <label for="progressWidth">Progress Bar Width:</label>
+                    <input type="range" id="progressWidth" min="0" max="100" step="1" value="33" style="width: 200px;">
+                    <label for="progressHide">Hide Progress Bar:</label>
+                    <input type="checkbox" id="progressHide">
+                    <label for="bgColor">Background Color:</label>
+                    <input type="color" id="bgColor" value="#000000">
+                    <label for="bgImage">Background Image URL:</label>
+                    <input type="text" id="bgImage" placeholder="https://example.com/image.jpg">
+                    <label for="bgBlur">Background Blur (px):</label>
+                    <input type="number" id="bgBlur" min="0" max="50" step="1" value="0">
+                    <label for="textColor">Text Color:</label>
+                    <input type="color" id="textColor" value="#ffffff">
+                    <button onclick="saveSettings();">Save and reload</button>
+                    <button onclick="resetSettings();">Reset to defaults</button>
+                </div>
             </div>
         </div>
     </div>
@@ -33,7 +58,7 @@
         var startclass = "{{startclass}}";
         var animfinished = false;
         var targetprogress = 0;
-        var progstart = new Date().getTime();
+        var updatetimerv = true;
         if (nextclass == "nothing") {
             document.getElementById("shadowbox").remove();
         } else {
@@ -55,9 +80,8 @@
                 var elapsed = now - startDate;
                 var progress = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
                 targetprogress = progress;
-                if (animfinished && progstart && (new Date().getTime() - progstart) < 1000) {
+                if (animfinished) {
                     document.getElementById("progressBar").style.width = progress + "%";
-                    progstart = new Date().getTime();
                 }
             }
             
@@ -72,8 +96,8 @@
                 if (first) {
                     alert("Please make sure your computer's time is correct.");
                 }
-                clearInterval(x);
-                document.getElementById("timel").innerHTML = "0s";
+                updatetimerv = false;
+                document.getElementById("timel").innerHTML = "0";
                 setTimeout(function() {
                     location.reload();
                 }, 3000);
@@ -81,12 +105,21 @@
                 if (first) {
                     alert("Please make sure your computer's time is correct.");
                 }
-                clearInterval(x);
-                document.getElementById("timel").innerHTML = "0s";
+                updatetimerv = false;
+                document.getElementById("timel").innerHTML = "0";
                 setTimeout(function() {
                     location.reload();
                 }, 500);
             }
+        }
+        function tick() {
+            var now = new Date()
+            const ms = 1000 - now.getMilliseconds();
+            if (updatetimer) {
+                updatetimer();
+            }
+            setTimeout(tick, ms);
+            setTimeout(tick, ms - 50);
         }
         if (nextclass != "nothing") {
             updatetimer(first=true)
@@ -98,7 +131,7 @@
             minutes = minutes < 10 ? '0' + minutes : minutes;
             var strTime = hours + ':' + minutes + ' ' + ampm;
             document.getElementById("time").innerHTML = strTime;
-            var x = setInterval(updatetimer, 500);
+            tick();
         }
         document.body.addEventListener('keydown', function(event) {
             if (event.code === 'Space') {
@@ -107,6 +140,12 @@
             } else {
                 document.exitFullscreen();
             }
+            } else if (event.code === 'KeyQ') {
+                if (document.getElementById("settings").style.display === "none") {
+                    document.getElementById("settings").style.display = "flex";
+                } else {
+                    document.getElementById("settings").style.display = "none";
+                }
             }
         });
         var urlParams = new URLSearchParams(window.location.search);
@@ -152,6 +191,129 @@
         } else {
             finalwidth = "33vw";
         }
+
+        document.getElementById("timersizeSlider").addEventListener('input', function() {
+            var size = this.value + 'em';
+            document.getElementById('time').style.fontSize = size;
+        });
+        document.getElementById("timelSize").addEventListener('input', function() {
+            var size = this.value + 'em';
+            document.getElementById('timel').style.fontSize = size;
+        });
+        document.getElementById("progressWidth").addEventListener('input', function() {
+            var width = this.value + 'vw';
+            document.getElementById('progressContainer').style.width = width;
+        });
+        document.getElementById("progressHide").addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById("progressContainer").style.display = "none";
+            } else {
+                document.getElementById("progressContainer").style.display = "flex";
+            }
+        });
+        document.getElementById("bgColor").addEventListener('input', function() {
+            document.body.style.backgroundColor = this.value;
+        });
+        document.getElementById("bgImage").addEventListener('input', function() {
+            document.body.style.backgroundImage = "url('"+this.value+"')";
+            document.getElementById("shadowbox").style.boxShadow = "0px 0px 20px black";
+        });
+        document.getElementById("bgBlur").addEventListener('input', function() {
+            document.body.style.backdropFilter = "blur("+this.value+"px)";
+        });
+        document.getElementById("textColor").addEventListener('input', function() {
+            document.body.style.color = this.value;
+        });
+
+        function saveSettings() {
+            var bgColor = document.getElementById("bgColor").value.replace("#", "");
+            var bgImage = document.getElementById("bgImage").value;
+            var bgBlur = document.getElementById("bgBlur").value;
+            var textColor = document.getElementById("textColor").value.replace("#", "");
+            var timeSize = document.getElementById("timersizeSlider").value + "em";
+            var timerSize = document.getElementById("timelSize").value + "em";
+            var hideProgress = document.getElementById("progressHide").checked;
+            var progressWidth = document.getElementById("progressWidth").value + "vw";
+
+            window.location.href = `?bg=${bgColor}&bgimage=${encodeURIComponent(bgImage)}&bgblur=${bgBlur}&color=${textColor}&timesize=${timeSize}&timersize=${timerSize}&hideprogress=${hideProgress}&progresswidth=${progressWidth}`;
+        }
+
+        function resetSettings() {
+            // Remove all URL parameters and reload
+            window.history.replaceState({}, document.title, window.location.pathname);
+            window.location.reload();
+        }
+
+        function loadCurrentSettings() {
+            // Load values from URL parameters or use defaults
+            var urlParams = new URLSearchParams(window.location.search);
+            
+            // Time size (default 1.2em)
+            var timeSize = urlParams.get('timesize');
+            if (timeSize) {
+                document.getElementById("timersizeSlider").value = parseFloat(timeSize.replace('em', ''));
+            }
+            
+            // Timer size (default 6em)
+            var timerSize = urlParams.get('timersize');
+            if (timerSize) {
+                document.getElementById("timelSize").value = parseFloat(timerSize.replace('em', ''));
+            }
+            
+            // Progress width (default 33vw)
+            var progressWidth = urlParams.get('progresswidth');
+            if (progressWidth) {
+                document.getElementById("progressWidth").value = parseFloat(progressWidth.replace('vw', ''));
+            }
+            
+            // Hide progress (default false)
+            var hideProgress = urlParams.get('hideprogress');
+            document.getElementById("progressHide").checked = hideProgress === 'true';
+            
+            // Background color - get from computed style or URL param
+            var bgColor = urlParams.get('bg');
+            if (bgColor) {
+                document.getElementById("bgColor").value = "#" + bgColor;
+            } else {
+                var computedBgColor = getComputedStyle(document.body).backgroundColor;
+                if (computedBgColor && computedBgColor !== 'rgba(0, 0, 0, 0)') {
+                    document.getElementById("bgColor").value = rgbToHex(computedBgColor);
+                }
+            }
+            
+            // Background image
+            var bgImage = urlParams.get('bgimage');
+            if (bgImage) {
+                document.getElementById("bgImage").value = bgImage;
+            }
+            
+            // Background blur (default 0)
+            var bgBlur = urlParams.get('bgblur');
+            if (bgBlur) {
+                document.getElementById("bgBlur").value = bgBlur;
+            }
+            
+            // Text color - get from computed style or URL param
+            var textColor = urlParams.get('color');
+            if (textColor) {
+                document.getElementById("textColor").value = "#" + textColor;
+            } else {
+                var computedTextColor = getComputedStyle(document.getElementById("timel")).color;
+                if (computedTextColor) {
+                    document.getElementById("textColor").value = rgbToHex(computedTextColor);
+                }
+            }
+        }
+        
+        // Helper function to convert RGB to Hex
+        function rgbToHex(rgb) {
+            var result = rgb.match(/\d+/g);
+            if (result && result.length >= 3) {
+                return "#" + ((1 << 24) + (parseInt(result[0]) << 16) + (parseInt(result[1]) << 8) + parseInt(result[2])).toString(16).slice(1);
+            }
+            return "#000000"; // fallback
+        }
+
         // Animate the progress bar container width, sadly copilot as I did not know how to do an ease animation, and could not figure it out
         let animationStart = null;
         const containerDuration = 800; // milliseconds
@@ -161,6 +323,14 @@
         }
         
         function animateContainerWidth(timestamp) {
+            // Only run animation if reduced motion is off
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (prefersReducedMotion) {
+            document.getElementById("progressContainer").style.width = finalwidth;
+            document.getElementById("progressBar").style.width = targetprogress + "%";
+            animfinished = true;
+            return;
+            }
             if (!animationStart) animationStart = timestamp;
             const elapsed = timestamp - animationStart;
             const progress = Math.min(elapsed / containerDuration, 1);
@@ -172,12 +342,15 @@
             if (progress < 1) {
             requestAnimationFrame(animateContainerWidth);
             } else {
+            document.getElementById("progressBar").style.width = targetprogress + "%";
+            setTimeout(function() {
                 animfinished = true;
-                document.getElementById("progressBar").style.width = targetprogress + "%";
+            }, 1000);
             }
         }
         
         document.addEventListener('DOMContentLoaded', function() {
+            loadCurrentSettings();
             setTimeout(function() {
                 requestAnimationFrame(animateContainerWidth);
             }, 10);

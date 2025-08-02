@@ -55,6 +55,11 @@ def get_user_current_period(user: User):
         return None
     if not current_period["lunchactive"]:
         app.logger.debug("Lunch not active")
+        for course in user.classes:
+            if course.period == current_period["period"]:
+                app.logger.debug(f"Found course {course.name} for period {current_period['period']}")
+                return current_period | {"lunch": None, "course": course}
+        app.logger.debug(f"No course found for period {current_period['period']} and user {user.username}")
         return current_period | {"lunch": None, "course": None}
     currentcourse = None
     for course in user.classes:

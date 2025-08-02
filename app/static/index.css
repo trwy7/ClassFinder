@@ -1,33 +1,33 @@
 :root {
-    --primary-color: #45ffb1;
-    --secondary-color: #439e78;
-    --tertiary-color: #27634a;
-    --background-color: #12201b;
-    --navbar-color: #214137;
-    --text-color: #c2fff5;
-    --secondary-text-color: #b6e9e0;
-    --current-period-color: #47ff6d;
-    --action-color: #1b6ad0;
-    --action-hover-color: #113a6f;
-    --user-color: #1b6ad0;
-    --user-primary-color: #1b6ad0;
-    --highlighted-inner-user-color: #1b6d4e;
+    --primary-color: hsl(var(--user-prefered-color, 155), 100%, 64%);
+    --secondary-color: hsl(var(--user-prefered-color, 155), 40%, 44%);
+    --tertiary-color: hsl(var(--user-prefered-color, 155), 43%, 27%);
+    --background-color: hsl(var(--user-prefered-color, 155), 28%, 10%);
+    --navbar-color: hsl(var(--user-prefered-color, 155), 33%, 19%);
+    --text-color: hsl(var(--user-prefered-color, 155), 100%, 88%);
+    --secondary-text-color: hsl(var(--user-prefered-color, 155), 54%, 81%);
+    --current-period-color: hsl(var(--user-prefered-color, 155), 100%, 64%);
+    --action-color: hsl(214, 77%, 46%);
+    --action-hover-color: hsl(214, 73%, 25%);
+    --user-color: hsl(214, 77%, 46%);
+    --user-primary-color: hsl(214, 77%, 46%);
+    --highlighted-inner-user-color: hsl(var(--user-prefered-color, 155), 60%, 27%);
 }
 @media (prefers-color-scheme: light) {
     :root {
-        --primary-color: #45ffb1;
-        --secondary-color: #29ffa6;
-        --tertiary-color: #59ffba;
-        --background-color: #e3eeea;
-        --navbar-color: #aaffe4;
-        --text-color: #575757;
-        --secondary-text-color: #575757;
-        --current-period-color: #575757;
-        --action-color: #60a5ff;
-        --action-hover-color: #113a6f;
-        --user-color: #60a5ff;
-        --user-primary-color: #98c5ff;
-        --highlighted-inner-user-color: #1ae094;
+        --primary-color: hsl(155, 100%, 64%);
+        --secondary-color: hsl(155, 100%, 58%);
+        --tertiary-color: hsl(155, 100%, 67%);
+        --background-color: hsl(158, 24%, 91%);
+        --navbar-color: hsl(161, 100%, 83%);
+        --text-color: hsl(0, 0%, 34%);
+        --secondary-text-color: hsl(0, 0%, 34%);
+        --current-period-color: hsl(0, 0%, 34%);
+        --action-color: hsl(214, 100%, 69%);
+        --action-hover-color: hsl(214, 73%, 25%);
+        --user-color: hsl(214, 100%, 69%);
+        --user-primary-color: hsl(214, 100%, 80%);
+        --highlighted-inner-user-color: hsl(157, 79%, 49%);
     }
 }
 /* TODO: Cut down on color, this could really be black and white with accent colors for important details */
@@ -358,7 +358,6 @@ li.action[onclick]:hover {
     height: 20px;
     background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     border-radius: 10px;
-    transition: width 0.8s ease;
     width: 0%;
 }
 
@@ -367,4 +366,39 @@ li.action[onclick]:hover {
     font-size: 1em;
     margin-top: 10px;
     color: var(--text-color);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    #timel {
+        transition: opacity 0.5s ease-in-out;
+        animation: fadeIn 0.8s forwards;
+    }
+
+    #time {
+        transition: opacity 0.5s ease-in-out;
+        opacity: 0;
+        animation: fadeIn 0.8s forwards;
+        animation-delay: 0.4s;
+    }
+
+    #nextclassalert {
+        transition: opacity 0.5s ease-in-out;
+        opacity: 0;
+        animation: fadeIn 0.8s forwards;
+        animation-delay: 0.8s;
+    }
+
+    .progress-bar {
+        transition: width 0.8s ease;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+    }
 }

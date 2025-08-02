@@ -9,12 +9,18 @@
 <body>
     {% include 'header.html' %}
     <main>
-        <h1 style="display: inline;">Hello, {{user.username}}!  </h1><br><p class="hidden-text">{{user.email}}</p><br>
+        <h1 style="display: inline;">Hello, {{user.username}}!  </h1><br><p class="hidden-text"><!--email_off-->{{user.email}}<!--/email_off--></p><br>
         {% if user.role == "admin" %}<button onclick="window.location.href = '/admin'">Admin</button>{%endif %}
         {% if classestoadd|length > 0 %}<h2>You still need to add {{classestoadd|length}} classes.</h2> <button onclick="window.location.href = '/addclasses'">Add classes</button>{% endif %}
         {% if needcanvaslink %}<button onclick="window.location.href = '/classes/canvaslink'">Link canvas classes</button>{% endif %}
+        <button onclick="showSlider()" id="changecolor">Change color</button>
+        <div id="color-slider" style="display: none;">
+            <input type="range" min="0" max="360" value="{{user.color_hue|default(155)}}" oninput="updateColor(this.value)" style="width: 25%;">
+            <button onclick="setColor()">Set color</button>
+        </div>
         <button onclick="window.location.href = '/classes/exportschedule'">Print your schedule</button>
         <button onclick="window.location.href = '/classes/calendar'">Create calendar</button>
+        <button onclick="getTempPasscode()">Get temporary passcode</button>
         <button onclick="window.location.href = '/logout'">Log out</button>
         <button onclick="window.location.href = '/account/delete'">Delete account</button>
         {% if user.classes|length > 0%}
@@ -86,8 +92,37 @@
                     e.style.cursor = null;
                     e.removeAttribute('onclick');
                 }
-            }
-        );
+            });
+        }
+        function showSlider() {
+            const slider = document.getElementById('color-slider');
+            slider.style.display = slider.style.display === 'none' ? 'block' : 'none';
+            const button = document.getElementById('changecolor');
+            button.style.display = button.style.display === 'none' ? 'block' : 'none';
+        }
+        function updateColor(value) {
+            document.documentElement.style.setProperty('--user-prefered-color', value);
+        }
+        function setColor() {
+            const hue = document.querySelector('#color-slider input[type="range"]').value;
+            fetch('/account/set_color', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ color_hue: hue })
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to set the color.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while trying to set the color.');
+            });
         }
         function revokeToken(granted_to) {
             if (confirm(`Are you sure you want to revoke access for ${granted_to}?`)) {
@@ -110,6 +145,19 @@
                     alert('An error occurred while trying to revoke the token.');
                 });
             }
+        }
+        function getTempPasscode() {
+            fetch('/account/temp_passcode', {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(`Temporary passcode created successfully: ${data.passcode}`);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while creating the temporary passcode.');
+            });
         }
     </script>
 </body>

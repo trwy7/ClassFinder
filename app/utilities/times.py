@@ -11,6 +11,7 @@ from app.db import Schedule, db, User
 #   "classtimes": [...],
 #   "lunchtimes": {}
 #}
+now = datetime.now()
 classtime_dict = {
     0: { # Monday
         "classtimes": [
@@ -502,6 +503,39 @@ classtime_dict = {
         ],
         "lunchtimes": {}
     },
+    9: {
+        "classtimes": [
+            {
+                "start": now.time(),
+                "end": (now + timedelta(minutes=5)).time(),
+                "period": "1",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": (now + timedelta(minutes=5)).time(),
+                "end": (now + timedelta(minutes=10)).time(),
+                "period": "2",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": (now + timedelta(minutes=10)).time(),
+                "end": (now + timedelta(minutes=15)).time(),
+                "period": "3",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": (now + timedelta(minutes=15)).time(),
+                "end": (now + timedelta(minutes=20)).time(),
+                "period": "4",
+                "passing": False,
+                "lunchactive": False,
+            }
+        ],
+        "lunchtimes": {}
+    }
 }
 readable_days = {
     0: "Monday",
@@ -513,6 +547,7 @@ readable_days = {
     6: "No school",
     7: "Early Release Blue",
     8: "Early Release Gold",
+    9: "Development"
 }
 
 BELL_DELAY = 5

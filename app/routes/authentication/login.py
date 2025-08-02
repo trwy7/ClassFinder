@@ -1,7 +1,7 @@
 """
 This module handles the login functionality for the application.
 """
-from flask import render_template, request
+from flask import render_template, request, redirect
 from app import app
 from app.utilities.config import devmode
 from app.utilities.users import check_password, create_token
@@ -14,6 +14,19 @@ def login():
     """
     Display the login page.
     """
+    if request.args.get("username") and request.args.get("password") and request.args.get("privacyPolicy") == "on": # legacy clients
+        if check_password(request.args.get("username").lower(), request.args.get("password")):
+            response = success_response("Login Successful")
+            response.set_cookie(
+                "token",
+                create_token(request.args.get("username").lower(), 'refresh').token,
+                samesite="Lax",
+                secure=not devmode,
+                max_age=604800,
+            )
+            app.logger.debug(f"User {request.args.get('username')} logged in via legacy client")
+            return response, 200
+        return error_response("Invalid Credentials"), 400
     return render_template("login.html", status=status, devmode=devmode)
 
 @app.route("/login", methods=["POST"])

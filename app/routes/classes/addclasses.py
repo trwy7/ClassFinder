@@ -54,21 +54,30 @@ def addclasses_post():
     if len(get_periods_of_user_classes(user)) == len(neededperiods):
         return error_response("You already have all of your classes."), 400
     classes = [
-        course for course in request.json
+        course.strip() for course in request.json
         if "day: t" not in course.strip().lower()
         and "day: w" not in course.strip().lower()
+        and "day: m" not in course.strip().lower()
+        and "day: r" not in course.strip().lower()
+        and "day: f" not in course.strip().lower()
+        and "day: early release- blue" not in course.strip().lower()
+        and "day: early release- gold" not in course.strip().lower()
         and course.strip() != ""
         and not course.strip().lower().startswith("start: ")
         and not course.strip().lower().startswith("end: ") # I have not confirmed this is a real value, but just in case
     ]
-    app.logger.debug(f"Classes: {classes}")
     if len(classes) % 5 != 0:
-        return (
-            error_response(
-                "Make sure you copied your classes from infinite campus, and that you have copied everything."
-            ),
-            400,
-        )
+        if classes[0].strip() == "Schedule":
+            app.logger.debug("Ctrl+A moment")
+            classes = classes[5:]
+        if len(classes) % 5 != 0:
+            app.logger.debug(f"Invalid number of classes: {len(classes)}")
+            return (
+                error_response(
+                    "Make sure you copied your classes from infinite campus, and that you have copied everything."
+                ),
+                400,
+            )
     classes = split_list(classes, 5)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -105,39 +114,39 @@ async def process_existing_course(course, user):
 
 async def process_course(course, user):
     """Process a course and add it to the user's account."""
-    period = course[0].strip()
-    name = course[1].strip().removeprefix("MS ")
-    room = course[4].strip().replace("Room: ", "")
+    # period = course[0].strip()
+    # name = course[1].strip().removeprefix("MS ")
+    # room = course[4].strip().replace("Room: ", "")
 
-    # Validate period
-    if period not in neededperiods:
-        app.logger.debug(f"Invalid period: {period}")
-        return error_response("Invalid period for a course."), 400
+    # # Validate period
+    # if period not in neededperiods:
+    #     app.logger.debug(f"Invalid period: {period}")
+    #     return error_response("Invalid period for a course."), 400
 
-    # Check if user already has a class in this period
-    user_periods = get_periods_of_user_classes(user)
-    if period in user_periods:
-        return None
+    # # Check if user already has a class in this period
+    # user_periods = get_periods_of_user_classes(user)
+    # if period in user_periods:
+    #     return None
 
-    # Validate room and name
-    if not validate_room(room):
-        app.logger.debug(f"Invalid room number: {room}")
-        return error_response("Invalid room number for a course."), 400
+    # # Validate room and name
+    # if not validate_room(room):
+    #     app.logger.debug(f"Invalid room number: {room}")
+    #     return error_response("Invalid room number for a course."), 400
 
-    if better_profanity.profanity.contains_profanity(name):
-        app.logger.debug(f"Course name with profanity: {name}")
-        return error_response("Invalid course name."), 400
+    # if better_profanity.profanity.contains_profanity(name):
+    #     app.logger.debug(f"Course name with profanity: {name}")
+    #     return error_response("Invalid course name."), 400
 
-    # Process the class
-    if check_if_class_exists(room, period):
-        return None
+    # # Process the class
+    # if check_if_class_exists(room, period):
+    #     return None
 
-    # Create class and add user
-    createdclass = add_class(
-        name, period, room, created_by=user.username, commit=False
-    )
-    add_user_to_class(user, createdclass)
-    return None
+    # # Create class and add user
+    # createdclass = add_class(
+    #     name, period, room, created_by=user.username, commit=False
+    # )
+    # add_user_to_class(user, createdclass)
+    # return None
 
 @app.route("/addclasses/help.gif")
 def addclasses_help():

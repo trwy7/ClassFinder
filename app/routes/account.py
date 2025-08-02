@@ -4,7 +4,7 @@ Account routes
 
 from flask import render_template, request
 from app import app
-from app.utilities.users import verify_user, delete_user, change_username, revoke_external_token
+from app.utilities.users import verify_user, delete_user, change_username, revoke_external_token, create_temp_passcode, set_color
 from app.utilities.responses import success_response
 from app.utilities.classes import (
     get_today_courses,
@@ -98,3 +98,24 @@ def account_revoke_token():
         return {"error": "No token provided"}, 400
     revoke_external_token(request.user, token_granted_to)
     return success_response("Token revoked successfully")
+
+@app.route("/account/temp_passcode", methods=["GET"])
+@verify_user
+def account_temp_passcode():
+    """
+    This route generates a temporary passcode for the user.
+    """
+    passcode = create_temp_passcode(request.user)
+    return success_response(f"Temporary passcode created successfully: {passcode}", {"passcode": passcode})
+
+@app.route("/account/set_color", methods=["POST"])
+@verify_user
+def account_set_color():
+    """
+    This route sets the user's preferred color.
+    """
+    color_hue = request.json.get("color_hue")
+    if color_hue is not None:
+        set_color(request.user, int(color_hue))
+        return success_response("Color set successfully")
+    return {"error": "No color provided"}, 400

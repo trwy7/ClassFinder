@@ -105,6 +105,9 @@ def add_day_type_event(calendar, current_date, current_day):
 def add_class_event(calendar, course, current_date, current_day, ignore_lunch=False):
     """Add a class event to the calendar."""
     classtime = get_classtime_by_period(period=course.period, passing=False, day=current_day)
+    if not classtime:
+        app.logger.warning(f"No class time found for {course.name} on {current_date}")
+        return
     app.logger.info(f"Adding class event for {classtime}")
     if classtime['lunchactive'] and not ignore_lunch:
         add_class_with_lunch_event(calendar, course, classtime, current_date, current_day)

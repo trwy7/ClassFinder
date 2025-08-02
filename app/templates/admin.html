@@ -43,7 +43,7 @@
         <button onclick="deleteAllClasses()" id="deleteallclasses">Delete all classes</button>
         <ul id="classes">
             {% for class in classes|sort(attribute='verified') %}
-                <li class="class {% if not class.verified %}unverified{%endif%}" id="{{class.id}}">
+                <li class="class {% if not class.verified %}unverified{%endif%}{% if period.period == class.period %} currentperiod{%endif%}" id="{{class.id}}">
                     {{class.name}}
                     {% if class.canvasid == None %}
                     <br>

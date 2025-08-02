@@ -3,32 +3,27 @@
 Static routes for the application.
 """
 import os
-from flask import Response
+from flask import Response, request
 from flask import send_from_directory, render_template
 from app import app
 from app.utilities.config import devmode
+from app.utilities.users import verify_user
+
+with open(os.path.join(app.static_folder, "index.css"), "r", encoding="UTF-8") as f:
+    INDEX_CSS = f.read()
 
 @app.route("/index.css")
-def index_css():
+@verify_user(required=False)
+def index_cssf():
     """
     Serves the index.css file.
     """
 
-    if not devmode:
-        return send_from_directory("static", "index.css")
-
-    # Read index.css
-    with open(os.path.join(app.static_folder, "index.css"), "r", encoding="UTF-8") as f:
-        css_content = f.read()
-
-    # Append colors-dev.css
-    try:
-        with open(os.path.join(app.static_folder, "colors-dev.css"), "r", encoding="UTF-8") as f:
-            css_content += "\n\n/* Development mode styles */\n" + f.read()
-    except (IOError, FileNotFoundError):
-        app.logger.warning("colors-dev.css not found")
-
-    return Response(css_content, mimetype="text/css")
+    if request.user and request.user.color_hue:
+        # If the user has a color, we add it to the CSS
+        color_hue = request.user.color_hue
+        return Response(INDEX_CSS + f"\n:root {{ --user-prefered-color: {color_hue}; }}", mimetype="text/css")
+    return send_from_directory("static", "index.css")
 
 @app.route("/favicon.ico")
 def favicon():
