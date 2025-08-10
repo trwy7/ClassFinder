@@ -8,6 +8,7 @@ from flask import send_from_directory, render_template
 from app import app
 from app.utilities.config import devmode
 from app.utilities.users import verify_user
+from app.addons.limiter import limiter
 
 with open(os.path.join(app.static_folder, "index.css"), "r", encoding="UTF-8") as f:
     INDEX_CSS = f.read()
@@ -40,6 +41,7 @@ def privacy():
     return render_template("privacy.html")
 
 @app.route("/ping")
+@limiter.limit("3 per second")
 def ping():
     """
     Pings the server.

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 :root {
     --primary-color: hsl(var(--user-prefered-color, 155), 100%, 64%);
     --secondary-color: hsl(var(--user-prefered-color, 155), 40%, 44%);
@@ -6,7 +7,7 @@
     --navbar-color: hsl(var(--user-prefered-color, 155), 33%, 19%);
     --text-color: hsl(var(--user-prefered-color, 155), 100%, 88%);
     --secondary-text-color: hsl(var(--user-prefered-color, 155), 54%, 81%);
-    --current-period-color: hsl(var(--user-prefered-color, 155), 100%, 64%);
+    --current-period-color: hsl(var(--user-prefered-color, 155), 100%, 80%);
     --action-color: hsl(214, 77%, 46%);
     --action-hover-color: hsl(214, 73%, 25%);
     --user-color: hsl(214, 77%, 46%);
@@ -38,7 +39,7 @@
     box-sizing: border-box;
 }
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Inter', 'Roboto', sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
 }
@@ -167,7 +168,7 @@ ul {
 }
 
 .class.currentperiod {
-    color: var(--current-period-color);
+    border: 5px solid var(--current-period-color);
 }
 .classuser, li.action {
     font-size: 88%;

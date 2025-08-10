@@ -47,11 +47,14 @@
                     {{class.name}}
                     {% if class.canvasid == None %}
                     <br>
-                    <span style="font-size: 0.8em;">No canvas ID</span>
+                    <span style="font-size: 0.8em;">No canvas ID</span><br>
                     {% else %}
                     <br>
-                    <span style="font-size: 0.8em;">{{class.canvasid}}</span>
+                    <span style="font-size: 0.8em;">{{class.canvasid}}</span><br>
                     {% endif %}
+                    <span style="font-size: 0.8em;">{{class.room}}</span><br>
+                    <span style="font-size: 0.8em;">{{class.period}}</span><br>
+                    <span style="font-size: 0.8em;">{{class.created_by}}</span><br>
                     <ul class="actions">
                         <li class="action" onclick="window.location.href = '/admin/class/{{class.id}}/edit'">Edit</li>
                         <li class="action" onclick="deleteClass('{{class.id}}')">Delete</li>
@@ -60,7 +63,7 @@
                     <ul class="classusers">
                         {%for user in class.users%}
                             {% if not user.role == "testing" %}
-                            <li class="classuser{% if class.created_by == user.username %} classcreator{%endif%}">{{user.username}}</li>
+                            <li class="classuser{% if class.created_by == user.id %} classcreator{%endif%}">{{user.username}}</li>
                             {%endif%}
                         {%endfor%}
                     </ul>

@@ -21,23 +21,23 @@
         <button onclick="window.location.href = '/classes/exportschedule'">Print your schedule</button>
         <button onclick="window.location.href = '/classes/calendar'">Create calendar</button>
         <button onclick="getTempPasscode()">Get temporary passcode</button>
+        <button onclick="leaveClasses(event)">My classes changed</button>
         <button onclick="window.location.href = '/logout'">Log out</button>
         <button onclick="window.location.href = '/account/delete'">Delete account</button>
         {% if user.classes|length > 0%}
         <h2>Your classes:</h2>
-        <button onclick="document.querySelectorAll('.classusers').forEach(e => e.style.display = 'block'); document.getElementById('highlightusers').style.display = 'block'; this.style.display = 'none';">Show people</button>
+        <button onclick="showUsers(); this.style.display = 'none';">Show people</button>
         <button id="highlightusers" onclick="user = prompt('Enter the username of the person you want to highlight'); highlightUser(user)" style="display:none;">Highlight a person</button>
         <ul id="classes">
             {% for class in user.classes|sort(attribute='period') %}
                 <li class="class" id="{{class.id}}" {% if class.canvasid %} onclick="window.location.href = '{{canvasurl}}/courses/{{class.canvasid}}'" {%endif%}>{{class.name}}
                     <ul class="actions">
                         {% if class.lunch is none and (class.period == "6" or class.period == "7")%}<li class="action" onclick="window.location.href = '/class/{{class.id}}/setlunch'">Set lunch</li>{% endif %}
-                        {% if allow_leave and class.period != "Access" %}<li class="action" onclick="event.stopPropagation(); leaveClass('{{class.id}}')">Leave</li>{% endif %}
                     </ul>
                     <ul class="classusers" style="display: none;">
                         {%for user in class.users%}
                             {% if not user.role == "testing" %}
-                                <li class="classuser" onclick="event.stopPropagation(); highlightUser('{{user.username}}')" style="cursor: pointer;">
+                                <li class="classuser" onclick="event.stopPropagation(); highlightUser('{{user.username}}')" data-color="{{user.color_hue}}" style="cursor: pointer;">
                                     {{user.username}}
                                 </li>
                             {% endif %}
@@ -63,18 +63,19 @@
         {% endif %}
     </main>
     <script>
-        function leaveClass(classid) {
-            if (confirm("Are you sure you want to leave this class?")) {
-                fetch(`/classes/${classid}/leave`, {
+        function leaveClasses(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            if (confirm("Have your classes changed? This will remove all your classes and you will have to add them again.")) {
+                fetch(`/classes/all/leave`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ class_id: classid })
+                    }
                 })
                 .then(response => {
                     if (response.ok) {
-                        window.location.reload();
+                        window.location.href = '/addclasses';
                     } else {
                         alert('Failed to leave the class.');
                     }
@@ -91,6 +92,10 @@
                     e.classList.add('highlight');
                     e.style.cursor = null;
                     e.removeAttribute('onclick');
+                    const colorHue = e.getAttribute('data-color');
+                    if (colorHue !== "None") {
+                        e.style.backgroundColor = `hsl(${colorHue}, 60%, 35%)`;
+                    }
                 }
             });
         }
@@ -158,6 +163,16 @@
                 console.error('Error:', error);
                 alert('An error occurred while creating the temporary passcode.');
             });
+        }
+        function showUsers() {
+            document.querySelectorAll('.classusers').forEach(e => e.style.display = 'block');
+            document.querySelectorAll('.classuser').forEach(e => {
+                const colorHue = e.getAttribute('data-color');
+                if (colorHue !== "None") {
+                    e.style.backgroundColor = `hsl(${colorHue}, 77%, 20%)`;
+                }
+            });
+            document.getElementById('highlightusers').style.display = 'block';
         }
     </script>
 </body>

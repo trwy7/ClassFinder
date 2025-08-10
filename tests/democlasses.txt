@@ -2,49 +2,49 @@ DAY: T
 
     2
     Class1
-    Time
-    Teacher
+    6:00 AM - 12:00 PM
+    Teacher: Doe, John
     Room: MS Cafe
     4
     Class2
-    Time
-    Teacher
+    12:00 PM - 7:20 PM
+    Teacher: Doe, John
     Room: 111B
     6
     Class3
-    Time
-    Teacher
+    6:00 AM - 12:20 PM
+    Teacher: Doe, John
     Room: E222B
     8
     Class4
-    Time
-    Teacher
+    6:00 AM - 12:20 PM
+    Teacher: Doe, John
     Room: 333
 
 Day: W
 
     1
     Class 5
-    Time
-    Teacher
+    6:00 AM - 12:20 PM
+    Teacher: Doe, John
     Room: 333
     3
     Class 1, 2, & 3
-    Time
-    Teacher
+    6:00 AM - 12:20 PM
+    Teacher: Doe, John
     Room: 232
     Access
     MS Access
-    Time
-    Teacher
+    6:00 AM - 12:20 PM
+    Teacher: Doe, John
     Room: E555
     5
     Class 6
-    Time
-    Teacher
+    6:00 AM - 12:20 PM
+    Teacher: Doe, John
     Room: 177
     7
     Class 7
-    Time
-    Teacher
+    6:00 AM - 12:20 PM
+    Teacher: Doe, John
     Room: PTECH

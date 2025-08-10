@@ -562,7 +562,6 @@ for d, dtimes in classtime_dict.items():
         time['start'] = time['start'].time()
         time['end'] = time['end'].time()
         classtime_dict[d]['classtimes'] = dtimes['classtimes']
-    # Lunch does not have a bell delay
 
 def get_current_day(oday: date=None):
     """

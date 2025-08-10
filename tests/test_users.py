@@ -214,6 +214,21 @@ def test_dashboard_invalid_token(client):
     assert response.status_code == 302
     assert response.location == "/login"
 
+def test_ping_rate_limit(client):
+    """
+    Tests the ping route with rate limiting
+    """
+    response = client.get("/ping")
+    assert response.status_code == 200
+    assert response.data == b"Pong"
+    for _ in range(5):
+        response = client.get("/ping")
+        if response.status_code == 429:
+            break
+    else:
+        pytest.fail("Rate limit not triggered")
+    assert response.status_code == 429
+
 def test_account(client, token):
     """
     Tests the account route

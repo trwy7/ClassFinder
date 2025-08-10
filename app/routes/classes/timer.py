@@ -24,7 +24,7 @@ def timer():
             return redirect(url_for('dashboard'))
         formatted_end_time = datetime.combine(datetime.now().date(), period['end']).strftime('%m/%d/%Y %I:%M:%S %p')
         formatted_start_time = datetime.combine(datetime.now().date(), period['start']).strftime('%m/%d/%Y %I:%M:%S %p')
-        response = make_response(render_template('timer.html', nextclass=formatted_end_time, startclass=formatted_start_time, status=status, period=period, user=None))
+        response = make_response(render_template('timer.html', nextclass=formatted_end_time, startclass=formatted_start_time, status=status, period=period, user=None, redirect=request.args.get('noredirect', "false") == "false"))
         return response
     period = get_user_current_period(user)
     if period is None:
@@ -33,5 +33,5 @@ def timer():
         return redirect(url_for('dashboard'))
     formatted_end_time = datetime.combine(datetime.now().date(), period['end']).strftime('%m/%d/%Y %I:%M:%S %p')
     formatted_start_time = datetime.combine(datetime.now().date(), period['start']).strftime('%m/%d/%Y %I:%M:%S %p')
-    response = make_response(render_template('timer.html', nextclass=formatted_end_time, startclass=formatted_start_time, status=status, period=period, user=user))
+    response = make_response(render_template('timer.html', nextclass=formatted_end_time, startclass=formatted_start_time, status=status, period=period, user=user, redirect=request.args.get('noredirect', "false") == "false"))
     return response

@@ -59,16 +59,3 @@ def validate_username(username: str):
             app.logger.warning(f"Username '{username}' ({pusername}) contains a profane word: {word}")
             return False
     return re.fullmatch(r"[a-z0-9_]{3,15}", username)
-
-
-def validate_room(room: str):
-    """
-    Check if a room is valid
-
-    Args:
-        room (str): The room to check.
-
-    Returns:
-        bool: True if the room is valid, False otherwise
-    """
-    return re.fullmatch(r"(E?[0-9]{3}B?)|MS Cafe|PTECH", room)

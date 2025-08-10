@@ -25,28 +25,37 @@
                     {{status}}
                 </div>
                 {% endif %}
-                {% if period.passing %}
+                {% if period and period.passing %}
                 <div style="width: 100%; text-align: center; font-size: 1.2em;" id="nextclassalert">
                     Get to {{period.course.name}} in room {{period.course.room}}
                 </div>
+                <div id="debug" style="display:none;">{{period}}</div>
                 {% endif %}
                 <div id="settings" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
                     <label for="timersizeSlider">End time Size:</label>
                     <input type="range" id="timersizeSlider" min="0" max="5" step="0.1" value="1.2" style="width: 200px;">
+                    <label for="timeWeight">End time Weight:</label>
+                    <input type="range" id="timeWeight" min="100" max="900" step="20" value="400" style="width: 200px;">
                     <label for="timelSize">Timer Size:</label>
                     <input type="range" id="timelSize" min="0" max="20" step="0.1" value="6" style="width: 200px;">
+                    <label for="timelWeight">Timer Weight:</label>
+                    <input type="range" id="timelWeight" min="100" max="900" step="20" value="400" style="width: 200px;">
                     <label for="progressWidth">Progress Bar Width:</label>
-                    <input type="range" id="progressWidth" min="0" max="100" step="1" value="33" style="width: 200px;">
+                    <input type="range" id="progressWidth" min="5" max="99" step="1" value="33" style="width: 200px;">
+                    <label for="progressHeight">Progress Bar Height:</label>
+                    <input type="range" id="progressHeight" min="5" max="100" step="1" value="20" style="width: 200px;">
                     <label for="progressHide">Hide Progress Bar:</label>
                     <input type="checkbox" id="progressHide">
                     <label for="bgColor">Background Color:</label>
                     <input type="color" id="bgColor" value="#000000">
                     <label for="bgImage">Background Image URL:</label>
                     <input type="text" id="bgImage" placeholder="https://example.com/image.jpg">
-                    <label for="bgBlur">Background Blur (px):</label>
-                    <input type="number" id="bgBlur" min="0" max="50" step="1" value="0">
+                    <label for="bgBlur">Background Blur:</label>
+                    <input type="range" id="bgBlur" min="0" max="50" step="1" value="0">
                     <label for="textColor">Text Color:</label>
                     <input type="color" id="textColor" value="#ffffff">
+                    <label for="noredirect">Disable redirecting to dashboard:</label>
+                    <input type="checkbox" id="noredirect" {% if not redirect %}checked{% endif %}>
                     <button onclick="saveSettings();">Save and reload</button>
                     <button onclick="resetSettings();">Reset to defaults</button>
                 </div>
@@ -146,6 +155,13 @@
                 } else {
                     document.getElementById("settings").style.display = "none";
                 }
+            } else if (event.code === 'KeyD') {
+                var debugDiv = document.getElementById("debug");
+                if (debugDiv.style.display === "none") {
+                    debugDiv.style.display = "block";
+                } else {
+                    debugDiv.style.display = "none";
+                }
             }
         });
         var urlParams = new URLSearchParams(window.location.search);
@@ -224,6 +240,18 @@
         document.getElementById("textColor").addEventListener('input', function() {
             document.body.style.color = this.value;
         });
+        document.getElementById("timelWeight").addEventListener('input', function() {
+            var weight = this.value;
+            document.getElementById('timel').style.fontWeight = weight;
+        });
+        document.getElementById("timeWeight").addEventListener('input', function() {
+            var weight = this.value;
+            document.getElementById('time').style.fontWeight = weight;
+        });
+        document.getElementById("progressHeight").addEventListener('input', function() {
+            var height = this.value + 'px';
+            document.getElementById('progressBar').style.height = height;
+        });
 
         function saveSettings() {
             var bgColor = document.getElementById("bgColor").value.replace("#", "");
@@ -234,8 +262,12 @@
             var timerSize = document.getElementById("timelSize").value + "em";
             var hideProgress = document.getElementById("progressHide").checked;
             var progressWidth = document.getElementById("progressWidth").value + "vw";
+            var timeWeight = document.getElementById("timeWeight").value;
+            var timerWeight = document.getElementById("timelWeight").value;
+            var progressHeight = document.getElementById("progressHeight").value + "px";
+            var redirect = document.getElementById("noredirect").checked ? "false" : "true";
 
-            window.location.href = `?bg=${bgColor}&bgimage=${encodeURIComponent(bgImage)}&bgblur=${bgBlur}&color=${textColor}&timesize=${timeSize}&timersize=${timerSize}&hideprogress=${hideProgress}&progresswidth=${progressWidth}`;
+            window.location.href = `?bg=${bgColor}&bgimage=${encodeURIComponent(bgImage)}&bgblur=${bgBlur}&color=${textColor}&timesize=${timeSize}&timersize=${timerSize}&hideprogress=${hideProgress}&progresswidth=${progressWidth}&timeweight=${timeWeight}&timerweight=${timerWeight}&progressheight=${progressHeight}` + (redirect === "true" ? "" : "&noredirect");
         }
 
         function resetSettings() {
@@ -302,6 +334,33 @@
                 if (computedTextColor) {
                     document.getElementById("textColor").value = rgbToHex(computedTextColor);
                 }
+            }
+
+            // Time weight (default 400)
+            var timeWeight = urlParams.get('timeweight');
+            if (timeWeight) {
+                document.getElementById("timeWeight").value = timeWeight;
+                document.getElementById("time").style.fontWeight = timeWeight;
+            } else {
+                document.getElementById("timeWeight").value = 400; // default weight
+                document.getElementById("time").style.fontWeight = 400;
+            }
+            var timerWeight = urlParams.get('timerweight');
+            if (timerWeight) {
+                document.getElementById("timelWeight").value = timerWeight;
+                document.getElementById("timel").style.fontWeight = timerWeight;
+            } else {
+                document.getElementById("timelWeight").value = 400; // default weight
+                document.getElementById("timel").style.fontWeight = 400;
+            }
+
+            var progressHeight = urlParams.get('progressheight');
+            if (progressHeight) {
+                document.getElementById("progressHeight").value = parseInt(progressHeight.replace('px', ''));
+                document.getElementById("progressBar").style.height = progressHeight;
+            } else {
+                document.getElementById("progressHeight").value = 20; // default height
+                document.getElementById("progressBar").style.height = "20px";
             }
         }
         

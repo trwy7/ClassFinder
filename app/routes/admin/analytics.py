@@ -79,7 +79,7 @@ def calculate_analytics(request_logs):
             continue
 
         # Skip index.css and index.html
-        if log.get("url") in ["/index.css", "/index.html"]:
+        if log.get("url") in ["/index.css", "/index.html", "/favicon.ico"]:
             continue
 
         path = log.get("url")

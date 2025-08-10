@@ -14,7 +14,7 @@ from app.utilities.classes import (
 )
 from app.utilities.times import get_lunchtimes
 from app.utilities.config import canvas_url, devmode, status
-
+from app.addons.limiter import limiter
 
 @app.route("/dashboard")
 @verify_user

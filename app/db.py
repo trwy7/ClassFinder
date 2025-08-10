@@ -85,7 +85,7 @@ class Class(db.Model):
     period = db.Column(db.String(10), nullable=False)
     canvasid = db.Column(db.Integer, nullable=True, default=None)
     lunch = db.Column(db.String(1), nullable=True, default=None)
-    created_by = db.Column(db.String(20), nullable=False)
+    created_by = db.Column(db.String(36), nullable=False)
     verified = db.Column(db.Boolean, nullable=False, default=False)
 
     def __str__(self):
