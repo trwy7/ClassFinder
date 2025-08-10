@@ -62,15 +62,25 @@ header ul li {
 header ul li a {
     text-decoration: none;
     color: var(--text-color);
-    transition: color 0.3s;
 }
-header ul li a:hover {
-    color: var(--primary-color);
+header ul li a:after {
+    content: '';
+    display: block;
+    height: 2px;
+    background-color: var(--primary-color);
+    transition: width 0.3s;
+    width: 0;
+    border-radius: 5px;
+    margin-left: -5px;
+    margin-right: -5px;
+    margin-top: 2px;
+}
+header ul li a:hover:after {
+    width: calc(100% + 10px);
 }
 main {
     padding: 1rem;
 }
-
 @media (max-width: 450px) {
     main {
         text-align: center;
@@ -168,8 +178,50 @@ ul {
 }
 
 .class.currentperiod {
-    border: 5px solid var(--current-period-color);
+    outline: 3px solid var(--current-period-color);
+    outline-offset: 2px;
 }
+main.passing .class.currentperiod {
+    outline: none;
+}
+main.passing classwrapper:has(.class.currentperiod) {
+    position: relative;
+}
+main.passing classwrapper:has(.class.currentperiod)::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    z-index: -1;
+    border-radius: 5px;
+    background: conic-gradient(
+        from var(--angle),
+        var(--current-period-color) 5deg,
+        transparent 5deg,
+        transparent 90deg,
+        var(--current-period-color) 185deg,
+        transparent 185deg,
+        transparent 270deg,
+        var(--current-period-color) 360deg
+    );
+    animation: rotateangle 3s linear infinite;
+}
+@keyframes rotateangle {
+    from {
+        --angle: 0deg;
+    }
+    to {
+        --angle: 360deg;
+    }
+}
+@property --angle {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 360deg;
+}
+
 .classuser, li.action {
     font-size: 88%;
     padding: 10px;

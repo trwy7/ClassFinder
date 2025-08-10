@@ -509,7 +509,7 @@ classtime_dict = {
                 "start": now.time(),
                 "end": (now + timedelta(minutes=5)).time(),
                 "period": "1",
-                "passing": False,
+                "passing": True,
                 "lunchactive": False,
             },
             {

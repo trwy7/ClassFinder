@@ -10,8 +10,14 @@ from app.utilities.config import devmode
 from app.utilities.users import verify_user
 from app.addons.limiter import limiter
 
-with open(os.path.join(app.static_folder, "index.css"), "r", encoding="UTF-8") as f:
-    INDEX_CSS = f.read()
+def load_css():
+    """
+    Loads the CSS file.
+    """
+    with open(os.path.join(app.static_folder, "index.css"), "r", encoding="UTF-8") as f:
+        return f.read()
+
+index_css = load_css()
 
 @app.route("/index.css")
 @verify_user(required=False)
@@ -23,7 +29,9 @@ def index_cssf():
     if request.user and request.user.color_hue:
         # If the user has a color, we add it to the CSS
         color_hue = request.user.color_hue
-        return Response(INDEX_CSS + f"\n:root {{ --user-prefered-color: {color_hue}; }}", mimetype="text/css")
+        if devmode:
+            index_css = load_css()
+        return Response(index_css + f"\n:root {{ --user-prefered-color: {color_hue}; }}", mimetype="text/css")
     return send_from_directory("static", "index.css")
 
 @app.route("/favicon.ico")

@@ -8,7 +8,7 @@
 </head>
 <body>
     {% include 'header.html' %}
-    <main id="dashboard">
+    <main id="dashboard" class="dashboard{% if currentperiod and currentperiod.passing %} passing{% endif %}">
         {% if devmode %}
             <div class="devmode">
                 <h3>Development mode</h1>
@@ -39,11 +39,11 @@
             {% endif %}
                 <ul id="classes">
                     {% for class in currentclasses|sort(attribute='period') %}
-                        <li style="padding: 15px" class="class{% if currentperiod.period == class.period %} currentperiod{%endif%}" {% if class.canvasid %} onclick="window.location.href = '{{canvasurl}}/courses/{{class.canvasid}}'" {%endif%}>
+                        <classwrapper><li style="padding: 15px" class="class{% if currentperiod.period == class.period %} currentperiod{%endif%}" {% if class.canvasid %} onclick="window.location.href = '{{canvasurl}}/courses/{{class.canvasid}}'" {%endif%}>
                             {{class.name}}
                             <br>
                             <span style="font-size: 0.8em;">{{class.room}}</span>
-                        </li>
+                        </li></classwrapper>
                     {% endfor %}
                 </ul>
             {% endif %}
