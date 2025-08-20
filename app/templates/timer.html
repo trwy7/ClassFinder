@@ -65,18 +65,58 @@
     <script>
         var nextclass = "{{nextclass}}";
         var startclass = "{{startclass}}";
+        var serverNextEpoch = {{ nextclass_epoch if nextclass != "nothing" else 'null' }};
+        var serverStartEpoch = {{ startclass_epoch if nextclass != "nothing" else 'null' }};
+        // Time sync state (single-shot)
+        let timeOffsetMs = 0;          // server_time - client_time
+        let timeSyncReady = false;
+
+        async function syncTimeOnce() {
+            const t0 = Date.now();
+            try {
+                const resp = await fetch('/api/server-time', {cache:'no-store'});
+                const data = await resp.json();
+                const t1 = Date.now();
+                const clientMid = t0 + (t1 - t0)/2; // midpoint to reduce RTT impact
+                timeOffsetMs = data.server_time_ms - clientMid;
+            } catch(e) {
+                // Fallback: leave offset 0
+            } finally {
+                timeSyncReady = true;
+            }
+        }
+
+        function nowServer() {
+            return Date.now() + timeOffsetMs;
+        }
+
         var animfinished = false;
         var targetprogress = 0;
         var updatetimerv = true;
+        var countDownDate = null;
+        var startDate = null;
+        var lasttime = null;
+
         if (nextclass == "nothing") {
             document.getElementById("shadowbox").remove();
         } else {
-            var countDownDate = new Date(nextclass).getTime();
-            var startDate = new Date(startclass).getTime();
+            if (typeof serverNextEpoch === 'number') {
+                countDownDate = serverNextEpoch;
+                startDate = serverStartEpoch;
+            } else {
+                countDownDate = new Date(nextclass).getTime();
+                startDate = new Date(startclass).getTime();
+            }
         }
 
         function updatetimer(first=false) {
-            var now = new Date().getTime();
+            if (!timeSyncReady) return;
+            var now = nowServer(); // synced time
+            if (lasttime && timeSyncReady && !first && (now - lasttime > 1500 || now < lasttime)) {
+                syncTimeOnce();
+                return; // skip this update to avoid big jumps
+            }
+            lasttime = now;
             var distance = countDownDate - now;
             var days = Math.floor(distance / (1000 * 60 * 60 * 24));
             var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -102,23 +142,19 @@
                 document.getElementById("timel").innerHTML = hours + "h " + minutes + "m " + seconds + "s";
             }
             if (hours === 0 && minutes === 0 && seconds === 0) {
-                if (first) {
-                    alert("Please make sure your computer's time is correct.");
-                }
                 updatetimerv = false;
                 document.getElementById("timel").innerHTML = "0";
                 setTimeout(function() {
                     location.reload();
                 }, 3000);
-            } else if (hours <= 0 && minutes <= 0 && seconds <= 0) {
-                if (first) {
-                    alert("Please make sure your computer's time is correct.");
-                }
-                updatetimerv = false;
+            } else if (distance < 0) {
                 document.getElementById("timel").innerHTML = "0";
-                setTimeout(function() {
-                    location.reload();
-                }, 500);
+                if (updatetimerv) {
+                    updatetimerv = false;
+                    setTimeout(function() {
+                        location.reload();
+                    }, 3000);
+                }
             }
         }
         function tick() {
@@ -130,18 +166,30 @@
             setTimeout(tick, ms);
             setTimeout(tick, ms - 50);
         }
-        if (nextclass != "nothing") {
-            updatetimer(first=true)
-            var countDownDateObj = new Date(countDownDate);
-            var hours = countDownDateObj.getHours();
-            var minutes = countDownDateObj.getMinutes();
-            var ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12 || 12; // the hour '0' should be '12'
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            var strTime = hours + ':' + minutes + ' ' + ampm;
-            document.getElementById("time").innerHTML = strTime;
-            tick();
+
+        function startTimerAfterSync() {
+            if (nextclass != "nothing") {
+                // Display static end time (local representation)
+                var countDownDateObj = new Date(countDownDate);
+                var hours = countDownDateObj.getHours();
+                var minutes = countDownDateObj.getMinutes();
+                var ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+                var strTime = hours + ':' + minutes + ' ' + ampm;
+                document.getElementById("time").innerHTML = strTime;
+                updatetimer(true);
+                tick();
+            }
         }
+
+        async function initTime() {
+            if (nextclass == "nothing") return;
+            await syncTimeOnce(); // single sync
+            startTimerAfterSync();
+        }
+
+        // Remove original immediate start; replaced by initTime()
         document.body.addEventListener('keydown', function(event) {
             if (event.code === 'Space') {
             if (!document.fullscreenElement) {
@@ -413,6 +461,7 @@
             setTimeout(function() {
                 requestAnimationFrame(animateContainerWidth);
             }, 10);
+            initTime();
         });
     </script>
 </body>

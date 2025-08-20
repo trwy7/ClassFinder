@@ -1,8 +1,8 @@
 """
 Handles the timer page
 """
-from datetime import datetime
-from flask import render_template, url_for, redirect, request, make_response
+from datetime import datetime, timezone
+from flask import render_template, url_for, redirect, request, make_response, jsonify
 from app import app
 from app.utilities.config import status
 from app.utilities.classes import get_user_current_period, get_current_period
@@ -15,6 +15,8 @@ def timer():
     Handles the timer page
     """
     user = request.user
+    # Determine server local timezone once
+    local_tz = datetime.now().astimezone().tzinfo
     app.logger.debug(request.args.get('noredirect', "false"))
     if user is None:
         period = get_current_period()
@@ -22,16 +24,40 @@ def timer():
             if request.args.get('noredirect', "false") != "false":
                 return render_template('timer.html', nextclass="nothing")
             return redirect(url_for('dashboard'))
-        formatted_end_time = datetime.combine(datetime.now().date(), period['end']).strftime('%m/%d/%Y %I:%M:%S %p')
-        formatted_start_time = datetime.combine(datetime.now().date(), period['start']).strftime('%m/%d/%Y %I:%M:%S %p')
-        response = make_response(render_template('timer.html', nextclass=formatted_end_time, startclass=formatted_start_time, status=status, period=period, user=None, redirect=request.args.get('noredirect', "false") == "false"))
+        end_dt = datetime.combine(datetime.now().date(), period['end']).replace(tzinfo=local_tz)
+        start_dt = datetime.combine(datetime.now().date(), period['start']).replace(tzinfo=local_tz)
+        formatted_end_time = end_dt.strftime('%m/%d/%Y %I:%M:%S %p')
+        formatted_start_time = start_dt.strftime('%m/%d/%Y %I:%M:%S %p')
+        response = make_response(render_template(
+            'timer.html',
+            nextclass=formatted_end_time,
+            startclass=formatted_start_time,
+            nextclass_epoch=int(end_dt.timestamp()*1000),          # CHANGED: removed incorrect UTC coercion
+            startclass_epoch=int(start_dt.timestamp()*1000),       # CHANGED
+            status=status,
+            period=period,
+            user=None,
+            redirect=request.args.get('noredirect', "false") == "false"
+        ))
         return response
     period = get_user_current_period(user)
     if period is None:
         if request.args.get('noredirect', "false") != "false":
             return render_template('timer.html', nextclass="nothing")
         return redirect(url_for('dashboard'))
-    formatted_end_time = datetime.combine(datetime.now().date(), period['end']).strftime('%m/%d/%Y %I:%M:%S %p')
-    formatted_start_time = datetime.combine(datetime.now().date(), period['start']).strftime('%m/%d/%Y %I:%M:%S %p')
-    response = make_response(render_template('timer.html', nextclass=formatted_end_time, startclass=formatted_start_time, status=status, period=period, user=user, redirect=request.args.get('noredirect', "false") == "false"))
+    end_dt = datetime.combine(datetime.now().date(), period['end']).replace(tzinfo=local_tz)
+    start_dt = datetime.combine(datetime.now().date(), period['start']).replace(tzinfo=local_tz)
+    formatted_end_time = end_dt.strftime('%m/%d/%Y %I:%M:%S %p')
+    formatted_start_time = start_dt.strftime('%m/%d/%Y %I:%M:%S %p')
+    response = make_response(render_template(
+        'timer.html',
+        nextclass=formatted_end_time,
+        startclass=formatted_start_time,
+        nextclass_epoch=int(end_dt.timestamp()*1000),              # CHANGED
+        startclass_epoch=int(start_dt.timestamp()*1000),           # CHANGED
+        status=status,
+        period=period,
+        user=user,
+        redirect=request.args.get('noredirect', "false") == "false"
+    ))
     return response
