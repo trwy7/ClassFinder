@@ -16,6 +16,13 @@ classtime_dict = {
     0: { # Monday
         "classtimes": [
             {
+                "start": time(7, 40),
+                "end": time(8, 0),
+                "period": "1",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
                 "start": time(8, 0),
                 "end": time(9, 45),
                 "period": "1",
@@ -74,6 +81,13 @@ classtime_dict = {
     1: { # Tuesday
         "classtimes": [
             {
+                "start": time(7, 40),
+                "end": time(8, 0),
+                "period": "2",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
                 "start": time(8, 0),
                 "end": time(9, 45),
                 "period": "2",
@@ -131,6 +145,13 @@ classtime_dict = {
     },
     2: { # Wednesday
         "classtimes": [
+            {
+                "start": time(7, 40),
+                "end": time(8, 0),
+                "period": "1",
+                "passing": True,
+                "lunchactive": False,
+            },
             {
                 "start": time(8, 0),
                 "end": time(9, 20),
@@ -204,6 +225,13 @@ classtime_dict = {
     3: { # Thursday
         "classtimes": [
             {
+                "start": time(7, 40),
+                "end": time(8, 0),
+                "period": "2",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
                 "start": time(8, 0),
                 "end": time(9, 20),
                 "period": "2",
@@ -275,6 +303,13 @@ classtime_dict = {
     },
     4: { # Friday
         "classtimes": [
+            {
+                "start": time(7, 40),
+                "end": time(8, 0),
+                "period": "1",
+                "passing": True,
+                "lunchactive": False,
+            },
             {
                 "start": time(8, 0),
                 "end": time(8, 45),
@@ -398,6 +433,13 @@ classtime_dict = {
     7: { # Early Release Blue
         "classtimes": [
             {
+                "start": time(7, 40),
+                "end": time(8, 0),
+                "period": "2",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
                 "start": time(8, 0),
                 "end": time(8, 55),
                 "period": "2",
@@ -451,6 +493,13 @@ classtime_dict = {
     },
     8: { # Early Release Gold
         "classtimes": [
+            {
+                "start": time(7, 40),
+                "end": time(8, 0),
+                "period": "3",
+                "passing": True,
+                "lunchactive": False,
+            },
             {
                 "start": time(8, 0),
                 "end": time(8, 55),
@@ -550,7 +599,7 @@ readable_days = {
     9: "Development"
 }
 
-BELL_DELAY = 5
+BELL_DELAY = 3
 
 for d, dtimes in classtime_dict.items():
     app.logger.debug(f"Setting times for {readable_days[d]}")
@@ -701,7 +750,7 @@ def create_schedule_pdf( # pylint: disable=too-many-arguments, too-many-position
         c.setFont("Helvetica", 12 if not smalltext else 8)
         classtimes = classtime_dict[day]['classtimes']
         for ctime in classtimes:
-            if ctime['passing'] or ctime['period'] == "1":
+            if ctime['passing']:
                 continue
             course = None
             if user:

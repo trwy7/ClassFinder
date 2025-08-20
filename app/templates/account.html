@@ -32,7 +32,7 @@
             {% for class in user.classes|sort(attribute='period') %}
                 <li class="class" id="{{class.id}}" {% if class.canvasid %} onclick="window.location.href = '{{canvasurl}}/courses/{{class.canvasid}}'" {%endif%}>{{class.name}}
                     <ul class="actions">
-                        {% if class.lunch is none and (class.period == "6" or class.period == "7")%}<li class="action" onclick="window.location.href = '/class/{{class.id}}/setlunch'">Set lunch</li>{% endif %}
+                        {% if class.lunch is none and (class.period == "6" or class.period == "5")%}<li class="action" onclick="window.location.href = '/class/{{class.id}}/setlunch'">Set lunch</li>{% endif %}
                     </ul>
                     <ul class="classusers" style="display: none;">
                         {%for user in class.users%}

@@ -25,7 +25,7 @@ def index_cssf():
     """
     Serves the index.css file.
     """
-
+    global index_css
     if request.user and request.user.color_hue:
         # If the user has a color, we add it to the CSS
         color_hue = request.user.color_hue

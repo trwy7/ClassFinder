@@ -183,6 +183,7 @@ ul {
 }
 main.passing .class.currentperiod {
     outline: none;
+    border: var(--background-color) 2px solid;
 }
 main.passing classwrapper:has(.class.currentperiod) {
     position: relative;
@@ -190,12 +191,12 @@ main.passing classwrapper:has(.class.currentperiod) {
 main.passing classwrapper:has(.class.currentperiod)::before {
     content: '';
     position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    bottom: -5px;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
     z-index: -1;
-    border-radius: 5px;
+    border-radius: 7px;
     background: conic-gradient(
         from var(--angle),
         var(--current-period-color) 5deg,

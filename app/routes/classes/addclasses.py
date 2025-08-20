@@ -1,19 +1,16 @@
 """
 This file contains the routes for adding classes to a user's account.
 """
-import asyncio
+import re
 from flask import render_template, redirect, request, send_from_directory
 from better_profanity import profanity
 from app import app
-import re
-from app.utilities.other import split_list
 from app.utilities.users import verify_user
 from app.utilities.classes import (
     add_class,
     add_user_to_class,
     check_if_class_exists,
     get_course,
-    check_if_user_in_class,
     get_periods_of_user_classes,
     neededperiods,
 )
@@ -67,7 +64,7 @@ def addclasses_post():
         and not course.strip().lower().startswith("end: ") # I have not confirmed this is a real value, but just in case
     ]
     app.logger.debug(f"Classes: {classes}")
-    classes = re.findall(r"([0-9]|Access)\n *(.*)\n *(?:[0-9]{1,2}:[0-9]{1,2} (?:A|P)M(?: - )?){2}\n *Teacher: .*, .*\n *Room: ((?:E?[0-9]{3}B?)|MS Cafe|PTECH|HS Commons)", "\n".join(classes), re.IGNORECASE)
+    classes = re.findall(r"([0-9]|Access)\n *(.*)\n *(?:[0-9]{1,2}:[0-9]{1,2} (?:A|P)M(?: - )?){2}\n *Teacher: .*, .*\n *Room: ((?:E?[0-9]{3}B?)|MS Cafe|PTECH|PTECH-[0-9]{3}|HS Commons)", "\n".join(classes), re.IGNORECASE)
     classes = list(set(classes))
     app.logger.debug(f"Filtered Classes: {classes}")
     if not classes:
@@ -100,11 +97,14 @@ def process_class(class_info, user, needed_periods):
     if profanity.contains_profanity(course):
         app.logger.warning(f"Profanity detected in course name: {course}")
         return error_response("Invalid class name"), 400
+    if room.startswith("PTECH"):
+        course = "PTECH"
     nclass = add_class(course, period, room, user.id, False)
     add_user_to_class(user, nclass)
     app.logger.debug(f"Added class {course} to user {user.username}")
+    db.session.commit()
     return True
-        
+
 @app.route("/addclasses/help.gif")
 def addclasses_help():
     """
