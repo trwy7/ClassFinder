@@ -12,6 +12,7 @@ from app.utilities.classes import (
     check_if_class_exists,
     get_course,
     get_periods_of_user_classes,
+    get_ptech_class,
     neededperiods,
 )
 from app.db import db
@@ -64,7 +65,7 @@ def addclasses_post():
         and not course.strip().lower().startswith("end: ") # I have not confirmed this is a real value, but just in case
     ]
     app.logger.debug(f"Classes: {classes}")
-    classes = re.findall(r"([0-9]|Access)\n *(.*)\n *(?:[0-9]{1,2}:[0-9]{1,2} (?:A|P)M(?: - )?){2}\n *Teacher: .*, .*\n *Room: ((?:E?[0-9]{3}B?)|MS Cafe|PTECH|PTECH-[0-9]{3}|HS Commons)", "\n".join(classes), re.IGNORECASE)
+    classes = re.findall(r"([0-9]|Access)\n *(.*)\n *(?:[0-9]{1,2}:[0-9]{1,2} (?:A|P)M(?: - )?){2}\n *Teacher: (.*), .*\n *Room: ((?:E?[0-9]{3}B?)|MS Cafe|PTECH|PTECH-[0-9]{3}|HS Commons)", "\n".join(classes), re.IGNORECASE)
     classes = list(set(classes))
     app.logger.debug(f"Filtered Classes: {classes}")
     if not classes:
@@ -86,20 +87,28 @@ def process_class(class_info, user, needed_periods):
     """
     Processes a single class and adds it to the user's account.
     """
-    period, course, room = class_info
+    period, course, teacher, room = class_info
     if period not in needed_periods:
         app.logger.debug(f"Skipping class {course} for period {period}, already added.")
         return None
-    app.logger.debug(f"Processing class: {period}, {course}, {room}")
+    app.logger.debug(f"Processing class: {period}, {course}, {teacher}, {room}")
+    if room.startswith("PTECH"):
+        #course = "PTECH"
+        room = "PTECH"
+        pclass = get_ptech_class(course, period)
+        if pclass:
+            app.logger.debug(f"Adding existing PTECH class {pclass.name} to user {user.username}")
+            add_user_to_class(user, pclass)
+            return None
+        else:
+            app.logger.debug(f"Creating new PTECH class {course} for user {user.username}")
     if check_if_class_exists(room, period):
         add_user_to_class(user, get_course(period, room))
         return None
     if profanity.contains_profanity(course):
         app.logger.warning(f"Profanity detected in course name: {course}")
         return error_response("Invalid class name"), 400
-    if room.startswith("PTECH"):
-        course = "PTECH"
-    nclass = add_class(course, period, room, user.id, False)
+    nclass = add_class(course, period, room, user.id, teacher, False)
     add_user_to_class(user, nclass)
     app.logger.debug(f"Added class {course} to user {user.username}")
     db.session.commit()

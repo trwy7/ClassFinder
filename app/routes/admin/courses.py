@@ -45,6 +45,7 @@ def edit_course_post(courseid):
         response = request.json
         course.name = response["name"]
         course.room = response["room"]
+        course.campus_name = response["campusname"]
         course.canvasid = (
             response["canvasid"] if response["canvasid"].isdigit() else None
         )

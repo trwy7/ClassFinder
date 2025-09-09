@@ -1,14 +1,21 @@
 """
 This module contains utility functions for managing courses, as well as a users relationship with courses.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 import typing
-from app.utilities.times import get_classtimes, get_lunchtimes
+import random
+from app.utilities.times import get_classtimes, get_lunchtimes, classtime_dict
 from app.db import User, Class, db
 from app import app
 
-neededperiods = ["1", "2", "3", "4", "5", "6", "7", "8", "Access"]
-
+neededperiods = []
+lunchperiods = []
+for day, times in classtime_dict.items():
+    for ctime in times['classtimes']:
+        if ctime["lunchactive"] and ctime["period"] not in lunchperiods:
+            lunchperiods.append(ctime["period"])
+        neededperiods.append(ctime["period"])
+lunchperiods = list(set(lunchperiods))
 # TODO: Move most of these functions to a function within a course class
 
 def get_current_period():
@@ -26,7 +33,7 @@ def get_current_period():
         app.logger.debug(f"Checking period {time['period']}")
         if time["start"] <= current_time <= time["end"]:
             app.logger.debug(f"Current period is {time['period']}")
-            return time
+            return time.copy()
     app.logger.debug("No current period")
     return None
 
@@ -58,7 +65,44 @@ def get_user_current_period(user: User):
         for course in user.classes:
             if course.period == current_period["period"]:
                 app.logger.debug(f"Found course {course.name} for period {current_period['period']}")
-                return current_period | {"lunch": None, "course": course}
+                returncourse = course
+                if "PTECH" in course.room:
+                    app.logger.debug(f"User {user.username} is in a PTECH class.")
+                    modified_start_time = datetime.combine(datetime.today(), current_period["start"])
+                    modified_end_time = datetime.combine(datetime.today(), current_period["end"])
+                    app.logger.debug(f"Original start time: {modified_start_time}, Original end time: {modified_end_time}, it is currently {datetime.now()}")
+                    # Start the screwery
+                    if current_period['passing']:
+                        # Passing periods get 5 more minutes
+                        app.logger.debug("We are in a passing period, so PTECH gets 5 extra minutes")
+                        modified_end_time += timedelta(minutes=5)
+                    elif (datetime.now() < (modified_start_time + timedelta(minutes=5))):
+                        # Making sure we arent in the extended time
+                        app.logger.debug("We are in the first 5 minutes of normal class, so PTECH starts now")
+                        modified_end_time = modified_start_time + timedelta(minutes=5)
+                        modified_start_time -= timedelta(minutes=5)
+                    elif (datetime.now() > (modified_end_time - timedelta(minutes=5))):
+                        # We are in the last 5 minutes of normal class, so PTECH leaves now
+                        app.logger.debug("We are in the last 5 minutes of normal class, so PTECH leaves now")
+                        modified_start_time = modified_end_time - timedelta(minutes=5)
+                        lastperiod = get_classtimes()[-1]
+                        if lastperiod['start'] == current_period['start']:
+                            # Last period of the day, so PTECH leaves at the end of class, we need to just say they have no class
+                            app.logger.debug("This is the last period of the day")
+                            return None
+                        modified_end_time += timedelta(minutes=5)
+                        current_period['leavingptech'] = True
+                        returncourse = None
+                    else:
+                        # Normal class time, so PTECH leaves 5 minutes early and starts 5 minutes late
+                        app.logger.debug("We are in normal class time, so PTECH leaves 5 minutes early and starts 5 minutes late")
+                        modified_start_time += timedelta(minutes=5)
+                        modified_end_time -= timedelta(minutes=5)
+                    # Save everything back to the dict
+                    current_period['start'] = modified_start_time.time()
+                    current_period['end'] = modified_end_time.time()
+                    app.logger.debug(f"Modified start time: {current_period['start']}, Modified end time: {current_period['end']}")
+                return current_period | {"lunch": None, "course": returncourse}
         app.logger.debug(f"No course found for period {current_period['period']} and user {user.username}")
         return current_period | {"lunch": None, "course": None}
     currentcourse = None
@@ -135,8 +179,7 @@ def get_today_courses(user: User, day: int = None):
     )
     return newcourses
 
-
-def add_class(name: str, period: int, room: str, created_by: str, commit: bool = True):
+def add_class(name: str, period: int, room: str, created_by: str, teacher: str, campusname: str = None, commit: bool = True):
     """
     Add a new class to the database.
     
@@ -150,12 +193,21 @@ def add_class(name: str, period: int, room: str, created_by: str, commit: bool =
     Returns:
         Class: The newly created class object.
     """
+    nid = f"{room}p{period}"
+    if room == "PTECH":
+        nid = f"PTECH{random.randint(0, 9999)}p{period}"
+        while get_course_by_id(nid):
+            nid = f"PTECH{random.randint(0, 9999)}p{period}"
+    if campusname is None:
+        campusname = name
     newclass = Class(
-        id=f"{room}p{period}",
+        id=nid,
         name=name,
         room=room,
         period=period,
         created_by=created_by,
+        teacher=teacher,
+        campus_name=campusname,
     )
     db.session.add(newclass)
     if commit:
@@ -222,6 +274,20 @@ def get_course(period: int, room: str):
     """
     return db.session.query(Class).filter_by(period=period, room=room).first()
 
+
+def get_ptech_class(campusname: str, period: int):
+    """
+    Retrieve a PTECH class by campusname, period, and room.
+    
+    Args:
+        name (str): The name of the PTECH class.
+        period (int): The period of the class.
+        room (str): The room of the class.
+        
+    Returns:
+        Class: The PTECH class object if found, otherwise None.
+    """
+    return db.session.query(Class).filter_by(campus_name=campusname, period=period, room="PTECH").first()
 
 def get_course_by_id(classid: str):
     """

@@ -120,7 +120,7 @@ def add_class_event(calendar, course, current_date, current_day, ignore_lunch=Fa
     event.name = course.name
     event.begin = start_time
     event.end = end_time
-    event.description = f"In room {course.room}"
+    event.description = f"Taught by {course.teacher} in room {course.room}"
     event.location = f"Room {course.room}"
 
     if course.canvasid:

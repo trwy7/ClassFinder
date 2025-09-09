@@ -13,6 +13,8 @@
         <form onsubmit="attemptEdit(event)"></form>
             <label for="name">Name</label>
             <input type="text" id="name" name="name" value="{{course.name}}" required><br>
+            <label for="campusname">Campus Name</label>
+            <input type="text" id="campusname" name="campusname" value="{{course.campus_name}}" required><br>
             <label for="canvasid">Canvas id</label>
             <input type="number" id="canvasid" name="canvasid" value="{{course.canvasid}}" required><br>
             <label for="room">Room</label>
@@ -38,6 +40,14 @@
             var newcanvasid = document.getElementById('canvasid').value;
             var newroom = document.getElementById('room').value;
             var newlunch = document.getElementById('lunch') ? document.getElementById('lunch').value : null;
+            var campusnameInput = document.getElementById('campusname');
+            var campusname = campusnameInput.value;
+            if (campusname != {{ course.campus_name|tojson }}) {
+                if (!confirm("You have changed the campus name. Are you sure you want to proceed?")) {
+                    document.getElementById('status').innerText = 'Edit cancelled by user.';
+                    return;
+                }
+            }
 
             fetch(window.location.toString(), {
                 method: 'POST',
@@ -48,7 +58,8 @@
                     name: newname,
                     canvasid: newcanvasid,
                     room: newroom,
-                    lunch: newlunch
+                    lunch: newlunch,
+                    campusname: campusname
                 }),
                 credentials: 'include'
             })

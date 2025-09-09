@@ -7,4 +7,4 @@ def api_server_time():
     """
     Allows clients to sync their time with the server, as some devices may have incorrect time settings.
     """
-    return jsonify(server_time_ms=int(datetime.now(timezone.utc).timestamp()*1000))
+    return jsonify(time=int(datetime.now(timezone.utc).timestamp()*1000))

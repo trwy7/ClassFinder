@@ -9,7 +9,7 @@ from app.utilities.users import check_password, create_token
 from app.utilities.responses import error_response, success_response
 
 @app.route("/api/v2/login", methods=["POST"])
-@limiter.limit("20/minute")
+@limiter.limit("10/minute")
 def api_login_post():
     """
     Login via the API
@@ -22,7 +22,7 @@ def api_login_post():
     app.logger.debug(f"Processing api v2 login for {username} with type {type} and expiry {expiry}")
     if expiry:
         expiry = datetime.fromtimestamp(expiry, timezone.utc)
-    if type not in ["app", "api"]:
+    if ttype not in ["app", "api"]:
         app.logger.debug(f"Invalid token type {type}")
         return error_response("Invalid token type, valid types are api and app"), 400
     if check_password(username, password):

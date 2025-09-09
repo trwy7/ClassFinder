@@ -435,56 +435,56 @@ classtime_dict = {
             {
                 "start": time(7, 40),
                 "end": time(8, 0),
-                "period": "2",
+                "period": "1",
                 "passing": True,
                 "lunchactive": False,
             },
             {
                 "start": time(8, 0),
                 "end": time(8, 55),
-                "period": "2",
+                "period": "1",
                 "passing": False,
                 "lunchactive": False,
             },
             {
                 "start": time(8, 55),
                 "end": time(9, 0),
-                "period": "4",
+                "period": "3",
                 "passing": True,
                 "lunchactive": False,
             },
             {
                 "start": time(9, 0),
                 "end": time(9, 55),
-                "period": "4",
+                "period": "3",
                 "passing": False,
                 "lunchactive": False,
             },
             {
                 "start": time(9, 55),
                 "end": time(10, 0),
-                "period": "6",
+                "period": "5",
                 "passing": True,
                 "lunchactive": False,
             },
             {
                 "start": time(10, 0),
                 "end": time(10, 55),
-                "period": "6",
+                "period": "5",
                 "passing": False,
                 "lunchactive": False,
             },
             {
                 "start": time(10, 55),
                 "end": time(11, 0),
-                "period": "8",
+                "period": "7",
                 "passing": True,
                 "lunchactive": False,
             },
             {
                 "start": time(11, 0),
                 "end": time(11, 55),
-                "period": "8",
+                "period": "7",
                 "passing": False,
                 "lunchactive": False,
             },
@@ -496,56 +496,56 @@ classtime_dict = {
             {
                 "start": time(7, 40),
                 "end": time(8, 0),
-                "period": "3",
+                "period": "2",
                 "passing": True,
                 "lunchactive": False,
             },
             {
                 "start": time(8, 0),
                 "end": time(8, 55),
-                "period": "3",
+                "period": "2",
                 "passing": False,
                 "lunchactive": False,
             },
             {
                 "start": time(8, 55),
                 "end": time(9, 0),
-                "period": "5",
+                "period": "4",
                 "passing": True,
                 "lunchactive": False,
             },
             {
                 "start": time(9, 0),
                 "end": time(9, 55),
-                "period": "5",
+                "period": "4",
                 "passing": False,
                 "lunchactive": False,
             },
             {
                 "start": time(9, 55),
                 "end": time(10, 0),
-                "period": "7",
+                "period": "6",
                 "passing": True,
                 "lunchactive": False,
             },
             {
                 "start": time(10, 0),
                 "end": time(10, 55),
-                "period": "7",
+                "period": "6",
                 "passing": False,
                 "lunchactive": False,
             },
             {
                 "start": time(10, 55),
                 "end": time(11, 0),
-                "period": "9",
+                "period": "8",
                 "passing": True,
                 "lunchactive": False,
             },
             {
                 "start": time(11, 0),
                 "end": time(11, 55),
-                "period": "9",
+                "period": "8",
                 "passing": False,
                 "lunchactive": False,
             },
@@ -599,7 +599,8 @@ readable_days = {
     9: "Development"
 }
 
-BELL_DELAY = 3
+BELL_DELAY = 2.98 if not app.config['TESTING'] else 0 # Seconds to add to each time to account for bell delay.
+PASSING_BELL_DELAY = 4.006 if not app.config['TESTING'] else 0 # Not used, just for reference.
 
 for d, dtimes in classtime_dict.items():
     app.logger.debug(f"Setting times for {readable_days[d]}")

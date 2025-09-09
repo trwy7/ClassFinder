@@ -1,8 +1,8 @@
 """
 Handles the timer page
 """
-from datetime import datetime, timezone
-from flask import render_template, url_for, redirect, request, make_response, jsonify
+from datetime import datetime
+from flask import render_template, url_for, redirect, request, make_response
 from app import app
 from app.utilities.config import status
 from app.utilities.classes import get_user_current_period, get_current_period
@@ -32,8 +32,7 @@ def timer():
             'timer.html',
             nextclass=formatted_end_time,
             startclass=formatted_start_time,
-            nextclass_epoch=int(end_dt.timestamp()*1000),          # CHANGED: removed incorrect UTC coercion
-            startclass_epoch=int(start_dt.timestamp()*1000),       # CHANGED
+            current_epoch=int(datetime.now().timestamp()*1000),
             status=status,
             period=period,
             user=None,
@@ -53,8 +52,7 @@ def timer():
         'timer.html',
         nextclass=formatted_end_time,
         startclass=formatted_start_time,
-        nextclass_epoch=int(end_dt.timestamp()*1000),              # CHANGED
-        startclass_epoch=int(start_dt.timestamp()*1000),           # CHANGED
+        current_epoch=int(datetime.now().timestamp()*1000),
         status=status,
         period=period,
         user=user,

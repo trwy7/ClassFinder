@@ -22,7 +22,8 @@ def current_classes():
         "classes": {
             c.period: {
                 "id": c.id,
-                "name": c.name,
+                "displayname": c.name,
+                "name": c.campus_name,
                 "room": c.room,
                 "lunch": c.lunch,
                 "verified": c.verified,
@@ -32,7 +33,8 @@ def current_classes():
         "period": currentperiod['period'] if currentperiod is not None else None,
         "endtime": int(datetime.combine(datetime.today(), currentperiod['end']).timestamp()) if (currentperiod is not None) else None,
         "passing": currentperiod['passing'] if currentperiod is not None and 'passing' in currentperiod else None,
-        "lunch": currentperiod['lunch'] if currentperiod is not None else None
+        "lunch": currentperiod['lunch'] if currentperiod is not None else None,
+        "leavingptech": currentperiod.get('leavingptech', False) if currentperiod is not None else None
     })
 
 @app.route("/api/v2/classes/all")
@@ -45,7 +47,8 @@ def all_classes():
     return success_response(None, {
         "classes": {
             c.id: {
-                "name": c.name,
+                "displayname": c.name,
+                "name": c.campus_name,
                 "room": c.room,
                 "period": c.period,
                 "lunch": c.lunch,
@@ -65,4 +68,5 @@ def time_until_end():
         "time": int(datetime.combine(datetime.today(), currentperiod['end']).timestamp()) if (currentperiod is not None) else None,
         "passing": currentperiod['passing'] if currentperiod is not None and 'passing' in currentperiod else None,
         "period": currentperiod['period'] if currentperiod is not None else None,
+        "leavingptech": currentperiod.get('leavingptech', False) if currentperiod is not None else None
     })

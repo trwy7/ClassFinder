@@ -16,6 +16,9 @@ from flask_apscheduler import APScheduler
 import requests
 from app.utilities.config import devmode
 start_init_time = datetime.now()
+
+# TODO: Move templates into folders
+# TODO: Use jinja2 template extends to reduce code duplication
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
 if 'pytest' in sys.modules:

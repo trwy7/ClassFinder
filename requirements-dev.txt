@@ -2,3 +2,4 @@ pytest
 freezegun
 pylint
 pytest-env
+pytest-dependency

@@ -47,15 +47,6 @@ def calculate_analytics(request_logs):
     """
     analytics = {}
 
-    # Skip if no logs
-    if not request_logs:
-        return {
-            "status_codes": [],
-            "path_time_total": [],
-            "most_requested_paths": [],
-            "path_time_avg": []
-        }
-
     # Calculate status code distribution
     status_codes = Counter([log.get("returncode") for log in request_logs])
     total_count = sum(status_codes.values())

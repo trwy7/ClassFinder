@@ -25,12 +25,17 @@
                     {{status}}
                 </div>
                 {% endif %}
-                {% if period and period.passing %}
+                {% if period.leavingptech %}
+                <div style="width: 100%; text-align: center; font-size: 1.2em;" id="nextclassalert">
+                    Leave the PTECH building.
+                </div>
+                {% endif %}
+                {% if period and period.passing and period.course %}
                 <div style="width: 100%; text-align: center; font-size: 1.2em;" id="nextclassalert">
                     Get to {{period.course.name}} in room {{period.course.room}}
                 </div>
-                <div id="debug" style="display:none;">{{period}}</div>
                 {% endif %}
+                <div id="syncready" style="display:none;">Sync ready.</div>
                 <div id="settings" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
                     <label for="timersizeSlider">End time Size:</label>
                     <input type="range" id="timersizeSlider" min="0" max="5" step="0.1" value="1.2" style="width: 200px;">
@@ -65,58 +70,90 @@
     <script>
         var nextclass = "{{nextclass}}";
         var startclass = "{{startclass}}";
-        var serverNextEpoch = {{ nextclass_epoch if nextclass != "nothing" else 'null' }};
-        var serverStartEpoch = {{ startclass_epoch if nextclass != "nothing" else 'null' }};
-        // Time sync state (single-shot)
-        let timeOffsetMs = 0;          // server_time - client_time
-        let timeSyncReady = false;
-
-        async function syncTimeOnce() {
-            const t0 = Date.now();
-            try {
-                const resp = await fetch('/api/server-time', {cache:'no-store'});
-                const data = await resp.json();
-                const t1 = Date.now();
-                const clientMid = t0 + (t1 - t0)/2; // midpoint to reduce RTT impact
-                timeOffsetMs = data.server_time_ms - clientMid;
-            } catch(e) {
-                // Fallback: leave offset 0
-            } finally {
-                timeSyncReady = true;
-            }
-        }
-
-        function nowServer() {
-            return Date.now() + timeOffsetMs;
-        }
-
         var animfinished = false;
         var targetprogress = 0;
         var updatetimerv = true;
-        var countDownDate = null;
-        var startDate = null;
-        var lasttime = null;
+        var current_epoch = Number("{{current_epoch}}") || Date.now();
+        let offset_from_epoch = current_epoch - Date.now();
+        let syncing = false;
+        let bellSyncActive = false;
+        let syncsuccess = false;
 
+        async function syncTimeNTPish(samples = 5, delayMs = 120) {
+            if (syncing) {
+                console.warn("Time sync already in progress, skipping new sync.");
+                return null;
+            }
+            syncing = true;
+            console.log("Starting time sync...");
+            const results = [];
+            for (let i = 0; i < samples; i++) {
+                const t0 = Date.now();
+                try {
+                    const resp = await fetch('/api/v2/server-time?_=' + t0, { cache: 'no-store' });
+                    const t1 = Date.now();
+                    if (!resp.ok) { await new Promise(r => setTimeout(r, delayMs)); continue; }
+                    const data = await resp.json();
+                    if (!data || typeof data.time !== 'number') { await new Promise(r => setTimeout(r, delayMs)); continue; }
+                    const rtt = t1 - t0;
+                    const serverTime = data.time;
+                    // Estimate offset as serverTime - (localTimeAtRequest + rtt/2)
+                    const offset = serverTime - (t0 + rtt / 2);
+                    results.push({ rtt, offset, serverTime });
+                } catch (e) {
+                    // ignore this sample
+                }
+                if (i < samples - 1) {
+                    await new Promise(r => setTimeout(r, delayMs));
+                }
+            }
+
+            if (results.length === 0) {
+                console.warn("Time sync failed, no valid samples.");
+                syncing = false;
+                return null;
+            }
+
+            // Use the samples with the smallest RTTs to reduce jitter influence
+            results.sort((a, b) => a.rtt - b.rtt);
+            const take = Math.min(3, results.length);
+            const best = results.slice(0, take);
+            const avgOffset = best.reduce((s, x) => s + x.offset, 0) / best.length;
+
+            // Apply offset (rounded to ms)
+            offset_from_epoch = Math.round(avgOffset);
+            current_epoch = Date.now() + offset_from_epoch;
+
+            // Log the offset and +- RTT
+            console.log(`Time sync: offset=${offset_from_epoch}ms, RTT range=${Math.min(...best.map(x => x.rtt))}ms to ${Math.max(...best.map(x => x.rtt))}ms`);
+            syncing = false;
+            syncsuccess = true;
+            return { offset_from_epoch, current_epoch, samples: results.length };
+        }
+
+        // Start background sync. Other code will use offset_from_epoch (initially 0) until sync completes.
+        syncTimeNTPish().then(info => {
+            if (!info) {
+                console.log('time sync failed; using local clock');
+            } else {
+                console.log('time synced', info);
+            }
+        });
         if (nextclass == "nothing") {
             document.getElementById("shadowbox").remove();
         } else {
-            if (typeof serverNextEpoch === 'number') {
-                countDownDate = serverNextEpoch;
-                startDate = serverStartEpoch;
-            } else {
-                countDownDate = new Date(nextclass).getTime();
-                startDate = new Date(startclass).getTime();
-            }
+            var countDownDate = new Date(nextclass).getTime();
+            var startDate = new Date(startclass).getTime();
         }
-
-        function updatetimer(first=false) {
-            if (!timeSyncReady) return;
-            var now = nowServer(); // synced time
-            if (lasttime && timeSyncReady && !first && (now - lasttime > 1500 || now < lasttime)) {
-                syncTimeOnce();
-                return; // skip this update to avoid big jumps
+        function tick() {
+            var now = new Date(Date.now() + offset_from_epoch);
+            if (updatetimerv) {
+                updatetimer();
             }
-            lasttime = now;
+            setTimeout(tick, 0);
+        }
+        function updatetimer(first=false) {
+            var now = Date.now() + offset_from_epoch;
             var distance = countDownDate - now;
             var days = Math.floor(distance / (1000 * 60 * 60 * 24));
             var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -141,55 +178,34 @@
             } else {
                 document.getElementById("timel").innerHTML = hours + "h " + minutes + "m " + seconds + "s";
             }
-            if (hours === 0 && minutes === 0 && seconds === 0) {
+            if (distance === 0) {
+                if (first) {
+                    alert("Please make sure your computer's time is correct.");
+                }
                 updatetimerv = false;
                 document.getElementById("timel").innerHTML = "0";
                 setTimeout(function() {
-                    location.reload();
+                    if (!bellSyncActive) {
+                        location.reload();
+                    }
                 }, 3000);
             } else if (distance < 0) {
-                document.getElementById("timel").innerHTML = "0";
-                if (updatetimerv) {
-                    updatetimerv = false;
-                    setTimeout(function() {
-                        location.reload();
-                    }, 3000);
-                }
+                document.getElementById("shadowbox").remove();
+                location.reload();
             }
         }
-        function tick() {
-            var now = new Date()
-            const ms = 1000 - now.getMilliseconds();
-            if (updatetimer) {
-                updatetimer();
-            }
-            setTimeout(tick, ms);
-            setTimeout(tick, ms - 50);
+        if (nextclass != "nothing") {
+            updatetimer(first=true)
+            var countDownDateObj = new Date(nextclass);
+            var hours = countDownDateObj.getHours();
+            var minutes = countDownDateObj.getMinutes();
+            var ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12; // the hour '0' should be '12'
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            var strTime = hours + ':' + minutes + ' ' + ampm;
+            document.getElementById("time").innerHTML = strTime;
+            tick();
         }
-
-        function startTimerAfterSync() {
-            if (nextclass != "nothing") {
-                // Display static end time (local representation)
-                var countDownDateObj = new Date(countDownDate);
-                var hours = countDownDateObj.getHours();
-                var minutes = countDownDateObj.getMinutes();
-                var ampm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12 || 12;
-                minutes = minutes < 10 ? '0' + minutes : minutes;
-                var strTime = hours + ':' + minutes + ' ' + ampm;
-                document.getElementById("time").innerHTML = strTime;
-                updatetimer(true);
-                tick();
-            }
-        }
-
-        async function initTime() {
-            if (nextclass == "nothing") return;
-            await syncTimeOnce(); // single sync
-            startTimerAfterSync();
-        }
-
-        // Remove original immediate start; replaced by initTime()
         document.body.addEventListener('keydown', function(event) {
             if (event.code === 'Space') {
             if (!document.fullscreenElement) {
@@ -203,13 +219,21 @@
                 } else {
                     document.getElementById("settings").style.display = "none";
                 }
-            } else if (event.code === 'KeyD') {
-                var debugDiv = document.getElementById("debug");
-                if (debugDiv.style.display === "none") {
-                    debugDiv.style.display = "block";
-                } else {
-                    debugDiv.style.display = "none";
+            } else if (event.code === 'KeyC') {
+                if (!syncsuccess) {
+                    alert("Time has not been synced yet, cannot show countdown.");
+                    return;
                 }
+                if (!bellSyncActive) {
+                    bellSyncActive = true;
+                    document.getElementById("syncready").style.display = "block";
+                    return;
+                }
+                // Show how long until the timer ends, in milliseconds, include negative values
+                var now = Date.now() + offset_from_epoch;
+                var distance = countDownDate - now;
+                document.getElementById("syncready").innerText = distance + "ms, adjust the delay by " + ((distance / 1000) * -1) + "s";
+                alert("Time until timer ends: " + distance + "ms");
             }
         });
         var urlParams = new URLSearchParams(window.location.search);
@@ -248,13 +272,14 @@
         } else {
             document.getElementById("progressContainer").style.display = "flex";
         }
-
         var progressWidth = urlParams.get('progresswidth');
+        let finalwidth;
         if (progressWidth) {
             finalwidth = progressWidth;
         } else {
             finalwidth = "33vw";
         }
+        
 
         document.getElementById("timersizeSlider").addEventListener('input', function() {
             var size = this.value + 'em';
@@ -461,7 +486,6 @@
             setTimeout(function() {
                 requestAnimationFrame(animateContainerWidth);
             }, 10);
-            initTime();
         });
     </script>
 </body>

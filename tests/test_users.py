@@ -1,4 +1,4 @@
-# pylint: disable=redefined-outer-name, import-error, cyclic-import
+# pylint: disable=redefined-outer-name, import-error, cyclic-import, unused-argument
 """
 This file tests the user functions, like login and registration, and general user actions.
 """
@@ -25,7 +25,7 @@ def client():
         yield cclient
 
 @pytest.fixture(scope="session")
-def admintoken(client): # Simulates the first registration, with no classes
+def admintoken(client): # Simulates the first registration, with no classes # TODO: Split into multiple tests
     """
     Creates an admin user
     """
@@ -43,11 +43,10 @@ def admintoken(client): # Simulates the first registration, with no classes
     assert ntoken
     yield ntoken
 
-
 @pytest.fixture(scope="session")
-def token(client): # Simulates a users first login and actions, with classes
+def token(client, admintoken): # Simulates a normal user registration, with classes # TODO: Split into multiple tests
     """
-    Creates a normal user
+    Creates a normal user, and simulates adding classes to them
     """
     print("Creating user")
     response = client.post("/register", json={"email": "a.a@s.stemk12.org"})
@@ -84,21 +83,13 @@ def token(client): # Simulates a users first login and actions, with classes
     assert response.json.get('status') == "success"
     yield ntoken
 
-def test_dashboard_no_token(client):
-    """
-    Tests the dashboard route without a token, should fail
-    """
-    response = client.get("/dashboard", follow_redirects=False, headers={"Authorization": ""})
-    assert response.status_code == 302
-    assert response.location == "/login"
-
-def test_create_admin(client, admintoken): #pylint: disable=unused-argument
+def test_create_admin(client, admintoken):
     """
     Checks if the admin user is able to be created
     """
     assert True
 
-def test_create_user(client, token): #pylint: disable=unused-argument
+def test_create_user(client, token):
     """
     Checks if the normal user is able to be created, forces the creation of the admin user to happen first
     """
@@ -130,10 +121,10 @@ def test_export_data(client, token):
     assert response.json.get('email') == "a.a@s.stemk12.org"
     assert response.json.get('role') == "user"
     assert len(response.json.get('classes')) == 9
-    assert {"canvasid": None,"lunch": None,"name":"Class 5","period":"1","room":"333"} in response.json.get('classes')
+    assert {"canvasid": None,"lunch": None,"name":"Class 5","period":"1","room":"352"} in response.json.get('classes')
     assert len(response.json.get('sessions')) == 1
 
-def test_basic_auth(client, token): # pylint: disable=unused-argument
+def test_basic_auth(client, token):
     """
     Tests the dashboard route with basic auth
     """
@@ -170,6 +161,15 @@ def test_dashboard_invalid_legacy_auth(client):
     response = client.get("/dashboard", headers={"Authorization": "pytest invalidtoken"})
     assert response.status_code in (302, 400)
 
+@pytest.mark.dependency(depends=["test_dashboard"])
+def test_dashboard_no_token(client):
+    """
+    Tests the dashboard route without a token, should fail
+    """
+    response = client.get("/dashboard", follow_redirects=False, headers={"Authorization": ""})
+    assert response.status_code == 302
+    assert response.location == "/login"
+
 @freezegun.freeze_time("2025-03-12 11:14:00")
 def test_dashboard_wensday(client, token):
     """
@@ -194,6 +194,16 @@ def test_dashboard_tuesday(client, token):
     assert b"Class2" in response.data
     assert b"Access" not in response.data
 
+@freezegun.freeze_time("2025-08-27 11:14:00")
+def test_timer(client, token):
+    """
+    Tests the timer route on a Tuesday
+    """
+    response = client.get("/timer/", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.content_type == 'text/html; charset=utf-8'
+    assert b"Timer" in response.data
+
 @freezegun.freeze_time("2025-03-14 11:14:00")
 def test_dashboard_friday(client, token):
     """
@@ -205,6 +215,110 @@ def test_dashboard_friday(client, token):
     assert b"Class 5" in response.data
     assert b"Class2" in response.data
     assert b"Access" not in response.data
+
+@freezegun.freeze_time("2025-8-25 13:45:30")
+def test_ptech_times(client, token):
+    """
+    Tests the weird PTECH times - Before class
+    """
+    response = client.get("/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.content_type == 'application/json'
+    assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
+    assert response.json['endtime'] != 1756129800, "The PTECH start delay was not accounted for"
+    assert response.json['endtime'] == 1756130100, f"The PTECH start delay messed up somewhere, got {response.json['endtime']}, expected 1756130100"
+
+@freezegun.freeze_time("2025-8-25 13:50:30")
+def test_ptech_times_duringbefore(client, token):
+    """
+    Tests the weird PTECH times - "During before" class
+    """
+    response = client.get("/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.content_type == 'application/json'
+    assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
+    assert response.json['endtime'] != 1756135500, "It thinks it is durring class"
+    assert response.json['endtime'] == 1756130100, f"The PTECH start delay messed up somewhere, got {response.json['endtime']}, expected 1756130100"
+
+@freezegun.freeze_time("2025-8-25 13:55:30")
+def test_ptech_times_during_class(client, token):
+    """
+    Tests the weird PTECH times - During class
+    """
+    response = client.get("/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.content_type == 'application/json'
+    assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
+    app.logger.debug(f"Response JSON: {response.json}")
+    assert response.json['endtime'] == 1756135500, f"The PTECH end delay messed up somewhere, got {response.json['endtime']}, expected 1756135500"
+
+@freezegun.freeze_time("2025-8-25 15:25:30")
+def test_ptech_times_afterduring_eos(client, token):
+    """
+    Tests the weird PTECH times - "After during" class, end of school
+    """
+    response = client.get("/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.content_type == 'application/json'
+    assert response.json['period'] is None, "It thinks it is class time, but school has ended"
+    assert response.json['endtime'] is None, "It thinks it is class time, but school has ended"
+
+@freezegun.freeze_time("2025-8-25 11:25:30")
+def test_ptech_times_afterduring(client, token):
+    """
+    Tests the weird PTECH times - "After during" class, end of school
+    """
+    response = client.get("/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.content_type == 'application/json'
+    assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
+    assert response.json['endtime'] == 1756121700, f"The PTECH end delay messed up somewhere, got {response.json['endtime']}, expected 1756135500"
+
+@freezegun.freeze_time("2025-8-27 11:05:00")
+def test_legacy_api_todaycourses(client, token):
+    """
+    Tests the legacy API for today's courses
+    """
+    response = client.get("/api/v1/currentcourses/", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.content_type == 'application/json'
+    assert 'courses' in response.json, "No courses found in response"
+    assert len(response.json['courses']) == 5, f"Expected 5 courses, got {len(response.json['courses'])}"
+    assert {"name": "Class 5", "room": "352", "lunch": None, "verified": False, "canvasid": None, "id": "352p1"} in response.json['courses'].values(), "Class 5 not found in courses"
+
+@freezegun.freeze_time("2025-8-27 11:05:00")
+def test_legacy_api_currentperiod(client, token):
+    """
+    Tests the legacy API for current period
+    """
+    response = client.get("/api/v1/currentperiod/", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.content_type == 'application/json'
+    assert response.json.get('currentperiod') == "Access", f"Expected current period to be 'Access', got {response.json.get('currentperiod')}"
+    assert response.json.get('nextclass') == 1756296000, f"Expected nextclass to be 1756296000, got {response.json.get('nextclass')}"
+
+def test_api_login(client, token):
+    """
+    Tests the API login route
+    """
+    response = client.post("/api/v2/login", json={"username": "pytest", "password": "password123", "type": "api"})
+    assert response.status_code == 200
+    assert response.content_type == 'application/json'
+    assert response.json.get('token')
+    dashresponse = client.get("/dashboard", headers={"Authorization": f"Bearer {response.json.get('token')}"})
+    assert dashresponse.status_code == 200, f"Failed to access dashboard with new token: {dashresponse.status_code}"
+    assert dashresponse.content_type == 'text/html; charset=utf-8'
+
+def test_api_createtoken(client, token):
+    """
+    Tests the API token creation route
+    """
+    response = client.post("/api/v2/createtoken", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.content_type == 'application/json'
+    dashresponse = client.get("/dashboard", headers={"Authorization": f"Bearer {response.json}"})
+    assert dashresponse.status_code == 200, f"Failed to access dashboard with new token: {dashresponse.status_code}"
+    assert dashresponse.content_type == 'text/html; charset=utf-8'
 
 def test_dashboard_invalid_token(client):
     """
@@ -291,3 +405,11 @@ def test_delete_user(client, token):
     response = client.get("/dashboard", headers={"Authorization": f"Bearer {token}"}, follow_redirects=False)
     assert response.status_code == 302
     assert response.location == "/login"  # Should redirect to login after deletion
+
+def test_admin_logs(client, admintoken):
+    """
+    Tests the admin logs route
+    """
+    response = client.get("/admin/logs", headers={"Authorization": f"Bearer {admintoken}"})
+    assert response.status_code == 200
+    assert response.content_type == 'text/html; charset=utf-8'

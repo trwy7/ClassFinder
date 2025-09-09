@@ -87,6 +87,8 @@ class Class(db.Model):
     lunch = db.Column(db.String(1), nullable=True, default=None)
     created_by = db.Column(db.String(36), nullable=False)
     verified = db.Column(db.Boolean, nullable=False, default=False)
+    teacher = db.Column(db.String(100), nullable=False)
+    campus_name = db.Column(db.String(100), nullable=False)
 
     def __str__(self):
         return self.name
