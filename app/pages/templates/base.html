@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassFinder - {% block title required %}{% endblock %}</title>
+    <link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    {% include 'templates/header.html' %}
+    <main id="{% block mainid %}unknownmain{% endblock %}">
+        {% block content required %}{% endblock %}
+    </main>
+    {% block script %}{% endblock %}
+</body>
+</html>

@@ -7,10 +7,10 @@
     <link rel="stylesheet" href="/index.css">
 </head>
 <body>
-    {% include 'header.html' %}
+    {% include 'templates/header.html' %}
     <main id="addclasses">
         <h1>Add Classes</h1>
-        <p>Copy and paste your T and W schedule from infinite campus</p>
+        <p>Copy and paste your schedule from <a href="{{ campus_url }}" target="_blank" rel="noopener">infinite campus</a></p>
         <form onsubmit="sendClasses(event)">
             <textarea id="classes" name="classes" rows="25" cols="40" style="resize: vertical;" required></textarea><br>
             <button type="submit" id="submitbutton">Submit</button><button onclick="showHelp(event)">Help</button>

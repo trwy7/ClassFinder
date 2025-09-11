@@ -1,0 +1,14 @@
+{% extends 'templates/base.html' %}
+{% block title %}ClassFinder - {{status_code}}{% endblock %}
+{% block mainid %}error{% endblock %}
+{% block content %}
+<h1>{{status_code}}</h1><br>
+<p>{% block status_message %}{{error_message}}{% endblock %}</p>
+{% if error_code is defined and error_code is not none and error_code %}
+    <p>Error code: {{error_code}}</p>
+{% endif %}
+{% if error_details is defined and error_details is not none and error_details %}
+    <p>{{error_details}}</p>
+{% endif %}
+<p><a href="/">Take me back</a></p>
+{% endblock %}

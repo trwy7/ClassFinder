@@ -7,21 +7,21 @@
     <link rel="stylesheet" href="/index.css">
 </head>
 <body>
-    {% include 'header.html' %}
+    {% include 'templates/header.html' %}
     <main>
-        <h1>Reset password</h1>
-        <form onsubmit="attemptReset(event)"></form>
+        <h1>Sign up</h1>
+        <form onsubmit="attemptRegister(event)"></form>
             <label for="username">Username</label>
-            <input type="text" id="username" name="username" readonly value="{{user.username}}"><br>
+            <input type="text" id="username" name="username" required><br>
             <label for="Password">Password</label>
             <input type="password" id="password" name="password" required><br>
-            <button onclick="attemptReset(event)">Reset password</button><br>
+            <button onclick="attemptRegister(event)">Register</button><br>
         </form>
         <p id="status"></p>
     </main>
     <p style="position: absolute; bottom:20px;left:20px;">Cookies are used to store login data, by logging in, you consent to this.</p>
     <script>
-        function attemptReset(event) {
+        function attemptRegister(event) {
             event.preventDefault();
 
             fetch(window.location.toString(), {
@@ -29,7 +29,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({password: document.getElementById('password').value
+                body: JSON.stringify({ username: document.getElementById('username').value, password: document.getElementById('password').value
                 }),
                 credentials: 'include'
             })

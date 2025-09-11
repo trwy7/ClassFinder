@@ -86,7 +86,7 @@ main {
         text-align: center;
     }
 }
-#landingpage, main:has(form) {
+main#landingpage, main:has(form), main#error {
     display: flex;
     flex-direction: column;
     justify-content: center;

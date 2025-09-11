@@ -96,7 +96,7 @@ def check_password(username: str, password: str):
     return False
 
 def create_token( # pylint: disable=too-many-arguments, too-many-positional-arguments
-    username: str, # TODO: Change this to user: User
+    username: str,
     tokentype: Literal["api", "refresh", "system", "app", "admin", "ext"],
     expiry: datetime = None,
     scopes: list = None,
@@ -116,6 +116,7 @@ def create_token( # pylint: disable=too-many-arguments, too-many-positional-argu
     """
     nexpiry = expiry
     if noexpiry:
+        app.logger.debug("Creating non-expiring token for user " + username)
         nexpiry = None
     else:
         if nexpiry is None:
@@ -132,6 +133,7 @@ def create_token( # pylint: disable=too-many-arguments, too-many-positional-argu
                 nexpiry += timedelta(days=90)
             else:
                 nexpiry += timedelta(days=1)
+    app.logger.debug("Creating " + tokentype + " token for user " + username + " with expiry " + str(nexpiry))
     token = Token(
         token=os.urandom(30).hex(),
         user_id=username,
@@ -434,7 +436,7 @@ def verify_user( # pylint: disable=dangerous-default-value, too-many-statements
                 user = check_token(token)
                 if user and user.role in allowed_roles:
                     token = get_token(token)
-                    if token.expire < datetime.now():
+                    if token.expire is None or token.expire < datetime.now():
                         app.logger.debug("Token for " + user.username + " has expired. Deleting token.")
                         delete_token(token)
                     else:

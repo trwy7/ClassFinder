@@ -172,6 +172,10 @@ after-build.sh
 # Other
 data
 data/
+logs
+logs/
+devlogs
+devlogs/
 
 # Specific to the instance
 profanity.txt

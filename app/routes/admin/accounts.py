@@ -78,7 +78,7 @@ def create_account():
     """"
     Creates a new user account.
     """
-    return render_template("createaccount.html")
+    return render_template("account/createaccount.html")
 
 
 @app.route("/admin/create/account", methods=["POST"])
@@ -116,7 +116,7 @@ def edit_account(username):
     """
     edituser = get_user(username)
     if edituser:
-        return render_template("editaccount.html", user=edituser)
+        return render_template("account/editaccount.html", user=edituser)
     return error_response("User not found."), 404
 
 @app.route("/admin/account/<username>/edit", methods=["POST"])

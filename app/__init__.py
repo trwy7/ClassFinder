@@ -19,7 +19,7 @@ start_init_time = datetime.now()
 
 # TODO: Move templates into folders
 # TODO: Use jinja2 template extends to reduce code duplication
-app = Flask(__name__, template_folder="templates", static_folder="static")
+app = Flask(__name__, template_folder="pages", static_folder="static")
 
 if 'pytest' in sys.modules:
     app.config['TESTING'] = True
@@ -27,8 +27,24 @@ app.config['END_OF_SEMESTER'] = os.environ.get('END_OF_SEMESTER', None)
 if app.config['END_OF_SEMESTER'] is not None:
     app.config['END_OF_SEMESTER'] = datetime.strptime(app.config['END_OF_SEMESTER'], '%Y-%m-%d').date()
 
+current_request_logs = []
+
+def get_current_request_logs():
+    """
+    Returns the current request logs and clears them.
+    """
+    global current_request_logs
+    logs = current_request_logs.copy()
+    return logs
+
 @app.before_request
-def beforerequest():
+def before_request():
+    current_request_logs.clear()
+    app.logger.info("New request started")
+    current_request_logs.append(("info", "New request started"))
+
+@app.before_request
+def before_request2():
     """
     Fixes the IP address when proxied through Cloudflare.
     """
@@ -43,7 +59,7 @@ def beforerequest():
     request.token = None
 
 @app.before_request
-def before_request():
+def before_request3():
     """
     Checks if the incoming request is from a Cloudflare IP address.
     """
@@ -117,6 +133,7 @@ class CustomFormatter(logging.Formatter):
             "path": relative_path,
             "line": record.lineno,
         })
+        current_request_logs.append(f"({record.levelname}) {relative_path}:{record.lineno} {record.getMessage()}")
         if os.path.basename(record.pathname) == "__init__.py":
             return f"{bold}{level_color}{record.levelname}{reset_color}{level_color}: {record.getMessage().replace('\033[0m', '\033[0m'+level_color)}{reset_color}" # pylint: disable=line-too-long
         return f"{bold}{level_color}{record.levelname}{reset_color}{level_color} in {bold}{relative_path}{reset_color}{level_color} at {bold}{record.lineno}{reset_color}{level_color}: {record.getMessage()}{reset_color}" # pylint: disable=line-too-long
@@ -129,6 +146,16 @@ app.logger.addHandler(handler)
 
 app.logger.debug("Logger initialized")
 app.logger.debug("Log level set to %s and devmode is %s", app.logger.level, devmode)
+if not app.config.get("TESTING", False):
+    for log in os.listdir(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')):
+        if log.endswith(".log"):
+            try:
+                os.remove(os.path.join(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs'), log))
+                app.logger.debug("Removed old log file: %s", log)
+            except Exception as e: # pylint: disable=broad-exception-caught
+                app.logger.error("Failed to remove old log file %s: %s", log, e)
+                continue
+app.logger.debug("Old log files removed")
 
 # Configure waitress logger to use the same handler
 waitress_logger = logging.getLogger('waitress')
@@ -278,7 +305,7 @@ def do_daily_tasks():
     app.logger.info("Cleaning up database...")
     db_cleanup()
 
-app.logger.info("Runing daily tasks for initialization")
+app.logger.info("Running daily tasks for initialization")
 with app.app_context():
     btime = datetime.now()
     do_daily_tasks()
@@ -304,14 +331,12 @@ class CustomWerkzeugFormatter(logging.Formatter):
     Custom formatter for werkzeug logger that only logs exceptions. I cant tell if this actually does anything. 
     """
     def format(self, record):
-        if "Exception" in record.getMessage() or "Traceback" in record.getMessage():
-            return super().format(record)
         return ""
 
 werkzeug_logger.handlers.clear()
 werkzeug_handler = logging.StreamHandler()
 werkzeug_handler.setFormatter(CustomWerkzeugFormatter())
-werkzeug_handler.addFilter(lambda record: "Exception" in record.getMessage() or "Traceback" in record.getMessage())
+werkzeug_handler.addFilter(lambda record: False)
 werkzeug_logger.addHandler(werkzeug_handler)
 logging.basicConfig(handlers=[werkzeug_handler], level=app.logger.level)
 

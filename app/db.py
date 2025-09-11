@@ -104,12 +104,12 @@ class Token(db.Model):
         token (str): The token string.
         user_id (str): The user the token is for.
     """
-    token = db.Column(db.String, primary_key=True, unique=True, nullable=False)
+    token = db.Column(db.String(60), primary_key=True, unique=True, nullable=False)
     user_id = db.Column(db.String(20), db.ForeignKey("user.username"), nullable=False)
     type = db.Column(db.String(20), nullable=False)
     expire = db.Column(db.DateTime, nullable=True, default=lambda: datetime.now() + timedelta(days=8))
     scopes = db.Column(db.Text, nullable=True, default=None)
-    granted_to = db.Column(db.String(50), nullable=True, default=None)
+    granted_to = db.Column(db.String(255), nullable=True, default=None)
 
     def __str__(self):
         return self.token + " for " + self.user_id
@@ -138,12 +138,12 @@ class Schedule(db.Model):
 
 def db_cleanup():
     """
-    Clean up the database by removing everything expired
+    Clean up the database by removing everything expired and fix any issues.
 
     Returns:
         None
     """
-    expired_tokens = db.session.query(Token).filter(Token.expire < datetime.now())
+    expired_tokens = db.session.query(Token).filter(Token.expire is not None, Token.expire < datetime.now())
     expired_schedules = db.session.query(Schedule).filter(Schedule.day < datetime.now().date())
 
     expired_tokens_count = expired_tokens.delete(synchronize_session=False)
@@ -154,6 +154,10 @@ def db_cleanup():
         app.logger.debug(f"Deleted {expired_schedules_count} expired schedules.")
     else:
         app.logger.info(f"Deleted {expired_schedules_count} expired schedules.")
+        
+    calendar_tokens = db.session.query(Token).filter(Token.scopes == "calendar")
+    for token in calendar_tokens:
+        token.expire = None
     db.session.commit()
 
 with app.app_context():

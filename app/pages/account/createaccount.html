@@ -7,19 +7,29 @@
     <link rel="stylesheet" href="/index.css">
 </head>
 <body>
-    {% include 'header.html' %}
+    {% include 'templates/header.html' %}
     <main>
-        <h1>Sign up</h1>
+        <h1>Create account</h1>
         <form onsubmit="attemptRegister(event)"></form>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required><br>
             <label for="username">Username</label>
             <input type="text" id="username" name="username" required><br>
             <label for="Password">Password</label>
             <input type="password" id="password" name="password" required><br>
-            <button onclick="attemptRegister(event)">Register</button><br>
+            <label for="role">Role</label>
+            <select id="role" name="role">
+                <option value="user">User</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+                <option value="testing">Test account</option>
+            </select><br>
+            <label for="bypass">Bypass username requirements</label>
+            <input type="checkbox" id="bypass" name="bypass"><br>
+            <button onclick="attemptRegister(event)">Create</button><br>
         </form>
         <p id="status"></p>
     </main>
-    <p style="position: absolute; bottom:20px;left:20px;">Cookies are used to store login data, by logging in, you consent to this.</p>
     <script>
         function attemptRegister(event) {
             event.preventDefault();
@@ -29,7 +39,8 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username: document.getElementById('username').value, password: document.getElementById('password').value
+                body: JSON.stringify({
+                    username: document.getElementById('username').value, password: document.getElementById('password').value, email: document.getElementById('email').value, role: document.getElementById('role').value, bypass_username_requirements: document.getElementById('bypass').checked
                 }),
                 credentials: 'include'
             })
@@ -37,8 +48,7 @@
             .then(data => {
                 if (data.status == "success") {
                     document.getElementById('status').innerText = data.message;
-                    window.location.href = '/dashboard';
-                    // Redirect or perform other actions on successful login
+                    window.location.href = '/admin';
                 } else {
                     document.getElementById('status').innerText = 'Registration failed: ' + data.message;
                 }

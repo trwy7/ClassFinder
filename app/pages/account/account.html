@@ -1,67 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'header.html' %}
-    <main>
-        <h1 style="display: inline;">Hello, {{user.username}}!  </h1><br><p class="hidden-text"><!--email_off-->{{user.email}}<!--/email_off--></p><br>
-        {% if user.role == "admin" %}<button onclick="window.location.href = '/admin'">Admin</button>{%endif %}
-        {% if classestoadd|length > 0 %}<h2>You still need to add {{classestoadd|length}} classes.</h2> <button onclick="window.location.href = '/addclasses'">Add classes</button>{% endif %}
-        {% if needcanvaslink %}<button onclick="window.location.href = '/classes/canvaslink'">Link canvas classes</button>{% endif %}
-        <button onclick="showSlider()" id="changecolor">Change color</button>
-        <div id="color-slider" style="display: none;">
-            <input type="range" min="0" max="360" value="{{user.color_hue|default(155)}}" oninput="updateColor(this.value)" style="width: 25%;">
-            <button onclick="setColor()">Set color</button>
-        </div>
-        <button onclick="window.location.href = '/classes/exportschedule'">Print your schedule</button>
-        <button onclick="window.location.href = '/classes/calendar'">Create calendar</button>
-        <button onclick="getTempPasscode()">Get temporary passcode</button>
-        <button onclick="leaveClasses(event)">My classes changed</button>
-        <button onclick="window.location.href = '/logout'">Log out</button>
-        <button onclick="window.location.href = '/account/delete'">Delete account</button>
-        {% if user.classes|length > 0%}
-        <h2>Your classes:</h2>
-        <button onclick="showUsers(); this.style.display = 'none';">Show people</button>
-        <button id="highlightusers" onclick="user = prompt('Enter the username of the person you want to highlight'); highlightUser(user)" style="display:none;">Highlight a person</button>
-        <ul id="classes">
-            {% for class in user.classes|sort(attribute='period') %}
-                <li class="class" id="{{class.id}}" {% if class.canvasid %} onclick="window.location.href = '{{canvasurl}}/courses/{{class.canvasid}}'" {%endif%}>{{class.name}}
+{% extends "templates/base.html" %}
+{% block title %}Account{% endblock %}
+{% block mainid %}accountmain{% endblock %}
+{% block content %}
+    <h1 style="display: inline;">Hello, {{user.username}}!  </h1><br><p class="hidden-text"><!--email_off-->{{user.email}}<!--/email_off--></p><br>
+    {% if user.role == "admin" %}<button onclick="window.location.href = '/admin'">Admin</button>{%endif %}
+    {% if classestoadd|length > 0 %}<h2>You still need to add {{classestoadd|length}} classes.</h2> <button onclick="window.location.href = '/addclasses'">Add classes</button>{% endif %}
+    {% if needcanvaslink %}<button onclick="window.location.href = '/classes/canvaslink'">Link canvas classes</button>{% endif %}
+    <button onclick="showSlider()" id="changecolor">Change color</button>
+    <div id="color-slider" style="display: none;">
+        <input type="range" min="0" max="360" value="{{user.color_hue|default(155)}}" oninput="updateColor(this.value)" style="width: 25%;">
+        <button onclick="setColor()">Set color</button>
+    </div>
+    <button onclick="window.location.href = '/classes/exportschedule'">Print your schedule</button>
+    <button onclick="window.location.href = '/classes/calendar'">Create calendar</button>
+    <button onclick="getTempPasscode()">Get temporary passcode</button>
+    <button onclick="leaveClasses(event)">My classes changed</button>
+    <button onclick="window.location.href = '/logout'">Log out</button>
+    <button onclick="window.location.href = '/account/delete'">Delete account</button>
+    {% if user.classes|length > 0%}
+    <h2>Your classes:</h2>
+    <button onclick="showUsers(); this.style.display = 'none';">Show people</button>
+    <button id="highlightusers" onclick="user = prompt('Enter the username of the person you want to highlight'); highlightUser(user)" style="display:none;">Highlight a person</button>
+    <ul id="classes">
+        {% for class in user.classes|sort(attribute='period') %}
+            <li class="class" id="{{class.id}}" {% if class.canvasid %} onclick="window.location.href = '{{canvasurl}}/courses/{{class.canvasid}}'" {%endif%}>{{class.name}}
+                <ul class="actions">
+                    {% if class.lunch is none and (class.period == "6" or class.period == "5")%}<li class="action" onclick="window.location.href = '/class/{{class.id}}/setlunch'">Set lunch</li>{% endif %}
+                </ul>
+                <ul class="classusers" style="display: none;">
+                    {%for user in class.users%}
+                        {% if not user.role == "testing" %}
+                            <li class="classuser" onclick="event.stopPropagation(); highlightUser('{{user.username}}')" data-color="{{user.color_hue}}" style="cursor: pointer;">
+                                {{user.username}}
+                            </li>
+                        {% endif %}
+                    {%endfor%}
+            </ul></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% if has_external_tokens %}
+        <h2>Authorized apps</h2>
+        <ul id="externaltokens">
+        {% for token in user.tokens %}
+            {% if token.granted_to is not none %}
+                <li class="token">
+                    <span class="token-granted-to">{{ token.granted_to }}</span>
                     <ul class="actions">
-                        {% if class.lunch is none and (class.period == "6" or class.period == "5")%}<li class="action" onclick="window.location.href = '/class/{{class.id}}/setlunch'">Set lunch</li>{% endif %}
+                        <li class="action" onclick="revokeToken('{{ token.granted_to }}')">Revoke</button>
                     </ul>
-                    <ul class="classusers" style="display: none;">
-                        {%for user in class.users%}
-                            {% if not user.role == "testing" %}
-                                <li class="classuser" onclick="event.stopPropagation(); highlightUser('{{user.username}}')" data-color="{{user.color_hue}}" style="cursor: pointer;">
-                                    {{user.username}}
-                                </li>
-                            {% endif %}
-                        {%endfor%}
-                </ul></li>
-            {% endfor %}
+                </li>
+            {% endif %}
+        {% endfor %}
         </ul>
-        {% endif %}
-        {% if has_external_tokens %}
-            <h2>Authorized apps</h2>
-            <ul id="externaltokens">
-            {% for token in user.tokens %}
-                {% if token.granted_to is not none %}
-                    <li class="token">
-                        <span class="token-granted-to">{{ token.granted_to }}</span>
-                        <ul class="actions">
-                            <li class="action" onclick="revokeToken('{{ token.granted_to }}')">Revoke</button>
-                        </ul>
-                    </li>
-                {% endif %}
-            {% endfor %}
-            </ul>
-        {% endif %}
-    </main>
+    {% endif %}
+{% endblock %}
+{% block script %}
     <script>
         function leaveClasses(event) {
             event.stopPropagation();
@@ -175,5 +169,4 @@
             document.getElementById('highlightusers').style.display = 'block';
         }
     </script>
-</body>
-</html>
+{% endblock %}

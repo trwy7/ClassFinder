@@ -16,6 +16,7 @@ from app.utilities.classes import (
     neededperiods,
 )
 from app.db import db
+from app.utilities.config import campus_url
 from app.utilities.responses import error_response, success_response
 
 @app.route("/addclasses")
@@ -37,6 +38,7 @@ def addclasses():
             for period in neededperiods
             if period not in get_periods_of_user_classes(user)
         ],
+        campus_url=campus_url
     )
 
 
@@ -66,10 +68,10 @@ def addclasses_post():
     ]
     app.logger.debug(f"Classes: {classes}")
     classes = re.findall(r"([0-9]|Access)\n *(.*)\n *(?:[0-9]{1,2}:[0-9]{1,2} (?:A|P)M(?: - )?){2}\n *Teacher: (.*), .*\n *Room: ((?:E?[0-9]{3}B?)|MS Cafe|PTECH|PTECH-[0-9]{3}|HS Commons)", "\n".join(classes), re.IGNORECASE)
+    if len(classes) == 0:
+        return error_response("No valid classes found. If you are on mobile, switch to a desktop browser when copying."), 400
     classes = list(set(classes))
     app.logger.debug(f"Filtered Classes: {classes}")
-    if not classes:
-        return error_response("No valid classes found. If you are on mobile, switch to a desktop browser when copying."), 400
     had_periods = get_periods_of_user_classes(user)
     needed_periods = [
         period for period in neededperiods if period not in had_periods

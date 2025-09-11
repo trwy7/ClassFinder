@@ -16,6 +16,7 @@ for day, times in classtime_dict.items():
             lunchperiods.append(ctime["period"])
         neededperiods.append(ctime["period"])
 lunchperiods = list(set(lunchperiods))
+neededperiods = sorted(set(neededperiods))
 # TODO: Move most of these functions to a function within a course class
 
 def get_current_period():

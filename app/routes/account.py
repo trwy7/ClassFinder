@@ -32,7 +32,7 @@ def account():
             has_external_tokens = True
             break
     return render_template(
-        "account.html",
+        "account/account.html",
         user=user,
         currentclasses=get_today_courses(user),
         classestoadd=[
@@ -52,7 +52,7 @@ def account_delete_get():
     """
     This route displays the account deletion page.
     """
-    return render_template("account_delete.html")
+    return render_template("account/account_delete.html")
 
 @app.route("/account/delete", methods=["POST"])
 @verify_user

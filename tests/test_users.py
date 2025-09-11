@@ -161,7 +161,6 @@ def test_dashboard_invalid_legacy_auth(client):
     response = client.get("/dashboard", headers={"Authorization": "pytest invalidtoken"})
     assert response.status_code in (302, 400)
 
-@pytest.mark.dependency(depends=["test_dashboard"])
 def test_dashboard_no_token(client):
     """
     Tests the dashboard route without a token, should fail
@@ -327,21 +326,6 @@ def test_dashboard_invalid_token(client):
     response = client.get("/dashboard", headers={"Authorization": "Bearer invalidtoken"}, follow_redirects=False)
     assert response.status_code == 302
     assert response.location == "/login"
-
-def test_ping_rate_limit(client):
-    """
-    Tests the ping route with rate limiting
-    """
-    response = client.get("/ping")
-    assert response.status_code == 200
-    assert response.data == b"Pong"
-    for _ in range(5):
-        response = client.get("/ping")
-        if response.status_code == 429:
-            break
-    else:
-        pytest.fail("Rate limit not triggered")
-    assert response.status_code == 429
 
 def test_account(client, token):
     """

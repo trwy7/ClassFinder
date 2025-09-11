@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/index.css">
 </head>
 <body>
-    {% include 'header.html' %}
+    {% include 'templates/header.html' %}
     <main id="dashboard" class="dashboard{% if currentperiod and currentperiod.passing %} passing{% endif %}">
         {% if devmode %}
             <div class="devmode">
