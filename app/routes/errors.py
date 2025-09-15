@@ -7,7 +7,7 @@ import traceback
 import os
 import random
 from flask import render_template, request, abort
-from app import app, start_init_time, get_current_request_logs
+from app import app, start_init_time
 from app.utilities.responses import error_response
 from app.utilities.config import devmode
 
@@ -27,6 +27,7 @@ def unauthorized(e): # pylint: disable=unused-argument
     return render_template("templates/error.html", status_code=401, error_message="Unauthorized"), 401
 
 @app.errorhandler(500)
+@app.errorhandler(Exception)
 def internal_server_error(e):
     """
     Handles the 500 page, and logs the error
@@ -34,7 +35,7 @@ def internal_server_error(e):
     errorcode = random.randbytes(5).hex()
     ret_dict = {"error_code": errorcode}
     app.logger.error(f"Error code: {errorcode}\n" + traceback.format_exc())
-    request_logs = get_current_request_logs()
+    # request_logs = get_current_request_logs()
     if not app.config['TESTING']:
         tb = getattr(e, '__traceback__', None)
         if tb:
@@ -64,10 +65,10 @@ def internal_server_error(e):
             with open(f"{os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')}/{error_details_log}.error.log", "w", encoding="utf-8") as f:
                 f.write(f"Error code: {errorcode}\n")
                 f.write("Date/Time: " + start_init_time.strftime('%Y-%m-%d %I:%M:%S %p') + "\n")
-                #f.write(str(e) + "\n")
-                #f.write(traceback.format_exc() + "\n")
-                for rlog in request_logs:
-                    f.write(str(rlog) + "\n")
+                f.write(str(e) + "\n")
+                f.write(traceback.format_exc() + "\n")
+                # for rlog in request_logs:
+                #     f.write(str(rlog) + "\n")
     request.error_code = errorcode
     if request.path.startswith("/api/") or request.method != "GET":
         if request.path.startswith("/api/plain"):
@@ -84,8 +85,6 @@ def internal_server_error(e):
         error_message="Internal server error",
         error_details=error_details_vis
     ), 500
-
-app.register_error_handler(Exception, internal_server_error)
 
 @app.route("/sim500")
 def simulate_500():

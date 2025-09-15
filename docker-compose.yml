@@ -6,7 +6,10 @@ services:
       - 7842:7842
     volumes:
       - ./data:/data
+      - ./logs:/logs
     restart: always
     hostname: classfinder
     stop_signal: SIGINT
-    stop_grace_period: 3s
+    environment:
+      - DB_PATH=sqlite:////data/db.sqlite3
+      - LOG_DIR=/logs

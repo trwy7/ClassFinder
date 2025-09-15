@@ -153,6 +153,9 @@ def edit_account_post(username):
         if edituser.requires_username_change != request.json.get("requires_username_change", False):
             app.logger.info(f"{user.username} has changed {edituser.username}'s requires_username_change to {request.json.get('requires_username_change', False)}.") #pylint: disable=line-too-long
             edituser.requires_username_change = request.json.get("requires_username_change", False)
+        if edituser.requires_reverification != request.json.get("reverify_email", False):
+            app.logger.info(f"{user.username} has changed {edituser.username}'s requires_reverification to {request.json.get('reverify_email', False)}.") #pylint: disable=line-too-long
+            edituser.requires_reverification = request.json.get("reverify_email", False)
         db.session.commit()
         return success_response("User updated."), 200
     return error_response("User not found."), 404

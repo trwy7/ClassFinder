@@ -26,6 +26,8 @@
             <input type="email" id="email" name="email" value="{{user.email}}" required><br>
             <label for="password">Password</label>
             <input type="password" id="password" name="password"><br>
+            <label for="reverify">Requires email reverification</label><br>
+            <input type="checkbox" id="reverify" name="reverify" {% if user.requires_reverification %}checked{%endif%}><br>
             <label for="userchange">Request username change</label>
             <input type="checkbox" id="userchange" name="userchange" {% if user.requires_username_change %}checked{%endif%}><br>
             <label for="bypass">Bypass username requirements</label>
@@ -48,7 +50,8 @@
                     password: document.getElementById('password').value,
                     requires_username_change: document.getElementById('userchange').checked,
                     username: document.getElementById('username').value,
-                    bypass_username_requirements: document.getElementById('bypass').checked
+                    bypass_username_requirements: document.getElementById('bypass').checked,
+                    reverify_email: document.getElementById('reverify').checked
                 }),
                 credentials: 'include'
             })

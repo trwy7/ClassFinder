@@ -27,22 +27,6 @@ app.config['END_OF_SEMESTER'] = os.environ.get('END_OF_SEMESTER', None)
 if app.config['END_OF_SEMESTER'] is not None:
     app.config['END_OF_SEMESTER'] = datetime.strptime(app.config['END_OF_SEMESTER'], '%Y-%m-%d').date()
 
-current_request_logs = []
-
-def get_current_request_logs():
-    """
-    Returns the current request logs and clears them.
-    """
-    global current_request_logs
-    logs = current_request_logs.copy()
-    return logs
-
-@app.before_request
-def before_request():
-    current_request_logs.clear()
-    app.logger.info("New request started")
-    current_request_logs.append(("info", "New request started"))
-
 @app.before_request
 def before_request2():
     """
@@ -133,7 +117,7 @@ class CustomFormatter(logging.Formatter):
             "path": relative_path,
             "line": record.lineno,
         })
-        current_request_logs.append(f"({record.levelname}) {relative_path}:{record.lineno} {record.getMessage()}")
+        # current_request_logs.append(f"({record.levelname}) {relative_path}:{record.lineno} {record.getMessage()}")
         if os.path.basename(record.pathname) == "__init__.py":
             return f"{bold}{level_color}{record.levelname}{reset_color}{level_color}: {record.getMessage().replace('\033[0m', '\033[0m'+level_color)}{reset_color}" # pylint: disable=line-too-long
         return f"{bold}{level_color}{record.levelname}{reset_color}{level_color} in {bold}{relative_path}{reset_color}{level_color} at {bold}{record.lineno}{reset_color}{level_color}: {record.getMessage()}{reset_color}" # pylint: disable=line-too-long

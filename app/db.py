@@ -15,7 +15,7 @@ if db_path == "sqlite:///:memory:":
     app.logger.info("Using in-memory database, probably for testing purposes. Data will not be saved.")
 app.config["SQLALCHEMY_DATABASE_URI"] = db_path
 db = SQLAlchemy(app)
-
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"connect_args": {"cache_size": -64000}}
 
 # if not os.path.exists(db_path):
 #     os.makedirs(db_path)
@@ -57,6 +57,7 @@ class User(db.Model):
     tokens = db.relationship("Token", backref="user", lazy=True)
     requires_username_change = db.Column(db.Boolean, nullable=False, default=False)
     color_hue = db.Column(db.String(3), nullable=True, default=None) # Format "0-360", everything else is handled by the frontend
+    requires_reverification = db.Column(db.Boolean, nullable=False, default=False)
 
     def __str__(self):
         return self.username

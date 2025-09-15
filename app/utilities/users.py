@@ -436,7 +436,7 @@ def verify_user( # pylint: disable=dangerous-default-value, too-many-statements
                 user = check_token(token)
                 if user and user.role in allowed_roles:
                     token = get_token(token)
-                    if token.expire is None or token.expire < datetime.now():
+                    if token.expire is not None and token.expire < datetime.now():
                         app.logger.debug("Token for " + user.username + " has expired. Deleting token.")
                         delete_token(token)
                     else:
@@ -479,7 +479,7 @@ def verify_user( # pylint: disable=dangerous-default-value, too-many-statements
                         request.user = user
                         request.token = token
                         return func(*args, **kwargs)
-            app.logger.debug("Rejected user for " + func.__name__)
+            app.logger.debug("Rejected user for " + func.__name__ + " with user agent " + request.user_agent.string)
             if not required:
                 return func(*args, **kwargs)
             failresponse = onfail()
