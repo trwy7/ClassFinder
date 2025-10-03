@@ -1,0 +1,342 @@
+/* A copilot created recreation of index.css for use on older devices */
+/* Font import removed - use system fonts */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Hardcoded color palette (light theme approximations) */
+body {
+    font-family: 'Inter', 'Roboto', Helvetica, Arial, sans-serif;
+    background-color: #E2EDEA; /* background */
+    color: #575757; /* text */
+}
+
+/* Header / nav - avoid flex, use inline-blocks */
+header {
+    background-color: #A8FFE3; /* navbar */
+    padding: 1rem;
+    position: relative;
+    top: 0;
+    z-index: 1000;
+}
+nav ul {
+    list-style: none;
+    text-align: center;
+}
+nav ul li {
+    display: inline-block;
+    margin-right: 1rem;
+    font-weight: bold;
+}
+nav ul li a {
+    text-decoration: none;
+    color: #575757;
+    display: inline-block;
+    padding-bottom: 2px;
+    position: relative;
+}
+nav ul li a:after {
+    content: '';
+    display: block;
+    height: 2px;
+    background-color: #47FFB3; /* primary */
+    width: 0;
+    border-radius: 5px;
+    margin-top: 2px;
+    -webkit-transition: width 0.3s;
+    transition: width 0.3s;
+}
+nav ul li a:hover:after {
+    width: 110%;
+}
+
+main {
+    padding: 1rem;
+    /* center most content by default (no modern :has) */
+    text-align: center;
+}
+
+/* Form elements */
+input[type='text'], input[type='email'], input[type='password'], input[type='number'],
+textarea, select, input[type='date'] {
+    padding: 0.5rem;
+    margin: 0.5rem;
+    border: 1px solid #29FFA6; /* secondary */
+    border-radius: 5px;
+    background-color: #57FFB9; /* tertiary */
+    color: #575757;
+}
+
+/* Buttons */
+button, input[type="submit"] {
+    margin: 3px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 7px;
+    border-radius: 5px;
+    border: none;
+    background-color: #57FFB9; /* tertiary */
+    color: #575757;
+    cursor: pointer;
+    -webkit-transition: background-color 0.3s;
+    transition: background-color 0.3s;
+}
+button:disabled, input[type="submit"]:disabled {
+    background-color: #29FFA6; /* secondary */
+    cursor: not-allowed;
+}
+button:hover, input[type="submit"]:hover {
+    background-color: #A8FFE3; /* navbar */
+}
+
+/* Checkbox */
+input[type="checkbox"] {
+    margin: 10px;
+}
+
+/* Links */
+a {
+    color: #47FFB3; /* primary */
+    text-decoration: none;
+}
+
+/* Generic lists */
+ul {
+    list-style: none;
+}
+
+/* Replace CSS Grid with inline-block (older technique) */
+/* Containers */
+#classes, #users, ul.actions, #schedules, #tokens {
+    margin: 0;
+    padding: 0;
+    /* fallback two-column inline blocks */
+    font-size: 0; /* collapse whitespace between inline-block children */
+}
+#classes .class, #users .user, #schedules .schedule, #tokens .token, ul.actions li, .classwrapper .class {
+    display: inline-block;
+    vertical-align: top;
+    width: 48%;
+    margin: 1%;
+    box-sizing: border-box;
+    font-size: 16px; /* reset */
+}
+
+/* Actions list (smaller items) */
+ul.actions {
+    padding: 0;
+}
+ul.actions li {
+    width: 22%; /* smaller action blocks */
+    margin: 1%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+/* Generic item styles */
+.class, .user, .classuser, .schedule, li.action, .token {
+    padding: 7px;
+    background-color: #29FFA6; /* secondary */
+    border-radius: 5px;
+    text-align: center;
+    -webkit-transition: background-color 0.3s;
+    transition: background-color 0.3s;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Current period - simpler border highlight (no animations) */
+.class.currentperiod {
+    outline: 3px solid #575757; /* current-period */
+    outline-offset: 2px;
+}
+
+/* Inner user/list styles */
+.classuser, li.action {
+    font-size: 88%;
+    padding: 10px;
+    margin: 5px;
+}
+.classuser {
+    background-color: #61A5FF; /* user color */
+}
+.classcreator {
+    background-color: #99C5FF; /* user primary */
+}
+li.action {
+    background-color: #61A5FF; /* action */
+}
+li.action[onclick] {
+    cursor: pointer;
+}
+/* Hover semantics simplified for older browsers */
+.class[onclick]:hover, .user[onclick]:hover {
+    background-color: #57FFB9; /* tertiary */
+    cursor: pointer;
+}
+.class li[onclick]:hover, .user li[onclick]:hover {
+    background-color: #11396E; /* action-hover */
+    color: #fff;
+    cursor: pointer;
+}
+.class li.classuser.highlight {
+    background-color: #1ADF94; /* highlighted inner user */
+}
+.class.unverified {
+    background-color: #9e4343;
+}
+
+/* Hidden text reveal fallback */
+.hidden-text {
+    background-color: black;
+    color: black;
+    display: inline;
+}
+.hidden-text:hover {
+    color: #575757;
+}
+
+/* Loader: static fallback circle (no animation) */
+.loader {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 15%, #47FFB3 60%, transparent 61%), /* primary */
+                linear-gradient(180deg, transparent 40%, #47FFB3 100%);
+    -webkit-mask: none;
+}
+
+/* Analytics dashboard: use inline-block cards, no grid */
+.analytics-container {
+    margin: 20px;
+    font-size: 0;
+}
+.analytics-card {
+    display: inline-block;
+    vertical-align: top;
+    width: 48%;
+    margin: 1%;
+    background-color: #57FFB9; /* tertiary */
+    border-radius: 8px;
+    padding: 20px;
+    -webkit-box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-size: 16px;
+    box-sizing: border-box;
+}
+.analytics-card h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #29FFA6; /* secondary */
+    color: #575757;
+}
+
+.analytics-summary {
+    background-color: #29FFA6; /* secondary */
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px;
+    text-align: center;
+}
+.analytics-count {
+    display: inline-block;
+    width: 48%;
+    box-sizing: border-box;
+    text-align: center;
+}
+.analytics-count h1 {
+    margin: 0;
+    font-size: 2.5rem;
+}
+
+/* Simple table styles for analytics/logs */
+#logspage table {
+    width: 100%;
+    border-collapse: collapse;
+}
+#logspage table th, #logspage table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+#logspage tr:nth-child(even) {
+    background-color: #27634a;
+}
+
+/* Status colors */
+.status-2xx { color: #2ecc71; }
+.status-3xx { color: #3498db; }
+.status-4xx { color: #e67e22; }
+.status-5xx { color: #e74c3c; }
+
+/* Refresh button */
+.refresh-button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.refresh-button:hover {
+    background-color: #2980b9;
+}
+
+/* Timestamp / empty state */
+.timestamp, .empty-state {
+    text-align: center;
+    margin: 10px;
+    color: #777;
+    font-style: italic;
+    padding: 10px 0;
+}
+
+/* Logs table monospace */
+#logsTable {
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+/* Filters */
+.filters {
+    margin-bottom: 15px;
+    display: block;
+}
+.filters select, .filters input {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.filters input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Progress bar (no advanced transitions required) */
+.progress-container {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    margin: 20px 0;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 20px;
+    background: linear-gradient(90deg, #47FFB3 0%, #29FFA6 100%);
+    border-radius: 10px;
+    width: 0%;
+}
+.progress-text {
+    text-align: center;
+    font-size: 1em;
+    margin-top: 10px;
+    color: #575757;
+}
+
+/* Small adjustments for legacy browsers */
+button, input, select, textarea {
+    -webkit-appearance: none;
+    appearance: none;
+}

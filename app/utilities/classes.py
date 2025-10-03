@@ -156,6 +156,27 @@ def get_user_current_period(user: User):
     )
     return current_period | {"lunch": None, "course": currentcourse}
 
+def search_classes(name: str=None, room: str=None, period: int=None, teacher: str=None):
+    """
+    Search for classes based on the provided criteria.
+
+    Args:
+        name (str, optional): The name of the class to search for.
+        room (str, optional): The room of the class to search for.
+        period (int, optional): The period of the class to search for.
+    Returns:
+        list[Class]: A list of classes that match the search criteria.
+    """
+    query = db.session.query(Class)
+    if name:
+        query = query.filter(Class.name.ilike(f"%{name}%"))
+    if room:
+        query = query.filter_by(room=room)
+    if period is not None:
+        query = query.filter_by(period=period)
+    results = query.all()
+    app.logger.debug(f"Search results for name={name}, room={room}, period={period}, teacher={teacher}: {[c.name for c in results]}")
+    return results
 
 def get_today_courses(user: User, day: int = None):
     """
@@ -168,13 +189,15 @@ def get_today_courses(user: User, day: int = None):
         list: A list of courses that the user has scheduled for today.
     """
     app.logger.debug(f"Retrieving today's courses for user {user.username}")
-    user_periods = [time["period"] for time in get_classtimes(day)]
+    user_periods = list(set([time["period"] for time in get_classtimes(day)]))
     app.logger.debug(f"User {user.username} periods: {user_periods}")
     newcourses = []
     for course in user.classes:
         if course.period in user_periods:
             app.logger.debug(f"Adding course {course.name} for period {course.period}")
             newcourses.append(course)
+    # Sort according to the user_periods dict
+    newcourses.sort(key=lambda x: user_periods.index(x.period))
     app.logger.debug(
         f"User {user.username} courses for today: {[course.name for course in newcourses]}"
     )

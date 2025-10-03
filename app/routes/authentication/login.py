@@ -1,7 +1,7 @@
 """
 This module handles the login functionality for the application.
 """
-from flask import render_template, request, redirect
+from flask import render_template, request, Response
 from app import app
 from app.utilities.config import devmode
 from app.utilities.users import check_password, create_token
@@ -14,27 +14,27 @@ def login():
     """
     Display the login page.
     """
-    if request.args.get("username") and request.args.get("password") and request.args.get("privacyPolicy") == "on": # legacy clients
-        if check_password(request.args.get("username").lower(), request.args.get("password")):
-            response = success_response("Login Successful")
-            response.set_cookie(
-                "token",
-                create_token(request.args.get("username").lower(), 'refresh').token,
-                samesite="Lax",
-                secure=not devmode,
-                max_age=604800,
-            )
-            app.logger.debug(f"User {request.args.get('username')} logged in via legacy client")
-            return response, 200
-        return error_response("Invalid Credentials"), 400
     return render_template("login.html", status=status, devmode=devmode)
 
 @app.route("/login", methods=["POST"])
-@limiter.limit("40/minute")
+@limiter.limit("20/minute")
 def login_post():
     """
     Handle the login form submission.
     """
+    if request.form.get("username") and request.form.get("password") and request.form.get("privacyPolicy") == "on": # legacy clients
+        if check_password(request.form.get("username").lower(), request.form.get("password")):
+            response = Response(render_template("account/legacy_login.html", username=request.form.get("username").lower()))
+            response.set_cookie(
+                "token",
+                create_token(request.form.get("username").lower(), 'refresh').token,
+                samesite="Lax",
+                secure=not devmode,
+                max_age=604800,
+            )
+            app.logger.debug(f"User {request.form.get('username')} logged in via legacy client")
+            return response, 200
+        return render_template("login.html", status=status, devmode=devmode, status_message="Invalid Credentials"), 400
     username = request.json.get("username")
     password = request.json.get("password")
     if check_password(username, password):

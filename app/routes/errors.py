@@ -7,6 +7,7 @@ import traceback
 import os
 import random
 from flask import render_template, request, abort
+from flask_limiter.errors import RateLimitExceeded
 from app import app, start_init_time
 from app.utilities.responses import error_response
 from app.utilities.config import devmode
@@ -32,6 +33,8 @@ def internal_server_error(e):
     """
     Handles the 500 page, and logs the error
     """
+    if isinstance(e, RateLimitExceeded):
+        return render_template("templates/error.html", status_code=429, error_message="Too many requests"), 429
     errorcode = random.randbytes(5).hex()
     ret_dict = {"error_code": errorcode}
     app.logger.error(f"Error code: {errorcode}\n" + traceback.format_exc())
@@ -85,7 +88,7 @@ def internal_server_error(e):
         error_message="Internal server error",
         error_details=error_details_vis
     ), 500
-
+    
 @app.route("/sim500")
 def simulate_500():
     """

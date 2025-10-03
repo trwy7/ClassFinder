@@ -15,11 +15,19 @@ from flask import Flask, request
 from flask_apscheduler import APScheduler
 import requests
 from app.utilities.config import devmode
+import signal
 start_init_time = datetime.now()
 
 # TODO: Move templates into folders
 # TODO: Use jinja2 template extends to reduce code duplication
 app = Flask(__name__, template_folder="pages", static_folder="static")
+
+def stop_server():
+    """
+    Kills the server process. When in production, this is caught by docker and the server is restarted.
+    Really, dont use this unless what was changed requires a full restart.
+    """
+    os.kill(os.getpid(), signal.SIGINT)
 
 if 'pytest' in sys.modules:
     app.config['TESTING'] = True

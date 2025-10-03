@@ -6,7 +6,7 @@ import datetime
 from flask import render_template, abort, request
 from app import app
 from app.utilities.users import verify_user
-from app.utilities.classes import get_course_by_id, remove_class, get_all_courses
+from app.utilities.classes import get_course_by_id, remove_class, get_all_courses, search_classes
 from app.utilities.responses import success_response, error_response
 from app.db import db
 
@@ -92,3 +92,19 @@ def delete_all_courses():
         app.logger.info(f"Deleting course: {course.name}")
         remove_class(course)
     return success_response("All courses deleted."), 200
+
+@app.route("/admin/class/search")
+@verify_user(allowed_roles=["admin"])
+def search_courses():
+    """
+    Searches for courses.
+    """
+    if not request.is_json:
+        return render_template("searchcourses.html")
+    query = request.json
+    results = []
+    for course in search_classes(**query):
+        serialized = course.serialize()
+        serialized.pop("teacher", None)
+        results.append(serialized)
+    return {"results": results}, 200

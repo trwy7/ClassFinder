@@ -75,6 +75,6 @@ USER appuser
 # Expose the port that the application listens on.
 EXPOSE 7842
 
-# Run the application.
-# CMD waitress-serve --host=0.0.0.0 --port=7842 app:app
-CMD ["gunicorn", "--bind", "0.0.0.0:7842", "-w", "4", "app:app"]
+# Run the application using exec form (JSON array) so signals are delivered properly.
+CMD ["waitress-serve", "--host=0.0.0.0", "--port=7842", "app:app"]
+# CMD ["gunicorn", "--bind", "0.0.0.0:7842", "-w", "4", "app:app"]Z

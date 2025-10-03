@@ -124,9 +124,9 @@ def create_token( # pylint: disable=too-many-arguments, too-many-positional-argu
             if tokentype in ("api", "app"):
                 nexpiry += timedelta(days=60)
             elif tokentype == "refresh":
-                nexpiry += timedelta(days=7)
-            elif tokentype == "system":
                 nexpiry += timedelta(days=30)
+            elif tokentype == "system":
+                nexpiry += timedelta(days=14)
             elif tokentype == "admin":
                 nexpiry += timedelta(hours=1)
             elif tokentype == "ext":
@@ -440,6 +440,11 @@ def verify_user( # pylint: disable=dangerous-default-value, too-many-statements
                         app.logger.debug("Token for " + user.username + " has expired. Deleting token.")
                         delete_token(token)
                     else:
+                        if token.type == "refresh" and token.expire is not None and token.expire < datetime.now() + timedelta(days=2):
+                            # This needs testing
+                            app.logger.debug("Refresh token for " + user.username + " is about to expire. Extending expiry by 2 days.")
+                            token.expire += timedelta(days=2)
+                            db.session.commit()
                         app.logger.debug(f"Required scopes is \"{required_scopes}\" and token has \"{token.scopes}\"")
                         if token.scopes is not None:
                             app.logger.debug("Token has scopes: " + token.scopes)

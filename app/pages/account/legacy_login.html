@@ -1,0 +1,14 @@
+{% extends "templates/base.html" %}
+{% block title %}Logged in{% endblock %}
+{% block mainid %}legacylogin{% endblock %}
+{% block content %}
+<h1>Logged in</h1>
+<p>You are now logged in as {{ username }}.</p>
+<p><a href="/dashboard">Go to your dashboard</a></p>
+{% endblock %}
+{% block script %}
+<script>
+    // Add your JavaScript here
+    console.log("Template page loaded");
+</script>
+{% endblock %}

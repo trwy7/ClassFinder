@@ -9,6 +9,7 @@ from app import app
 from app.utilities.config import devmode
 from app.utilities.users import verify_user
 from app.addons.limiter import limiter
+import re
 
 def load_css():
     """
@@ -26,6 +27,15 @@ def index_cssf():
     Serves the index.css file.
     """
     global index_css
+    ua = (request.headers.get("User-Agent") or "").lower()
+    app.logger.debug(f"User-Agent: {ua}")
+    m = re.search(r"os (\d+)[_.]", ua)
+    if m and any(x in ua for x in ("iphone", "ipad", "ipod", "cpu")):
+        try:
+            if int(m.group(1)) <= 8:
+                return send_from_directory("static", "legacycss.css")
+        except ValueError:
+            pass
     if request.user and request.user.color_hue:
         # If the user has a color, we add it to the CSS
         color_hue = request.user.color_hue

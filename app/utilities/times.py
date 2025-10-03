@@ -599,7 +599,9 @@ readable_days = {
     9: "Development"
 }
 
-BELL_DELAY = 2.98 if not app.config['TESTING'] else 0 # Seconds to add to each time to account for bell delay.
+# TODO: Webhooks?
+
+BELL_DELAY = 4 if not app.config['TESTING'] else 0 # Seconds to add to each time to account for bell delay.
 PASSING_BELL_DELAY = 4.006 if not app.config['TESTING'] else 0 # Not used, just for reference.
 
 for d, dtimes in classtime_dict.items():

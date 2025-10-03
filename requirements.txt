@@ -3,7 +3,7 @@ flask-sqlalchemy
 flask-bcrypt
 flask-limiter
 flask-apscheduler
-gunicorn
+waitress
 better-profanity
 requests
 Flask-Migrate

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClassFinder - {% if classes|length == 0 %}Welcome{%else%}Dashboard{% endif %}</title>
-    <link rel="stylesheet" href="/index.css">
+    <link rel="stylesheet" type="text/css" href="https://class.trey7658.com/index.css">
 </head>
 <body>
     {% include 'templates/header.html' %}
@@ -38,7 +38,7 @@
                 <h3 style="padding-bottom: 6px;">There is no lunch today</h2>
             {% endif %}
                 <ul id="classes">
-                    {% for class in currentclasses|sort(attribute='period') %}
+                    {% for class in currentclasses %}
                         <classwrapper><li style="padding: 15px" class="class{% if currentperiod.period == class.period %} currentperiod{%endif%}" {% if class.canvasid %} onclick="window.location.href = '{{canvasurl}}/courses/{{class.canvasid}}'" {%endif%}>
                             {{class.name}}
                             <br>
