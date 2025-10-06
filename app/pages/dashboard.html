@@ -6,7 +6,7 @@
     {% if devmode %}
         <div class="devmode">
             <h3>Development mode</h1>
-            <h4>ClassFinder is currently in development mode. This means that some features may not work as expected, and your data may randomly dissapear.</h2>
+            <h4>Chronis is currently in development mode. This means that some features may not work as expected, and your data may randomly dissapear.</h2>
         </div>
     {% endif %}
     {%if user.requires_username_change%}
@@ -22,7 +22,7 @@
         {% if not haslunch %}
             <h3 style="padding-bottom: 6px;">There is no lunch today</h2>
         {% endif %}
-        <h2>Welcome to ClassFinder! To begin, add your classes <a href="/addclasses">here</a>.</h2>
+        <h2>Welcome to Chronis! To begin, add your classes <a href="/addclasses">here</a>.</h2>
     {% else %}
         <h1>Dashboard</h1><br>
         {% if currentclasses|length == 0 %}

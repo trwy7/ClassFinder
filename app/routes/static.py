@@ -36,9 +36,12 @@ def index_cssf():
                 return send_from_directory("static", "legacycss.css")
         except ValueError:
             pass
-    if request.user and request.user.color_hue:
+    if (request.user and request.user.color_hue) or devmode:
         # If the user has a color, we add it to the CSS
-        color_hue = request.user.color_hue
+        if request.user is not None:
+            color_hue = request.user.color_hue
+        else:
+            color_hue = "234"
         if devmode:
             index_css = load_css()
         return Response(index_css + f"\n:root {{ --user-prefered-color: {color_hue}; }}", mimetype="text/css")

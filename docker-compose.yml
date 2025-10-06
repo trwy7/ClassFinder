@@ -8,7 +8,7 @@ services:
       - ./data:/data
       - ./logs:/logs
     restart: always
-    hostname: classfinder
+    hostname: chronis
     stop_signal: SIGINT
     environment:
       - DB_PATH=sqlite:////data/db.sqlite3

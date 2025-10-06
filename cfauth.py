@@ -1,5 +1,5 @@
 """
-This module provides a way to get data from ClassFinder.
+This module provides a way to get data from Chronis.
 Used for scripts that require authentication.
 Not to be used with web applications, as this runs its own flask server.
 """
@@ -15,7 +15,7 @@ ntoken = None # pylint: disable=invalid-name
 
 def get_available_scopes() -> dict:
     """
-    Gets the available scopes from the ClassFinder API.
+    Gets the available scopes from the Chronis API.
     Returns a dictionary with keys being the scope names and values being the scope descriptions.
     """
     req = requests.get("https://class.trey7658.com/api/v2/scopes", timeout=5)
@@ -26,7 +26,7 @@ def get_available_scopes() -> dict:
 
 def get_token(scopes: list = [], openbrowser: bool=True, port: int = 5000) -> str: #pylint: disable=dangerous-default-value
     """
-    Gets the token from ClassFinder.
+    Gets the token from Chronis.
     """
     global ntoken # pylint: disable=global-statement
     ntoken = None
