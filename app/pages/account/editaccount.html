@@ -1,41 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
-        <h1>Editing user: {{user.username}}</h1>
-        <form onsubmit="attemptEdit(event)"></form>
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" value="{{user.username}}" maxlength="15">
-            <button onclick="generateUsername(event)">Gen</button><br>
-            <label for="role">Role</label>
-            <select id="role" name="role">
-                <option value="">Dont change</option>
-                <option value="user" {%if user.role == user %}checked{%endif%}>User</option>
-                <option value="teacher" {%if user.role == teacher %}checked{%endif%}>Teacher</option>
-                <option value="admin" {%if user.role == admin %}checked{%endif%}>Admin</option>
-                <option value="testing" {%if user.role == testing %}checked{%endif%}>Test account</option>
-            </select><br>
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="{{user.email}}" required><br>
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password"><br>
-            <label for="reverify">Requires email reverification</label><br>
-            <input type="checkbox" id="reverify" name="reverify" {% if user.requires_reverification %}checked{%endif%}><br>
-            <label for="userchange">Request username change</label>
-            <input type="checkbox" id="userchange" name="userchange" {% if user.requires_username_change %}checked{%endif%}><br>
-            <label for="bypass">Bypass username requirements</label>
-            <input type="checkbox" id="bypass" name="bypass"><br>
-            <button onclick="attemptEdit(event)">Submit</button><br>
-        </form>
-        <p id="status"></p>
-    </main>
+{% extends "templates/base.html" %}
+{% block title %}Edit Account{% endblock %}
+{% block mainid %}editaccountpage{% endblock %}
+    <h1>Editing user: {{user.username}}</h1>
+    <form onsubmit="attemptEdit(event)"></form>
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" value="{{user.username}}" maxlength="15">
+        <button onclick="generateUsername(event)">Gen</button><br>
+        <label for="role">Role</label>
+        <select id="role" name="role">
+            <option value="">Dont change</option>
+            <option value="user" {%if user.role == user %}checked{%endif%}>User</option>
+            <option value="teacher" {%if user.role == teacher %}checked{%endif%}>Teacher</option>
+            <option value="admin" {%if user.role == admin %}checked{%endif%}>Admin</option>
+            <option value="testing" {%if user.role == testing %}checked{%endif%}>Test account</option>
+        </select><br>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="{{user.email}}" required><br>
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password"><br>
+        <label for="reverify">Requires email reverification</label><br>
+        <input type="checkbox" id="reverify" name="reverify" {% if user.requires_reverification %}checked{%endif%}><br>
+        <label for="userchange">Request username change</label>
+        <input type="checkbox" id="userchange" name="userchange" {% if user.requires_username_change %}checked{%endif%}><br>
+        <label for="bypass">Bypass username requirements</label>
+        <input type="checkbox" id="bypass" name="bypass"><br>
+        <button onclick="attemptEdit(event)">Submit</button><br>
+    </form>
+    <p id="status"></p>
+{% endblock %}
+{% block script %}
     <script>
         function attemptEdit(event) {
             event.preventDefault();
@@ -75,5 +68,4 @@
             document.getElementById('username').value = 'anon' + randomNumber;
         }
     </script>
-</body>
-</html>
+{% endblock %}

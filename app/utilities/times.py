@@ -738,7 +738,7 @@ def create_schedule_pdf( # pylint: disable=too-many-arguments, too-many-position
     """
     if not days:
         days = [get_current_day()]
-    file_path = f"/tmp/{user.username if user else 'schedule'}ClassFinderSchedule.pdf"
+    file_path = f"/tmp/{user.username if user else 'schedule'}CFSchedule.pdf"
     c = canvas.Canvas(file_path)
     c.setTitle("School Schedule")
     c.setFont("Helvetica", 20 if not smalltext else 12)

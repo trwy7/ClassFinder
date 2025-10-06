@@ -1,20 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
-        <h1>Delete account</h1>
-        <form onsubmit="attemptDelete(event)">
-            <button onclick="attemptDelete(event)">Delete</button><br>
-        </form>
-        <p id="status"></p>
-    </main>
+{% extends "templates/base.html" %}
+{% block title %}Delete Account{% endblock %}
+{% block mainid %}deleteaccountpage{% endblock %}
+{% block content %}
+    <h1>Delete account</h1>
+    <form onsubmit="attemptDelete(event)">
+        <button onclick="attemptDelete(event)">Delete</button><br>
+    </form>
+    <p id="status"></p>
+{% endblock %}
+{% block script %}
     <script>
         function attemptDelete(event) {
             event.preventDefault();
@@ -41,5 +35,4 @@
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}

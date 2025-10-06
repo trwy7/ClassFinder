@@ -1,14 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
+{% extends "templates/base.html" %}
+{% block title %}Create Account{% endblock %}
+{% block mainid %}createaccountpage{% endblock %}
+{% block content %}
         <h1>Create account</h1>
         <form onsubmit="attemptRegister(event)"></form>
             <label for="email">Email</label>
@@ -29,7 +22,8 @@
             <button onclick="attemptRegister(event)">Create</button><br>
         </form>
         <p id="status"></p>
-    </main>
+{% endblock %}
+{% block script %}
     <script>
         function attemptRegister(event) {
             event.preventDefault();
@@ -58,5 +52,4 @@
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}

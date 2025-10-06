@@ -72,7 +72,7 @@ def before_request3():
         )
         # return {"message": "You seem to be bypassing CloudFlare, or your IP is using IPv6.", "status": "error"}, 403
         return None
-    app.logger.warning("CLOUDFLARE_IP_RANGES not set. ClassFinder cannot access https://www.cloudflare.com/ips-v4.")
+    app.logger.warning("CLOUDFLARE_IP_RANGES not set. We cannot access https://www.cloudflare.com/ips-v4.")
     app.logger.warning("People may be able to bypass rate limits.")
     return None
 
