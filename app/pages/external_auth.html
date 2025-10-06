@@ -1,43 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder - Authorize external app</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
-        <h1>Authorize {{redirect_domain}}</h1>
-        <p>{{redirect_domain}} will get access to:</p>
-        <ul>
-            <li>Identify you</li>
-            {% for scope in scopes_readable %}
-                <li>{{scope}}</li>
-            {% endfor %}
-        </ul>
-        <button id="authorize-button" onclick="authorizeApp(event)">Authorize</button>
-        <script>
-            function authorizeApp(event) {
-                event.preventDefault();
-                fetch(window.location.toString(), {
-                    method: 'POST',
-                    credentials: 'include'
-                }).then(response => {
-                    data = response.json();
-                    return data;
-                }).then(data => {
-                    if (data.redirect_to) {
-                        window.location.href = data.redirect_to;
-                    } else {
-                        alert('Authorization failed.');
-                    }
-                }).catch(error => {
-                    console.error('Error:', error);
-                });
-            }
-        </script>
-    </main>
-</body>
-</html>
+{% extends "templates/base.html" %}
+{% block title %}Authorize{% endblock %}
+{% block mainid %}authpage{% endblock %}
+    <h1>Authorize {{redirect_domain}}</h1>
+    <p>{{redirect_domain}} will get access to:</p>
+    <ul>
+        <li>Identify you</li>
+        {% for scope in scopes_readable %}
+            <li>{{scope}}</li>
+        {% endfor %}
+    </ul>
+    <button id="authorize-button" onclick="authorizeApp(event)">Authorize</button>
+{% block script %}
+    <script>
+        function authorizeApp(event) {
+            event.preventDefault();
+            fetch(window.location.toString(), {
+                method: 'POST',
+                credentials: 'include'
+            }).then(response => {
+                data = response.json();
+                return data;
+            }).then(data => {
+                if (data.redirect_to) {
+                    window.location.href = data.redirect_to;
+                } else {
+                    alert('Authorization failed.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+{% endblock %}

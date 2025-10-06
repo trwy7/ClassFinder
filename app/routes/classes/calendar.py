@@ -121,7 +121,7 @@ def add_class_event(calendar, course, current_date, current_day, ignore_lunch=Fa
     event.begin = start_time
     event.end = end_time
     event.description = f"Taught by {course.teacher} in room {course.room}\n{course.campus_name}"
-    event.location = f"Room {course.room}"
+    event.location = course.room
 
     if course.canvasid:
         event.url = f"{canvas_url}/courses/{course.canvasid}"

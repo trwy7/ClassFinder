@@ -18,5 +18,5 @@ def admin():
     app.logger.debug(f"Admin page requested by {user.username}")
     app.logger.debug(f"Devmode: {devmode}")
     return render_template(
-        "admin.html", user=user, classes=Class.query.all(), users=User.query.all(), devmode=devmode, period=get_current_period()
+        "admin/admin.html", user=user, classes=Class.query.all(), users=User.query.all(), devmode=devmode, period=get_current_period()
     )

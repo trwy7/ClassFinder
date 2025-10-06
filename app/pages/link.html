@@ -1,31 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder - Link device</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
-        <form action="" method="get" onsubmit="redirectToCode(event)">
-            <label for="code">Enter Code:</label>
-            <input type="number" id="code" name="code" min="100000" max="999999" required>
-            <button type="submit">Go</button>
-        </form>
-
-        <script>
-            function redirectToCode(event) {
-                event.preventDefault();
-                const code = Number(document.getElementById('code').value);
-                if (!isNaN(code) && code >= 100000 && code <= 999999) {
-                    window.location.href = `/account/link/${code}`;
-                } else {
-                    alert('Please enter a valid code.');
-                }
+{% extends "templates/base.html" %}
+{% block title %}Link device{% endblock %}
+{% block mainid %}linkpage{% endblock %}
+    <form action="" method="get" onsubmit="redirectToCode(event)">
+        <label for="code">Enter Code:</label>
+        <input type="number" id="code" name="code" min="100000" max="999999" required>
+        <button type="submit">Go</button>
+    </form>
+{% endblock %}
+{% block script %}
+    <script>
+        function redirectToCode(event) {
+            event.preventDefault();
+            const code = Number(document.getElementById('code').value);
+            if (!isNaN(code) && code >= 100000 && code <= 999999) {
+                window.location.href = `/account/link/${code}`;
+            } else {
+                alert('Please enter a valid code.');
             }
-        </script>
-    </main>
-</body>
-</html>
+        }
+    </script>
+{% endblock %}

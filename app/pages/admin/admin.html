@@ -1,10 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder</title>
-    <link rel="stylesheet" href="/index.css">
+{% extends "templates/base.html" %}
+{% block title %}Admin{% endblock %}
+{% block mainid %}adminpage{% endblock %}
+{% block head %}
     <style>
         li>ul.classusers {
             display: none;
@@ -13,10 +10,8 @@
             display:none;
         }
     </style>
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
+{% endblock %}
+{% block content %}
         <h1 style="display: inline;">Hello, {{user.username}}!</h1><br>
         <button onclick="window.location.href = '/admin/create/account'">Create user</button>
         <button onclick="window.location.href = '/admin/times/schedule'">Schedule times</button>
@@ -71,7 +66,8 @@
             {% endfor %}
         </ul>
         {% endif %}
-    </main>
+{% endblock %}
+{% block script %}
     <script>
         classDelWarning = false;
         function deleteUser(username) {
@@ -148,5 +144,4 @@
             }
         }
     </script>
-</body>
-</html>
+{% endblock %}

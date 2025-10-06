@@ -1,26 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
-        <h1>Set lunch for {{course.name}}</h1>
-        <form onsubmit="attemptSubmit(event)">
-            <label for="lunch">Lunch</label>
-            <select id="lunch" name="lunch" required>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-            </select><br>
-            <button type="submit">Set lunch</button><br>
-        </form>
-        <p id="status"></p>
-    </main>
+{% extends "templates/base.html" %}
+{% block title %}Set lunch{% endblock %}
+{% block mainid %}setlunchpage{% endblock %}
+{% block content %}
+    <h1>Set lunch for {{course.name}}</h1>
+    <form onsubmit="attemptSubmit(event)">
+        <label for="lunch">Lunch</label>
+        <select id="lunch" name="lunch" required>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+        </select><br>
+        <button type="submit">Set lunch</button><br>
+    </form>
+    <p id="status"></p>
+{% endblock %}
+{% block script %}
     <script>
         function attemptSubmit(event) {
             event.preventDefault();
@@ -51,5 +45,4 @@
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}

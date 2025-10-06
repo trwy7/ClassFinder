@@ -1,46 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main id="schedule">
-        <h1>Add schedule</h1>
-        <form onsubmit="setSchedule(event)"></form>
-            <button onclick="document.getElementById('start').value = new Date().toLocaleDateString('en-CA'); document.getElementById('end').value = new Date().toLocaleDateString('en-CA');">Today</button><br>
-            <label for="start">Start</label>
-            <input type="date" id="start" name="start" required><br>
-            <button onclick="document.getElementById('end').value = document.getElementById('start').value;">One day schedule</button><br>
-            <label for="end">End</label>
-            <input type="date" id="end" name="end" required><br>
-            <label for="day">Day</label>
-            <select id="day" name="day" required>
-                {% for id, day in readable_days.items() %}
-                    <option value="{{id}}">{{day}}</option>
-                {% endfor %}
-            </select><br>
-            <button onclick="setSchedule(event)">Add</button><br>
-        </form><br>
-        <p id="status"></p><br>
-        {% if schedules|length > 0 %}
-        <div style="width:100%; display:block;">
-            <h2 style="margin:10px">Times</h2>
-            <ul id="schedules">
-                {% for schedule in schedules|sort(attribute="day") %}
-                    <li class="schedule" id="{{schedule.day}}">{{ readable_days[schedule.type] }} on {{ schedule.day.strftime('%m/%d/%Y') }}
-                        <ul class="actions">
-                            <li onclick="deleteSchedule('{{schedule.day}}')" class="action">Delete</li>
-                        </ul>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-    </main>
+{% extends "templates/base.html" %}
+{% block title %}Schedules{% endblock %}
+{% block mainid %}schedule{% endblock %}
+    <h1>Add schedule</h1>
+    <form onsubmit="setSchedule(event)"></form>
+        <button onclick="document.getElementById('start').value = new Date().toLocaleDateString('en-CA'); document.getElementById('end').value = new Date().toLocaleDateString('en-CA');">Today</button><br>
+        <label for="start">Start</label>
+        <input type="date" id="start" name="start" required><br>
+        <button onclick="document.getElementById('end').value = document.getElementById('start').value;">One day schedule</button><br>
+        <label for="end">End</label>
+        <input type="date" id="end" name="end" required><br>
+        <label for="day">Day</label>
+        <select id="day" name="day" required>
+            {% for id, day in readable_days.items() %}
+                <option value="{{id}}">{{day}}</option>
+            {% endfor %}
+        </select><br>
+        <button onclick="setSchedule(event)">Add</button><br>
+    </form><br>
+    <p id="status"></p><br>
+    {% if schedules|length > 0 %}
+    <div style="width:100%; display:block;">
+        <h2 style="margin:10px">Times</h2>
+        <ul id="schedules">
+            {% for schedule in schedules|sort(attribute="day") %}
+                <li class="schedule" id="{{schedule.day}}">{{ readable_days[schedule.type] }} on {{ schedule.day.strftime('%m/%d/%Y') }}
+                    <ul class="actions">
+                        <li onclick="deleteSchedule('{{schedule.day}}')" class="action">Delete</li>
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+{% endblock %}
+{% block script %}
     <script>
         function setSchedule(event) {
             event.preventDefault();
@@ -93,5 +86,4 @@
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}

@@ -1,73 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder - Export schedule</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
-        <h1>Export schedule</h1>
-        <form action="" method="get" onsubmit="downloadPDF(event)">
-            <div id="days">
-                <label for="monday">Monday</label>
-                <input type="checkbox" name="monday" id="monday" checked>
-                <label for="tuesday">Tuesday</label>
-                <input type="checkbox" name="tuesday" id="tuesday" checked>
-                <label for="wednesday">Wednesday</label>
-                <input type="checkbox" name="wednesday" id="wednesday" checked>
-                <label for="thursday">Thursday</label>
-                <input type="checkbox" name="thursday" id="thursday" checked>
-                <label for="friday">Friday</label>
-                <input type="checkbox" name="friday" id="friday" checked>
-                <label for="eb">Early release blue</label>
-                <input type="checkbox" name="eb" id="eb" checked>
-                <label for="eg">Early release gold</label>
-                <input type="checkbox" name="eg" id="eg" checked>
-            </div>
-            <div id="options">
-                <label for="noclass">Hide Class Name</label>
-                <input type="checkbox" name="noclass" id="noclass">
-                <label for="noroom">Hide Room Number</label>
-                <input type="checkbox" name="noroom" id="noroom">
-                <label for="notime">Hide Time</label>
-                <input type="checkbox" name="notime" id="notime">
-                <label for="nolunch">Hide Lunch</label>
-                <input type="checkbox" name="nolunch" id="nolunch">
-                <label for="smalltext">Small Text</label>
-                <input type="checkbox" name="smalltext" id="smalltext">
-                <label for="noperiod">Hide Period</label>
-                <input type="checkbox" name="noperiod" id="noperiod">
-            </div>
-            <button type="submit">Download PDF</button>
-        </form>
-        <script>
-            function downloadPDF(event) {
-                event.preventDefault();
-                const days = [];
-                const daycheckboxes = document.getElementById('days').querySelectorAll('input[type="checkbox"]');
-                for (const checkbox of daycheckboxes) {
-                    if (checkbox.checked) {
-                        days.push(checkbox.name);
-                    }
+{% extends "templates/base.html" %}
+{% block title %}Export to PDF{% endblock %}
+{% block mainid %}pdfpage{% endblock %}
+{% block content %}
+    <h1>Export schedule</h1>
+    <form action="" method="get" onsubmit="downloadPDF(event)">
+        <div id="days">
+            <label for="monday">Monday</label>
+            <input type="checkbox" name="monday" id="monday" checked>
+            <label for="tuesday">Tuesday</label>
+            <input type="checkbox" name="tuesday" id="tuesday" checked>
+            <label for="wednesday">Wednesday</label>
+            <input type="checkbox" name="wednesday" id="wednesday" checked>
+            <label for="thursday">Thursday</label>
+            <input type="checkbox" name="thursday" id="thursday" checked>
+            <label for="friday">Friday</label>
+            <input type="checkbox" name="friday" id="friday" checked>
+            <label for="eb">Early release blue</label>
+            <input type="checkbox" name="eb" id="eb" checked>
+            <label for="eg">Early release gold</label>
+            <input type="checkbox" name="eg" id="eg" checked>
+        </div>
+        <div id="options">
+            <label for="noclass">Hide Class Name</label>
+            <input type="checkbox" name="noclass" id="noclass">
+            <label for="noroom">Hide Room Number</label>
+            <input type="checkbox" name="noroom" id="noroom">
+            <label for="notime">Hide Time</label>
+            <input type="checkbox" name="notime" id="notime">
+            <label for="nolunch">Hide Lunch</label>
+            <input type="checkbox" name="nolunch" id="nolunch">
+            <label for="smalltext">Small Text</label>
+            <input type="checkbox" name="smalltext" id="smalltext">
+            <label for="noperiod">Hide Period</label>
+            <input type="checkbox" name="noperiod" id="noperiod">
+        </div>
+        <button type="submit">Download PDF</button>
+    </form>
+{% endblock %}
+{% block script %}
+    <script>
+        function downloadPDF(event) {
+            event.preventDefault();
+            const days = [];
+            const daycheckboxes = document.getElementById('days').querySelectorAll('input[type="checkbox"]');
+            for (const checkbox of daycheckboxes) {
+                if (checkbox.checked) {
+                    days.push(checkbox.name);
                 }
-                const options = [];
-                const optioncheckboxes = document.getElementById('options').querySelectorAll('input[type="checkbox"]');
-                for (const checkbox of optioncheckboxes) {
-                    if (checkbox.checked) {
-                        options.push(checkbox.name);
-                    }
-                }
-                const params = new URLSearchParams();
-                for (const option of options) {
-                    params.append(option, 'true');
-                }
-                const url = `/classes/schedulepdf/${days.join(',')}?${params.toString()}`; 
-                window.location.href = url;
             }
-        </script>
-    </main>
-</body>
-</html>
+            const options = [];
+            const optioncheckboxes = document.getElementById('options').querySelectorAll('input[type="checkbox"]');
+            for (const checkbox of optioncheckboxes) {
+                if (checkbox.checked) {
+                    options.push(checkbox.name);
+                }
+            }
+            const params = new URLSearchParams();
+            for (const option of options) {
+                params.append(option, 'true');
+            }
+            const url = `/classes/schedulepdf/${days.join(',')}?${params.toString()}`; 
+            window.location.href = url;
+        }
+    </script>
+{% endblock %}

@@ -64,9 +64,11 @@ def calculate_analytics(request_logs):
     path_time = defaultdict(list)
     path_count = Counter()
 
+    api_requests = 0
+
     for log in request_logs:
-        # Skip 308 redirects, these are done by flask
-        if log.get("returncode") == 308:
+        # Skip 308 redirects, these are done by flask, also most 404s are bots
+        if log.get("returncode") == 308 or log.get("returncode") == 404:
             continue
 
         # Skip index.css and index.html
@@ -77,13 +79,15 @@ def calculate_analytics(request_logs):
         method = log.get("method", "GET")
         if path.endswith("/calendar.ics"):
             path = "/calendar.ics"
+            api_requests += 1
         elif path.startswith("/resetpassword") and path != "/resetpassword":
             path = "/resetpassword/final"
         elif path.startswith("/register") and path != "/register":
             path = "/register/final"
         elif path.startswith("/admin/"):
             continue  # Skip admin paths for now, this can be expanded later
-
+        if path.startswith("/api/"):
+            api_requests += 1
         path_method = f"{method} {path}"
         path_count[path_method] += 1
 
@@ -134,5 +138,7 @@ def calculate_analytics(request_logs):
         {"path": path_method, "avg_time_ms": round(avg_time, 2), "count": path_count[path_method]}
         for path_method, avg_time in sorted(path_avg_time.items(), key=lambda x: x[1], reverse=True)
     ][:20]  # Top 20
+
+    analytics["api_requests"] = api_requests
 
     return analytics

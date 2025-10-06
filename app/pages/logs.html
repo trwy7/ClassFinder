@@ -1,186 +1,180 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder - Logs</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main id="logspage">
-        <div class="analytics-summary">
-            <div class="analytics-count">
-                <h1>{{ total_requests }}</h1>
-                <p>Total Requests</p>
-            </div>
-            <div>
-                <a href="/admin/logs" class="refresh-button">Refresh Analytics</a>
-            </div>
+{% extends "templates/base.html" %}
+{% block title %}Logs{% endblock %}
+{% block mainid %}logspage{% endblock %}
+{% block content %}
+    <div class="analytics-summary">
+        <div class="analytics-count">
+            <h1>{{ total_requests - analytics.api_requests }}</h1>
+            <p>Total Requests</p>
+            <h1>{{ analytics.api_requests }}</h1>
+            <p>API Requests</p>
         </div>
-        
-        <p class="timestamp">ClassFinder was started at {{start_time}}</p>
-        <p class="timestamp">Data as of {{ timestamp }}</p>
-        
-        <div class="analytics-container">
-            <!-- Status Code Distribution -->
-            <div class="analytics-card">
-                <h2>Status Code Distribution</h2>
-                {% if analytics.status_codes %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Status Code</th>
-                            <th>Count</th>
-                            <th>Percentage</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in analytics.status_codes %}
-                        <tr>
-                            <td class="{% if item.code >= 500 %}status-5xx{% elif item.code >= 400 %}status-4xx{% elif item.code >= 300 %}status-3xx{% else %}status-2xx{% endif %}">
-                                {{ item.code }} - {% if item.code == 200 %}OK{% elif item.code == 201 %}Created{% elif item.code == 204 %}No Content{% elif item.code == 301 %}Moved Permanently{% elif item.code == 302 %}Found{% elif item.code == 304 %}Not Modified{% elif item.code == 308 %}Permanent Redirect{% elif item.code == 400 %}Bad Request{% elif item.code == 401 %}Unauthorized{% elif item.code == 403 %}Forbidden{% elif item.code == 404 %}Not Found{% elif item.code == 405 %}Method Not Allowed{% elif item.code == 408 %}Request Timeout{% elif item.code == 429 %}Too Many Requests{% elif item.code == 500 %}Internal Server Error{% elif item.code == 501 %}Not Implemented{% elif item.code == 502 %}Bad Gateway{% elif item.code == 503 %}Service Unavailable{% elif item.code == 504 %}Gateway Timeout{% else %}Unknown{% endif %}
-                            </td>
-                            <td>{{ item.count }}</td>
-                            <td>{{ item.percentage }}%</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="empty-state">No status code data available</div>
-                {% endif %}
-            </div>
-            
-            <!-- Most Requested Paths -->
-            <div class="analytics-card">
-                <h2>Most Requested Paths</h2>
-                {% if analytics.most_requested_paths %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Method - Path</th>
-                            <th>Count</th>
-                            <th>Percentage</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in analytics.most_requested_paths %}
-                        <tr>
-                            <td>{{ item.path }}</td>
-                            <td>{{ item.count }}</td>
-                            <td>{{ item.percentage }}%</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="empty-state">No path data available</div>
-                {% endif %}
-            </div>
-            
-            <!-- Total Time by Path -->
-            <div class="analytics-card">
-                <h2>Total Processing Time by Path</h2>
-                {% if analytics.path_time_total %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Method - Path</th>
-                            <th>Total Time (ms)</th>
-                            <th>Count</th>
-                            <th>% of Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in analytics.path_time_total %}
-                        <tr>
-                            <td>{{ item.path }}</td>
-                            <td>{{ item.total_time_ms }}</td>
-                            <td>{{ item.count }}</td>
-                            <td>{{ item.time_percentage }}%</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="empty-state">No timing data available</div>
-                {% endif %}
-            </div>
-            
-            <!-- Average Time by Path -->
-            <div class="analytics-card">
-                <h2>Average Response Time</h2>
-                {% if analytics.path_time_avg %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Method - Path</th>
-                            <th>Avg Time (ms)</th>
-                            <th>Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in analytics.path_time_avg %}
-                        <tr>
-                            <td>{{ item.path }}</td>
-                            <td>{{ item.avg_time_ms }}</td>
-                            <td>{{ item.count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="empty-state">No timing data available</div>
-                {% endif %}
-            </div>
+            <a href="/admin/logs" class="refresh-button">Refresh Analytics</a>
         </div>
-        
-        <!-- Application Logs Table -->
+    </div>
+    
+    <p class="timestamp">ClassFinder was started at {{start_time}}</p>
+    <p class="timestamp">Data as of {{ timestamp }}</p>
+    
+    <div class="analytics-container">
+        <!-- Status Code Distribution -->
         <div class="analytics-card">
-            <h2>Recent Application Logs</h2>
-            {% if app_logs %}
-            <div class="filters">
-                <select id="logLevelFilter" onchange="filterLogs()">
-                    <option value="all">All Levels</option>
-                    <option value="DEBUG">DEBUG</option>
-                    <option value="INFO">INFO</option>
-                    <option value="WARNING">WARNING</option>
-                    <option value="ERROR">ERROR</option>
-                    <option value="CRITICAL">CRITICAL</option>
-                </select>
-                <input type="text" id="logSearch" placeholder="Search logs..." onkeyup="filterLogs()">
-            </div>
-            <table id="logsTable">
+            <h2>Status Code Distribution</h2>
+            {% if analytics.status_codes %}
+            <table>
                 <thead>
                     <tr>
-                        <th>Time</th>
-                        <th>Level</th>
-                        <th>Path</th>
-                        <th>Line</th>
-                        <th>Message</th>
+                        <th>Status Code</th>
+                        <th>Count</th>
+                        <th>Percentage</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for log in app_logs %}
-                    <tr class="log-entry log-{{ log.level.lower() }}">
-                        <td>{{ log.time.strftime('%H:%M:%S') }}</td>
-                        <td class="{% if log.level == 'ERROR' or log.level == 'CRITICAL' %}status-5xx{% elif log.level == 'WARNING' %}status-4xx{% elif log.level == 'INFO' %}status-3xx{% else %}status-2xx{% endif %}">
-                            {{ log.level }}
+                    {% for item in analytics.status_codes %}
+                    <tr>
+                        <td class="{% if item.code >= 500 %}status-5xx{% elif item.code >= 400 %}status-4xx{% elif item.code >= 300 %}status-3xx{% else %}status-2xx{% endif %}">
+                            {{ item.code }} - {% if item.code == 200 %}OK{% elif item.code == 201 %}Created{% elif item.code == 204 %}No Content{% elif item.code == 301 %}Moved Permanently{% elif item.code == 302 %}Found{% elif item.code == 304 %}Not Modified{% elif item.code == 308 %}Permanent Redirect{% elif item.code == 400 %}Bad Request{% elif item.code == 401 %}Unauthorized{% elif item.code == 403 %}Forbidden{% elif item.code == 404 %}Not Found{% elif item.code == 405 %}Method Not Allowed{% elif item.code == 408 %}Request Timeout{% elif item.code == 429 %}Too Many Requests{% elif item.code == 500 %}Internal Server Error{% elif item.code == 501 %}Not Implemented{% elif item.code == 502 %}Bad Gateway{% elif item.code == 503 %}Service Unavailable{% elif item.code == 504 %}Gateway Timeout{% else %}Unknown{% endif %}
                         </td>
-                        <td>{{ log.path }}</td>
-                        <td>{{ log.line }}</td>
-                        <td>{{ log.message }}</td>
+                        <td>{{ item.count }}</td>
+                        <td>{{ item.percentage }}%</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
             {% else %}
-            <div class="empty-state">No application logs available</div>
+            <div class="empty-state">No status code data available</div>
             {% endif %}
         </div>
-    </main>
+        
+        <!-- Most Requested Paths -->
+        <div class="analytics-card">
+            <h2>Most Requested Paths</h2>
+            {% if analytics.most_requested_paths %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method - Path</th>
+                        <th>Count</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in analytics.most_requested_paths %}
+                    <tr>
+                        <td>{{ item.path }}</td>
+                        <td>{{ item.count }}</td>
+                        <td>{{ item.percentage }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">No path data available</div>
+            {% endif %}
+        </div>
+        
+        <!-- Total Time by Path -->
+        <div class="analytics-card">
+            <h2>Total Processing Time by Path</h2>
+            {% if analytics.path_time_total %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method - Path</th>
+                        <th>Total Time (ms)</th>
+                        <th>Count</th>
+                        <th>% of Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in analytics.path_time_total %}
+                    <tr>
+                        <td>{{ item.path }}</td>
+                        <td>{{ item.total_time_ms }}</td>
+                        <td>{{ item.count }}</td>
+                        <td>{{ item.time_percentage }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">No timing data available</div>
+            {% endif %}
+        </div>
+        
+        <!-- Average Time by Path -->
+        <div class="analytics-card">
+            <h2>Average Response Time</h2>
+            {% if analytics.path_time_avg %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method - Path</th>
+                        <th>Avg Time (ms)</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in analytics.path_time_avg %}
+                    <tr>
+                        <td>{{ item.path }}</td>
+                        <td>{{ item.avg_time_ms }}</td>
+                        <td>{{ item.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">No timing data available</div>
+            {% endif %}
+        </div>
+    </div>
     
+    <!-- Application Logs Table -->
+    <div class="analytics-card">
+        <h2>Recent Application Logs</h2>
+        {% if app_logs %}
+        <div class="filters">
+            <select id="logLevelFilter" onchange="filterLogs()">
+                <option value="all">All Levels</option>
+                <option value="DEBUG">DEBUG</option>
+                <option value="INFO">INFO</option>
+                <option value="WARNING">WARNING</option>
+                <option value="ERROR">ERROR</option>
+                <option value="CRITICAL">CRITICAL</option>
+            </select>
+            <input type="text" id="logSearch" placeholder="Search logs..." onkeyup="filterLogs()">
+        </div>
+        <table id="logsTable">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Level</th>
+                    <th>Path</th>
+                    <th>Line</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in app_logs %}
+                <tr class="log-entry log-{{ log.level.lower() }}">
+                    <td>{{ log.time.strftime('%H:%M:%S') }}</td>
+                    <td class="{% if log.level == 'ERROR' or log.level == 'CRITICAL' %}status-5xx{% elif log.level == 'WARNING' %}status-4xx{% elif log.level == 'INFO' %}status-3xx{% else %}status-2xx{% endif %}">
+                        {{ log.level }}
+                    </td>
+                    <td>{{ log.path }}</td>
+                    <td>{{ log.line }}</td>
+                    <td>{{ log.message }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">No application logs available</div>
+        {% endif %}
+    </div>
+{% endblock %}
+{% block script %}
     <script>
         function filterLogs() {
             const level = document.getElementById('logLevelFilter').value;
@@ -213,5 +207,4 @@
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}

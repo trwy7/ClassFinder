@@ -1,34 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
-        <h1>Canvas linking</h1>
-        <h3>Select the classes that match</h3>
-        <h4>You may need to favorite the classes in Canvas to see them here.</h4><br><br>
-        <form onsubmit="attemptLink(event)">
-            <ul id="courses">
-                {% for course in courses %}
-                    <li class="course">
-                        <label for="{{ course.id }}">{{ course.name }}</label><br>
-                        <select id="{{ course.id }}" name="{{ course.id }}">
-                            <option value="">Select an option</option>
-                            {% for id, name in cards.items() %}
-                                <option value="{{ id }}">{{ name }}</option>
-                            {% endfor %}
-                        </select>
-                    </li>
-                {% endfor %}
-            </ul>
-        </form>
-        <button onclick="attemptLink(event)">Submit</button><br>
-    </main>
+{% extends "templates/base.html" %}
+{% block title %}Link to canvas{% endblock %}
+{% block mainid %}canvaslinkpage{% endblock %}
+{% block content %}
+    <h1>Canvas linking</h1>
+    <h3>Select the classes that match</h3>
+    <h4>You may need to favorite the classes in Canvas to see them here.</h4><br><br>
+    <form onsubmit="attemptLink(event)">
+        <ul id="courses">
+            {% for course in courses %}
+                <li class="course">
+                    <label for="{{ course.id }}">{{ course.name }}</label><br>
+                    <select id="{{ course.id }}" name="{{ course.id }}">
+                        <option value="">Select an option</option>
+                        {% for id, name in cards.items() %}
+                            <option value="{{ id }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </li>
+            {% endfor %}
+        </ul>
+    </form>
+    <button onclick="attemptLink(event)">Submit</button><br>
+{% endblock %}
+{% block script %}
     <script>
         function attemptLink(event) {
             event.preventDefault();
@@ -58,5 +52,4 @@
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}

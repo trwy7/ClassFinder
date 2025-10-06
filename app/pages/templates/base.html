@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClassFinder - {% block title required %}{% endblock %}</title>
     <link rel="stylesheet" href="/index.css">
+    {% block head %}{% endblock %}
 </head>
 <body>
     {% include 'templates/header.html' %}
-    <main id="{% block mainid %}unknownmain{% endblock %}">
+    <main id="{% block mainid %}unknownmain{% endblock %}" class="{% block mainclasses %}{% endblock %}">
         {% block content required %}{% endblock %}
     </main>
     {% block script %}{% endblock %}

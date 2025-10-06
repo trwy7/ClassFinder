@@ -1,19 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
-        <h1>Edit course: {{course.name}} (Period {{course.period}})</h1>
-        <form onsubmit="attemptEdit(event)"></form>
-            <label for="name">Name</label>
-            <input type="text" id="name" name="name" value="{{course.name}}" required><br>
-            <label for="campusname">Campus Name</label>
+{% extends "templates/base.html" %}
+{% block title %}Edit Course{% endblock %}
+{% block mainid %}editcoursepage{% endblock %}
+{% block content %}
+    <h1>Edit course: {{course.name}} (Period {{course.period}})</h1>
+    <form onsubmit="attemptEdit(event)">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" value="{{course.name}}" required><br>
+        <label for="campusname">Campus Name</label>
             <input type="text" id="campusname" name="campusname" value="{{course.campus_name}}" required><br>
             <label for="canvasid">Canvas id</label>
             <input type="number" id="canvasid" name="canvasid" value="{{course.canvasid}}" required><br>
@@ -31,7 +24,8 @@
             <button onclick="attemptEdit(event)">Submit</button><br>
         </form>
         <p id="status"></p>
-    </main>
+{% endblock %}
+{% block script %}
     <script>
         function attemptEdit(event) {
             event.preventDefault();
@@ -77,5 +71,4 @@
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}

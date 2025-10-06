@@ -342,7 +342,7 @@ li.action[onclick]:hover {
 }
 
 #logspage tr:nth-child(even) {
-    background-color: #27634a;
+    background-color: hsl(var(--user-prefered-color, 155), 43%, 27%);
 }
 
 .status-2xx { color: #2ecc71; }

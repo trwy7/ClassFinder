@@ -1,14 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder - Add Classes</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main id="addclasses">
+{% extends "templates/base.html" %}
+{% block title %}Add Classes{% endblock %}
+{% block mainid %}addclasses{% endblock %}
+{% block content %}
         <h1>Add Classes</h1>
         <p>Copy and paste your schedule from <a href="{{ campus_url }}" target="_blank" rel="noopener">infinite campus</a></p>
         <form onsubmit="sendClasses(event)">
@@ -19,65 +12,65 @@
         <p id="status"></p>
         <h2>Remaining Periods</h2>
         {% for class in neededperiods %}<h3 style="display: inline;">{{class}}</h3>{% endfor %}
-    </main>
-    <script>
-        function sendClasses(event) {
-            event.preventDefault();
-            const classes = document.getElementById('classes').value;
-            const lines = classes.split('\n');
-            const spinner = document.getElementById('spinner');
-            spinner.style.display = 'block';
-            document.getElementById('submitbutton').disabled = true;
-            fetch('/addclasses', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(lines),
-                credentials: 'include'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status == "success") {
-                    document.getElementById('status').innerText = 'Success!';
-                    location.reload();
-                    // Redirect or perform other actions on successful login
-                } else {
-                    document.getElementById('status').innerText = 'Failed: ' + data.message;
-                }
-                spinner.style.display = 'none';
-                document.getElementById('submitbutton').disabled = false;
-            })
-            .catch(error => {
-                if (error instanceof SyntaxError) {
-                    alert('JSON parse error: ' + error.message);
-                } else {
-                    document.getElementById('status').innerText = 'An error occurred: ' + error.message;
-                }
-                spinner.style.display = 'none';
-                document.getElementById('submitbutton').disabled = false;
-            });
-        }
-        function showHelp(event) {
-            event.preventDefault();
-            const helpPopup = document.createElement('div');
-            helpPopup.style.position = 'fixed';
-            helpPopup.style.top = '50%';
-            helpPopup.style.left = '50%';
-            helpPopup.style.transform = 'translate(-50%, -50%)';
-            helpPopup.style.backgroundColor = 'var(--navbar-color)';
-            helpPopup.style.padding = '20px';
-            helpPopup.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
-            helpPopup.innerHTML = `
-                <img src="/addclasses/help.gif" alt="Help Image" style="max-width: 100%; height: auto;"><br>
-                <button onclick="closeHelp()">Close</button>
-            `;
-            document.body.appendChild(helpPopup);
-        }
+{% endblock %}
+{% block script %}
+<script>
+    function sendClasses(event) {
+        event.preventDefault();
+        const classes = document.getElementById('classes').value;
+        const lines = classes.split('\n');
+        const spinner = document.getElementById('spinner');
+        spinner.style.display = 'block';
+        document.getElementById('submitbutton').disabled = true;
+        fetch('/addclasses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(lines),
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status == "success") {
+                document.getElementById('status').innerText = 'Success!';
+                location.reload();
+                // Redirect or perform other actions on successful login
+            } else {
+                document.getElementById('status').innerText = 'Failed: ' + data.message;
+            }
+            spinner.style.display = 'none';
+            document.getElementById('submitbutton').disabled = false;
+        })
+        .catch(error => {
+            if (error instanceof SyntaxError) {
+                alert('JSON parse error: ' + error.message);
+            } else {
+                document.getElementById('status').innerText = 'An error occurred: ' + error.message;
+            }
+            spinner.style.display = 'none';
+            document.getElementById('submitbutton').disabled = false;
+        });
+    }
+    function showHelp(event) {
+        event.preventDefault();
+        const helpPopup = document.createElement('div');
+        helpPopup.style.position = 'fixed';
+        helpPopup.style.top = '50%';
+        helpPopup.style.left = '50%';
+        helpPopup.style.transform = 'translate(-50%, -50%)';
+        helpPopup.style.backgroundColor = 'var(--navbar-color)';
+        helpPopup.style.padding = '20px';
+        helpPopup.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+        helpPopup.innerHTML = `
+            <img src="/addclasses/help.gif" alt="Help Image" style="max-width: 100%; height: auto;"><br>
+            <button onclick="closeHelp()">Close</button>
+        `;
+        document.body.appendChild(helpPopup);
+    }
 
-        function closeHelp() {
-            document.body.removeChild(document.querySelector('div[style*="position: fixed"]'));
-        }
-    </script>
-</body>
-</html>
+    function closeHelp() {
+        document.body.removeChild(document.querySelector('div[style*="position: fixed"]'));
+    }
+</script>
+{% endblock %}

@@ -1,101 +1,94 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder - Create Calendar</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
-        <h1>Create Calendar</h1>
-        <div id="calform">
-            <div id="options">
-                <label for="showpassing">Add passing periods</label>
-                <input type="checkbox" id="showpassing" name="showpassing">
-                <label for="showdaytype">Add day type</label>
-                <input type="checkbox" id="showdaytype" name="showdaytype" checked>
-            </div>
-            <button id="generate" onclick="genCalLink(event)">Generate Calendar Link</button>
-            <button id="download" onclick="downloadCal(event)">Download Calendar</button>
+{% extends "templates/base.html" %}
+{% block title %}Create Calendar{% endblock %}
+{% block mainid %}createcalendar{% endblock %}
+{% block content %} 
+    <h1>Create Calendar</h1>
+    <div id="calform">
+        <div id="options">
+            <label for="showpassing">Add passing periods</label>
+            <input type="checkbox" id="showpassing" name="showpassing">
+            <label for="showdaytype">Add day type</label>
+            <input type="checkbox" id="showdaytype" name="showdaytype" checked>
         </div>
-        <div class="loader" id="spinner" style="display:none;"></div>
-        <p id="cal-link"></p>
-        <p id="cal-info" style="display: none;">You can add this calendar to anything that supports the iCal format, like Google Calendar.</p>
-        <script>
-            function genCalLink(event) {
-                event.preventDefault();
-                document.getElementById('calform').style.display = 'none';
-                document.getElementById('spinner').style.display = 'block';
-                fetch('/api/v2/createscopedtoken', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        scopes: ['calendar']
+        <button id="generate" onclick="genCalLink(event)">Generate Calendar Link</button>
+        <button id="download" onclick="downloadCal(event)">Download Calendar</button>
+    </div>
+    <div class="loader" id="spinner" style="display:none;"></div>
+    <p id="cal-link"></p>
+    <p id="cal-info" style="display: none;">You can add this calendar to anything that supports the iCal format, like Google Calendar.</p>
+{% endblock %}
+{% block script %}
+<script>
+    function genCalLink(event) {
+        event.preventDefault();
+        document.getElementById('calform').style.display = 'none';
+        document.getElementById('spinner').style.display = 'block';
+        fetch('/api/v2/createscopedtoken', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                scopes: ['calendar']
+            })
+        })
+        .then(response => response.json())
+        .then(token => {
+            const showPassing = document.getElementById('showpassing').checked;
+            const showDayType = document.getElementById('showdaytype').checked;
+            
+            const params = new URLSearchParams();
+            if (showPassing) params.append('passing', '');
+            if (showDayType) params.append('adddaytype', '');
+
+            const calLink = `${window.location.origin}/${token}/calendar.ics${params.toString() ? '?' + params.toString() : ''}`;
+            
+            // Create HTML with URL and copy button
+            document.getElementById('cal-link').innerHTML = `
+                Calendar URL: <span id="cal-url">${calLink}</span>
+                <button id="copy-btn">Copy</button>
+            `;
+            
+            // Add click handler for copy button
+            document.getElementById('copy-btn').addEventListener('click', function() {
+                navigator.clipboard.writeText(calLink)
+                    .then(() => {
+                        this.textContent = 'Copied!';
+                        setTimeout(() => {
+                            this.textContent = 'Copy';
+                        }, 2000);
                     })
-                })
-                .then(response => response.json())
-                .then(token => {
-                    const showPassing = document.getElementById('showpassing').checked;
-                    const showDayType = document.getElementById('showdaytype').checked;
-                    
-                    const params = new URLSearchParams();
-                    if (showPassing) params.append('passing', '');
-                    if (showDayType) params.append('adddaytype', '');
+                    .catch(err => console.error('Failed to copy:', err));
+            });
+            
+            document.getElementById('cal-info').style.display = 'block';
+            document.getElementById('spinner').style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Error creating token:', error);
+            document.getElementById('cal-link').textContent = 'Error creating link: ' + error.message;
+            document.getElementById('spinner').style.display = 'none';
+        });
+    }
+    function downloadCal(event) {
+        event.preventDefault();
+        
+        const confirmed = window.confirm("The downloaded calendar will not automatically update with schedule changes, and is based off of the published stem calendar. Are you sure you want to download?");
+        
+        if (confirmed) {
+            const showPassing = document.getElementById('showpassing').checked;
+            const showDayType = document.getElementById('showdaytype').checked;
+            
+            const params = new URLSearchParams();
+            if (showPassing) params.append('passing', 'true');
+            if (showDayType) params.append('adddaytype', 'true');
 
-                    const calLink = `${window.location.origin}/${token}/calendar.ics${params.toString() ? '?' + params.toString() : ''}`;
-                    
-                    // Create HTML with URL and copy button
-                    document.getElementById('cal-link').innerHTML = `
-                        Calendar URL: <span id="cal-url">${calLink}</span>
-                        <button id="copy-btn">Copy</button>
-                    `;
-                    
-                    // Add click handler for copy button
-                    document.getElementById('copy-btn').addEventListener('click', function() {
-                        navigator.clipboard.writeText(calLink)
-                            .then(() => {
-                                this.textContent = 'Copied!';
-                                setTimeout(() => {
-                                    this.textContent = 'Copy';
-                                }, 2000);
-                            })
-                            .catch(err => console.error('Failed to copy:', err));
-                    });
-                    
-                    document.getElementById('cal-info').style.display = 'block';
-                    document.getElementById('spinner').style.display = 'none';
-                })
-                .catch(error => {
-                    console.error('Error creating token:', error);
-                    document.getElementById('cal-link').textContent = 'Error creating link: ' + error.message;
-                    document.getElementById('spinner').style.display = 'none';
-                });
-            }
-            function downloadCal(event) {
-                event.preventDefault();
-                
-                const confirmed = window.confirm("The downloaded calendar will not automatically update with schedule changes, and is based off of the published stem calendar. Are you sure you want to download?");
-                
-                if (confirmed) {
-                    const showPassing = document.getElementById('showpassing').checked;
-                    const showDayType = document.getElementById('showdaytype').checked;
-                    
-                    const params = new URLSearchParams();
-                    if (showPassing) params.append('passing', 'true');
-                    if (showDayType) params.append('adddaytype', 'true');
-
-                    // Technically "download" is not a token, but the server defaults to using cookies if this is invalid
-                    // and if you reached this page, you are logged in, so this is safe
-                    const calLink = `${window.location.origin}/download/calendar.ics${params.toString() ? '?' + params.toString() : ''}`;
-                    
-                    window.open(calLink, '_blank');
-                }
-            }
-        </script>
-    </main>
-</body>
-</html>
+            // Technically "download" is not a token, but the server defaults to using cookies if this is invalid
+            // and if you reached this page, you are logged in, so this is safe
+            const calLink = `${window.location.origin}/download/calendar.ics${params.toString() ? '?' + params.toString() : ''}`;
+            
+            window.open(calLink, '_blank');
+        }
+    }
+</script>    
+{% endblock %}

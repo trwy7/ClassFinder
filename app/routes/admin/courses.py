@@ -30,7 +30,7 @@ def edit_course(courseid):
     """
     course = get_course_by_id(courseid)
     if course:
-        return render_template("editcourse.html", course=course)
+        return render_template("admin/editcourse.html", course=course)
     app.logger.debug(f"Course not found: {courseid}")
     return abort(404)
 

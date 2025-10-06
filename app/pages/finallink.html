@@ -1,48 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassFinder - Link device</title>
-    <link rel="stylesheet" href="/index.css">
-</head>
-<body>
-    {% include 'templates/header.html' %}
-    <main>
-        <form action="" method="get" onsubmit="confirmLink(event)">
-            <label for="code">Device code:</label>
-            <input type="number" id="code" name="code" min="100000" max="999999" readonly value="{{ code }}">
-            {% if codedata.ip != ip %}
-                <p class="error">You seem to be in a different location than the device you are connecting to.</p>
-            {% endif %}
-            <p>This will give the device with the code {{code}} access to your classfinder account</p>
-            <button type="submit">Link</button>
-        </form>
+{% extends "templates/base.html" %}
+{% block title %}Link device{% endblock %}
+{% block mainid %}finallinkpage{% endblock %}
+{% block head %}
+    <form action="" method="get" onsubmit="confirmLink(event)">
+        <label for="code">Device code:</label>
+        <input type="number" id="code" name="code" min="100000" max="999999" readonly value="{{ code }}">
+        {% if codedata.ip != ip %}
+            <p class="error">You seem to be in a different location than the device you are connecting to.</p>
+        {% endif %}
+        <p>This will give the device with the code {{code}} access to your classfinder account</p>
+        <button type="submit">Link</button>
+    </form>
+{% endblock %}
+{% block content %}
+    <script>
+        function confirmLink(event) {
+            event.preventDefault();
+            const code = document.getElementById('code').value;
 
-        <script>
-            function confirmLink(event) {
-                event.preventDefault();
-                const code = document.getElementById('code').value;
-
-                fetch(window.location.pathname, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ code: code })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status == 'success') {
-                        window.location.href = `/account`;
-                    } else {
-                        alert('Something went wrong.');
-                        location.reload();
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            }
-        </script>
-    </main>
-</body>
-</html>
+            fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status == 'success') {
+                    window.location.href = `/account`;
+                } else {
+                    alert('Something went wrong.');
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+{% endblock %}
