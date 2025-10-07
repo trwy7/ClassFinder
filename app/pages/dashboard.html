@@ -29,7 +29,7 @@
             <h2>No classes today.</h2>{% if classestoadd > 0 %}<br><h2>Some classes may not be shown, as you still need to add {{classestoadd}} classes. You can add them <a href="/addclasses">here</a>.</h2>{% endif %}
         {% else %}
         {% if not haslunch %}
-            <h3 style="padding-bottom: 6px;">There is no lunch today</h2>
+            <h3 style="padding-bottom: 30px;">There is no lunch today</h2>
         {% endif %}
             <ul id="classes">
                 {% for class in currentclasses %}

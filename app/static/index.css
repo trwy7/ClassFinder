@@ -3,8 +3,10 @@
     --primary-color: hsl(var(--user-prefered-color, 155), 100%, 64%);
     --secondary-color: hsl(var(--user-prefered-color, 155), 40%, 44%);
     --tertiary-color: hsl(var(--user-prefered-color, 155), 43%, 27%);
-    --background-color: hsl(var(--user-prefered-color, 155), 28%, 10%);
-    --navbar-color: hsl(var(--user-prefered-color, 155), 33%, 19%);
+    --background-color: hsl(var(--user-prefered-color, 155), 8%, 5%);
+    /* --background-color: black; */
+    --navbar-color: hsl(var(--user-prefered-color, 155), 33%, 15%);
+    --navbar-bottom-color: hsla(var(--user-prefered-color, 155), 33%, 14%, 0);
     --text-color: hsl(var(--user-prefered-color, 155), 100%, 88%);
     --secondary-text-color: hsl(var(--user-prefered-color, 155), 54%, 81%);
     --current-period-color: hsl(var(--user-prefered-color, 155), 100%, 80%);
@@ -13,6 +15,7 @@
     --user-color: hsl(214, 77%, 46%);
     --user-primary-color: hsl(214, 77%, 46%);
     --highlighted-inner-user-color: hsl(var(--user-prefered-color, 155), 60%, 27%);
+    --listbox-color: hsl(var(--user-prefered-color, 155), 25%, 30%);
 }
 @media (prefers-color-scheme: light) {
     :root {
@@ -31,8 +34,7 @@
         --highlighted-inner-user-color: hsl(157, 79%, 49%);
     }
 }
-/* TODO: Cut down on color, this could really be black and white with accent colors for important details */
-/* If anyone wants to help me with UI/UX feel free to contact me */
+/* Main pages */
 * {
     margin: 0;
     padding: 0;
@@ -44,17 +46,21 @@ body {
     color: var(--text-color);
 }
 header {
-    background-color: var(--navbar-color);
+    background: linear-gradient(to bottom, var(--navbar-color) 0%, var(--navbar-color) 10%, var(--navbar-bottom-color) 100%);
     padding: 1rem;
     position: sticky;
     top: 0;
     z-index: 1000;
 }
-nav ul {
-    list-style: none;
-    display: flex;
-    justify-content: center;
+main {
+    padding: 1rem;
 }
+@media (max-width: 450px) {
+    main {
+        text-align: center;
+    }
+}
+/* Header */
 header ul li {
     font-weight: bold;
     margin-right: 1rem;
@@ -78,14 +84,12 @@ header ul li a:after {
 header ul li a:hover:after {
     width: calc(100% + 10px);
 }
-main {
-    padding: 1rem;
+header nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
 }
-@media (max-width: 450px) {
-    main {
-        text-align: center;
-    }
-}
+/* Forms */
 main#landingpage, main:has(form), main#error {
     display: flex;
     flex-direction: column;
@@ -157,6 +161,7 @@ a {
 ul {
     list-style: none;
 }
+/* List grid (e.g. classes and user page) */
 #classes, #users, ul.actions, #schedules, #tokens {
     /* margin-top: 20px; */
     display: grid;
@@ -169,7 +174,7 @@ ul {
 }
 .class, .user, .classuser, .schedule, li.action, .token {
     padding: 7px;
-    background-color: var(--secondary-color);
+    background-color: var(--listbox-color);
     border-radius: 5px;
     text-align: center;
     transition: background-color 0.3s;
@@ -180,6 +185,7 @@ ul {
 .class.currentperiod {
     outline: 3px solid var(--current-period-color);
     outline-offset: 2px;
+    background-color: var(--secondary-color);
 }
 main.passing .class.currentperiod {
     outline: none;

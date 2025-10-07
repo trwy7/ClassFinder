@@ -82,7 +82,14 @@ def inject_user():
     """
     Injects the user into the template context.
     """
-    return dict(user=auth_user()[0], devmode=devmode)
+    return {"user": auth_user()[0]}
+
+@app.context_processor
+def inject_devmode():
+    """
+    Injects the devmode variable into the template context.
+    """
+    return {"devmode": devmode}
 
 # Analytics
 logs: list[dict[str, any]] = []

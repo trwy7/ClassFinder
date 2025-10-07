@@ -7,6 +7,7 @@
         <input type="email" id="email" name="email" required><br>
         <button onclick="attemptRegister(event, this)">Register</button><br>
     </form>
+    <div class="loader" id="spinner" style="display:none;"></div>
     {% if status is not none %}
     <p>{{status}}</p>
     {% endif %}
@@ -25,6 +26,8 @@
             if (thisButton) {
                 thisButton.disabled = true;
             }
+            document.getElementById('spinner').style.display = 'inline-block';
+            document.getElementById('status').innerText = '...';
             fetch('/register', {
                 method: 'POST',
                 headers: {
@@ -36,6 +39,7 @@
                 credentials: 'include'
             })
             .then(response => {
+                document.getElementById('spinner').style.display = 'none';
                 if (response.status === 429) {
                     throw new Error('Too many requests. Please try again later.');
                 }
@@ -57,6 +61,7 @@
             })
             .catch(error => {
                 document.getElementById('status').innerText = 'An error occurred: ' + error.message;
+                document.getElementById('spinner').style.display = 'none';
                 setTimeout(() => {
                     if (thisButton) {
                         thisButton.disabled = false;
