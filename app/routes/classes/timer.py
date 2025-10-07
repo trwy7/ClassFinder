@@ -6,10 +6,9 @@ from flask import render_template, url_for, redirect, request, make_response
 from app import app
 from app.utilities.config import status
 from app.utilities.classes import get_user_current_period, get_current_period
-from app.utilities.users import verify_user
+from app.utilities.users import require_login
 
 @app.route('/timer/')
-@verify_user(required=False)
 def timer():
     """
     Handles the timer page

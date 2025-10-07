@@ -98,7 +98,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status == "success") {
-                        window.location.href = '/dashboard';
+                        window.location.href = data.redirect_to;
                     } else {
                         console.error('Failed to check link code: ' + data.message);
                     }

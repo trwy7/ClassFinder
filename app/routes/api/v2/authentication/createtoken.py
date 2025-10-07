@@ -4,10 +4,10 @@ This module handles the creation of API tokens for users.
 from flask import request, jsonify
 from app import app
 from app.addons.limiter import limiter
-from app.utilities.users import verify_user, create_token
+from app.utilities.users import require_login, create_token
 
 @app.route("/api/v2/createtoken", methods=["POST", "GET"])
-@verify_user
+@require_login
 @limiter.limit("6 per minute")
 def api_v2_createtoken():
     """
@@ -21,7 +21,7 @@ def api_v2_createtoken():
     return jsonify(token.token)
 
 @app.route("/api/v2/createscopedtoken", methods=["POST"])
-@verify_user
+@require_login
 @limiter.limit("6 per minute")
 def api_v2_createscopedtoken():
     """

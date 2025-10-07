@@ -7,14 +7,14 @@ from ics import Calendar, Event
 from flask import request, send_file, render_template
 from app import app
 from app.utilities.config import canvas_url
-from app.utilities.users import verify_user
+from app.utilities.users import require_login, require_scopes
 from app.utilities.times import get_current_day, get_classtime_by_period, readable_days, get_lunchtimes
 from app.utilities.classes import get_today_courses
 
 #GEN_CAL_LENGTH = 91  # Number of days to generate calendar for
 
 @app.route('/classes/calendar')
-@verify_user()
+@require_login
 def calendar_page():
     """
     Render the calendar page.
@@ -23,7 +23,8 @@ def calendar_page():
 
 @app.route('/<authtoken>/calendar.ics')
 @app.route('/calendar.ics')
-@verify_user(required_scopes=[['read-classes'], ['calendar']], onfail=lambda: ("Your token is invalid", 401))
+@require_login
+@require_scopes(required_scopes=[['read-classes'], ['calendar']])
 def calendar_req(authtoken=None): # pylint: disable=unused-argument
     """Generate a calendar file for the current and next 90 days."""
     start_datetime = datetime.now()

@@ -3,13 +3,14 @@ Basic admin route
 """
 from flask import render_template, request
 from app import app
-from app.utilities.users import verify_user
+from app.utilities.users import require_login, require_role
 from app.utilities.classes import get_current_period
 from app.db import Class, User
 from app.utilities.config import devmode
 
 @app.route("/admin")
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def admin():
     """
     Display the admin dashboard.

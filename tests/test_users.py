@@ -373,10 +373,20 @@ def test_calendar(client, token):
     assert b"BEGIN:VCALENDAR" in response.data
     assert b"END:VCALENDAR" in response.data
     response = client.get(f"/{token}/calendar.ics")
-    assert response.status_code == 200
-    assert response.content_type == 'text/calendar; charset=utf-8'
-    assert b"BEGIN:VCALENDAR" in response.data
-    assert b"END:VCALENDAR" in response.data
+    assert response.status_code == 200, f"Failed to get calendar with token in URL: {response.status_code}"
+    assert response.content_type == 'text/calendar; charset=utf-8', f"Failed to get calendar with token in URL: {response.content_type}"
+    assert b"BEGIN:VCALENDAR" in response.data, f"Failed to get calendar with token in URL: {response.data}"
+    assert b"END:VCALENDAR" in response.data, f"Failed to get calendar with token in URL: {response.data}"
+    response = client.post("/api/v2/createscopedtoken", headers={"Authorization": f"Bearer {token}"}, json={"scopes": ["calendar"]})
+    assert response.status_code == 200, f"Failed to create scoped token: {response.status_code}"
+    assert response.content_type == 'application/json', f"Failed to create scoped token: {response.content_type}"
+    assert response.json, f"Failed to create scoped token: {response.json}"
+    calendartoken = response.json
+    response = client.get(f"/{calendartoken}/calendar.ics")
+    assert response.status_code == 200, f"Failed to get calendar with scoped token: {response.status_code} {response.data}"
+    assert response.content_type == 'text/calendar; charset=utf-8', f"Failed to get calendar with scoped token: {response.content_type}"
+    assert b"BEGIN:VCALENDAR" in response.data, f"Failed to get calendar with scoped token: {response.data}"
+    assert b"END:VCALENDAR" in response.data, f"Failed to get calendar with scoped token: {response.data}"
 
 def test_delete_user(client, token):
     """

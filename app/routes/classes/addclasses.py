@@ -5,7 +5,7 @@ import re
 from flask import render_template, redirect, request, send_from_directory
 from better_profanity import profanity
 from app import app
-from app.utilities.users import verify_user
+from app.utilities.users import require_login
 from app.utilities.classes import (
     add_class,
     add_user_to_class,
@@ -20,7 +20,7 @@ from app.utilities.config import campus_url
 from app.utilities.responses import error_response, success_response
 
 @app.route("/addclasses")
-@verify_user
+@require_login
 def addclasses():
     """
     Checks if the user has all of their classes, and if not, renders the addclasses page.
@@ -43,9 +43,7 @@ def addclasses():
 
 
 @app.route("/addclasses", methods=["POST"])
-@verify_user(
-    onfail=lambda:({"status": "error", "message": "You must be logged in to do that."}, 401)
-)
+@require_login
 def addclasses_post():
     """
     Adds the classes to the user's account.

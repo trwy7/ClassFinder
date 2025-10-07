@@ -9,7 +9,7 @@ import functools
 import base64
 import random
 from flask_bcrypt import Bcrypt
-from flask import request, redirect
+from flask import request, redirect, abort, render_template
 from app.db import db, User, Token, Class
 from app.utilities.responses import error_response
 from app import app
@@ -138,7 +138,7 @@ def create_token( # pylint: disable=too-many-arguments, too-many-positional-argu
         token=os.urandom(30).hex(),
         user_id=username,
         type=tokentype,
-        expire=expiry,
+        expire=nexpiry,
         scopes=" ".join(scopes) if scopes is not None else None,
         granted_to=granted_to
     )
@@ -367,160 +367,209 @@ def set_color(user: User, color_hue: int):
     db.session.commit()
     return user
 
-def verify_user( # pylint: disable=dangerous-default-value, too-many-statements
-    func=None,
-    required: bool = True,
-    allowed_roles: list = ["user", "teacher", "admin", "testing"],
-    onfail=lambda: redirect("/login"),
-    required_scopes: list[list[str]] = None, # Tokens with a null scope value are always allowed, even through a null required_scopes
-):
+# Verify user
+
+def get_active_token():
     """
-    Decorator to verify a user
+    Check if the request has a token in it, valid or not
+    """
+    auth = request.headers.get("Authorization")
+    # Check cookies, query string and URL parameters for an auth token
+    token = (
+        request.cookies.get("token")
+        or request.args.get("authtoken")
+        or (request.view_args.get("authtoken") if getattr(request, "view_args", None) else None)
+    )
+    if auth:
+        if auth.startswith("Bearer "):
+            token = auth.split(" ")[1]
+        elif auth.startswith("Basic "):
+            return None
+        else:
+            if auth != "":
+                token = auth.split(" ")[1]
+    return token
+
+def get_active_pwd():
+    """
+    Check if the request has basic auth in it, valid or not
+    """
+    auth = request.headers.get("Authorization")
+    if auth:
+        if auth.startswith("Basic "):
+            try:
+                auth = base64.b64decode(auth.split(" ")[1]).decode("utf-8")
+            except (ValueError, UnicodeDecodeError):
+                return None
+            username, password = auth.split(":")
+            return (username, password)
+    return None
+
+def check_token_validity(token: str):
+    """
+    Check if a token is valid, and return the user and token if it is
 
     Args:
-        func: The function to decorate.
-        required (bool): Whether the user is required.
-        allowed_roles (list): Roles that are allowed.
-        onfail: The function to call if the user is not verified.
-
-    This populates the request object with the user and token.
+        token (str): The token string to check.
+    Returns:
+        (User, Token): The user and token if valid, else (None, None).
     """
-    # TODO: Recreate this whole function in a cleaner way, this is a mess
-    # Right now, unauthorized and forbidden responses both return the same thing
-    # Also, we should have a seperate auth() function, and an in memory token cache
-    def decorator(func): # pylint: disable=too-many-statements
+    token = Token.query.filter_by(token=token).first()
+    if token:
+        if token.expire is not None and token.expire < datetime.now():
+            return (None, None)
+        user = User.query.filter_by(username=token.user_id).first()
+        if user:
+            return (user, token)
+    return (None, None)
+
+def check_token_scopes(token: Token, required_scopes: list[list[str]]):
+    """
+    Check if a token has the required scopes
+
+    Args:
+        token (Token): The token to check.
+        required_scopes (list[list[str]]): The required scopes.
+    Returns:
+        bool: Whether the token has the required scopes.
+    """
+    if token.scopes is None:
+        return True
+    token_scopes = token.scopes.split(" ")
+    for scope_group in required_scopes:
+        allow_token = True
+        for scope in scope_group:
+            if not scope in token_scopes:
+                allow_token = False
+                break
+        if allow_token:
+            return True
+    return False
+
+def auth_user():
+    """
+    Authenticate a user based on the current request. Should only be run once per request.
+    Returns:
+        (User, Token): The authenticated user and token, (User, None) if authenticated with password, else (None, None).
+    """
+    if request.user is not None:
+        return (request.user, request.token)
+    request.user = None
+    request.token = None
+    ctoken = get_active_token()
+    if ctoken:
+        user, token = check_token_validity(ctoken)
+        if user and token:
+            request.user = user
+            request.token = token
+            return (user, token)
+    cpwd = get_active_pwd()
+    if cpwd:
+        username, password = cpwd
+        if check_password(username, password):
+            user = User.query.filter_by(username=username).first()
+            if user:
+                request.user = user
+                return (user, None)
+    return (None, None)
+
+def require_logged_out(f):
+    """
+    Decorator to require a user to be logged out.
+    If the user is logged in, they will be redirected to the home page.
+    """
+    @functools.wraps(f)
+    def decorated_function(*args, **kwargs):
+        user, token = auth_user()
+        if user is not None:
+            return redirect("/dashboard")
+        return f(*args, **kwargs)
+    return decorated_function
+
+def require_login(_func=None):
+    """
+    Decorator to require a user to be logged in.
+    Supports both usage forms:
+      @require_login
+      @require_login()
+
+    If the user is not logged in, they will be redirected to the login page or receive a 401 error for API requests.
+
+    This version no longer takes allow_scoped; instead it allows scoped tokens only when the endpoint is
+    also decorated with @require_scopes (detected by a marker attribute on the wrapped function).
+    """
+    def _has_required_scopes_marker(func):
+        cur = func
+        # Walk the __wrapped__ chain to find a marker set by require_scopes
+        while cur is not None:
+            if getattr(cur, "_required_scopes", None) is not None:
+                return True
+            cur = getattr(cur, "__wrapped__", None)
+        return False
+
+    def decorator(f):
+        @functools.wraps(f)
+        def decorated_function(*args, **kwargs):
+            user, token = auth_user()
+            if user is None:
+                if request.path.startswith("/api/") or request.method != "GET":
+                    if request.path.startswith("/api/plain/"):
+                        return "Unauthorized", 401
+                    return error_response("Unauthorized"), 401
+                resp = redirect("/login")
+                resp.set_cookie("redirect_to", request.path + ("?" + request.query_string.decode("utf-8") if request.query_string else ""))
+                return resp
+
+            # If a token was used for auth and it has scopes, disallow it unless the endpoint requires scopes
+            if token is not None and token.scopes is not None and not _has_required_scopes_marker(f):
+                if request.path.startswith("/api/") or request.method != "GET":
+                    if request.path.startswith("/api/plain/"):
+                        return "Forbidden: This token has scopes and cannot be used for this request", 403
+                    return error_response("Forbidden: This token has scopes and cannot be used for this request"), 403
+                return render_template("templates/error.html", status_code=403, error_message="Forbidden: This token has scopes and cannot be used for this request"), 403
+
+            return f(*args, **kwargs)
+        return decorated_function
+
+    # If used without parentheses: @require_login
+    if _func is not None:
+        return decorator(_func)
+    return decorator
+
+def require_scopes(required_scopes: list[list[str]]): # pylint: disable=dangerous-default-value
+    """
+    Decorator to require a user to have certain scopes.
+    If the user does not have the required scopes, they will receive a 403 error.
+    """
+    def decorator(func):
+        func._required_scopes = required_scopes  # Marker attribute to indicate required scopes
         @functools.wraps(func)
-        def wrapper(*args, **kwargs): # pylint: disable=too-many-branches, too-many-statements # I have no idea why too-many-branches is flagged
-            request.user = None
-            request.token = None
-            auth = request.headers.get("Authorization")
-            token = request.cookies.get("token") or kwargs.get("authtoken")
-            if auth:
-                if auth.startswith("Bearer "):
-                    app.logger.debug("Trying bearer authentication for " + func.__name__)
-                    token = auth.split(" ")[1]
-                elif auth.startswith("Basic "):
-                    try:
-                        auth = base64.b64decode(auth.split(" ")[1]).decode("utf-8")
-                    except (ValueError, UnicodeDecodeError):
-                        app.logger.debug("Failed to decode basic authentication for " + func.__name__)
-                        return error_response("Invalid basic authentication format"), 400
-                    username, password = auth.split(":")
-                    app.logger.debug("Trying basic authentication for " + func.__name__ + " with " + username)
-                    if app.config.get("TESTING"):
-                        app.logger.debug("Testing mode enabled, printing password (basic): '" + password + "'")
-                    if check_password(username, password):
-                        user = User.query.filter_by(username=username).first()
-                        if user and user.role in allowed_roles:
-                            app.logger.debug(
-                                "Accepted user "
-                                + user.username
-                                + " with role "
-                                + user.role
-                                + " for "
-                                + func.__name__
-                                + " with basic authentication"
-                            )
-                            request.user = user
-                            return func(*args, **kwargs)
-                    else:
-                        app.logger.debug("Basic authentication failed for " + func.__name__)
-                        return error_response("Invalid username or password"), 401
-                else:
-                    if auth != "":
-                        app.logger.debug("Trying legacy authentication for " + func.__name__)
-                        token = auth.split(" ")[1]
-            if token:
-                app.logger.debug("Trying token/refresh authentication for " + func.__name__)
-                if app.config.get("TESTING"):
-                    app.logger.debug("Testing mode enabled, printing token: '" + token + "'")
-                    app.logger.debug("Testing mode enabled, printing header: '" + str(request.headers) + "'")
-                user = check_token(token)
-                if user and user.role in allowed_roles:
-                    token = get_token(token)
-                    if token.expire is not None and token.expire < datetime.now():
-                        app.logger.debug("Token for " + user.username + " has expired. Deleting token.")
-                        delete_token(token)
-                    else:
-                        if token.type == "refresh" and token.expire is not None and token.expire < datetime.now() + timedelta(days=2):
-                            # This needs testing
-                            app.logger.debug("Refresh token for " + user.username + " is about to expire. Extending expiry by 2 days.")
-                            token.expire += timedelta(days=2)
-                            db.session.commit()
-                        app.logger.debug(f"Required scopes is \"{required_scopes}\" and token has \"{token.scopes}\"")
-                        if token.scopes is not None:
-                            app.logger.debug("Token has scopes: " + token.scopes)
-                            if required_scopes is None:
-                                app.logger.debug("Token has scopes, but this endpoint does not allow scoped tokens")
-                                return error_response("This endpoint does not allow scoped tokens"), 403
-                            app.logger.debug("Required scopes is not null")
-                            token_scopes = token.scopes.split(" ")
-                            allow_token = True
-                            for scope_group in required_scopes:
-                                allow_token = True
-                                for scope in scope_group:
-                                    if not scope in token_scopes:
-                                        app.logger.debug("Token does not have required scope " + scope)
-                                        allow_token = False
-                                        break
-                                    app.logger.debug("Token has required scope " + scope)
-                                if allow_token:
-                                    break
-                            if not allow_token:
-                                app.logger.debug("Token does not have required scopes " + str(required_scopes))
-                                return error_response(
-                                    "You do not have the required scopes. You must match at least one of these scope lists.",
-                                    {
-                                        "required_scopes": required_scopes
-                                    }
-                                ), 403
-                        app.logger.debug(
-                            "Accepted user "
-                            + user.username
-                            + " with role "
-                            + user.role
-                            + " for "
-                            + func.__name__
-                            + " with token/refresh authentication"
-                        )
-                        request.user = user
-                        request.token = token
-                        return func(*args, **kwargs)
-            app.logger.debug("Rejected user for " + func.__name__ + " with user agent " + request.user_agent.string)
-            if not required:
-                return func(*args, **kwargs)
-            failresponse = onfail()
-            if request.cookies.get("token"):
-                app.logger.debug("Clearing token")
-                failresponse.set_cookie(
-                    "token",
-                    "",
-                    httponly=True,
-                    samesite="Lax",
-                    secure=True,
-                    max_age=0,
-                )
-            if request.cookies.get("admin_token"):
-                app.logger.debug("Restoring to admin token")
-                failresponse.set_cookie(
-                    "token",
-                    request.cookies.get("admin_token"),
-                    httponly=True,
-                    samesite="Lax",
-                    secure=True,
-                    max_age=604800,
-                )
-                failresponse.set_cookie(
-                    "admin_token",
-                    "",
-                    httponly=True,
-                    samesite="Lax",
-                    secure=True,
-                    max_age=0,
-                )
-                return failresponse
-            return failresponse
+        def decorated_function(*args, **kwargs):
+            user, token = auth_user()
+            if user is None:
+                raise Exception("This decorator requires the user to be logged in. Use @require_login before this decorator.")
+            if not check_token_scopes(token, required_scopes):
+                return error_response("Forbidden: This token does not have the required scopes"), 403
+            return func(*args, **kwargs)
+        return decorated_function
+    return decorator
 
-        return wrapper
+def require_role(roles: list):
+    """
+    Decorator factory to require a user to have a certain role.
+    Usage:
+      @require_role(["admin"]) or @require_role(["admin", "moderator"]) 
+    If the user does not have the required role, they will receive a 403 error.
+    """
+    def decorator(f):
+        @functools.wraps(f)
+        def decorated_function(*args, **kwargs):
+            user, token = auth_user()
+            if user is None:
+                raise Exception("This decorator requires the user to be logged in. Use @require_login before this decorator.")
+            if user.role not in roles:
+                return render_template("templates/error.html", status_code=403, error_message="Forbidden"), 403
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
-    return decorator if func is None else decorator(func)

@@ -5,13 +5,13 @@ from flask import redirect, request
 from app import app
 from app.utilities.config import canvas_url
 from app.utilities.classes import get_user_current_period
-from app.utilities.users import verify_user
+from app.utilities.users import require_login
 from app.utilities.responses import error_response
 
 valid_paths = ["assignments", "grades", "announcements", "discussions", "modules"]
 
 @app.route("/canvas")
-@verify_user
+@require_login
 def canvas():
     """
     Redirects the user to the Canvas course page.
@@ -35,7 +35,7 @@ def canvas():
 
 
 @app.route("/canvas/<path>")
-@verify_user
+@require_login
 def canvas_with_path(path):
     """
     Redirects the user to the Canvas course page with a path

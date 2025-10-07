@@ -6,12 +6,13 @@ from flask import render_template, request
 from app import app
 from app.db import Schedule, db
 from app.utilities.times import set_schedule, readable_days
-from app.utilities.users import verify_user
+from app.utilities.users import require_login, require_role
 from app.utilities.responses import success_response, error_response
 
 
 @app.route("/admin/times/schedule")
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def schedule():
     """
     This route displays the schedule times page.
@@ -20,7 +21,8 @@ def schedule():
 
 
 @app.route("/admin/times/schedule", methods=["POST"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def schedule_post():
     """
     This route handles the schedule times form submission.
@@ -33,7 +35,8 @@ def schedule_post():
     return success_response("Schedule set")
 
 @app.route("/admin/times/schedule/<day>", methods=["DELETE"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def schedule_delete(day):
     """
     This route deletes a schedule for a specific day.

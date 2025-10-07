@@ -4,7 +4,7 @@ This file contains the routes for linking the user's classes to canvas courses.
 import requests
 from flask import render_template, request, redirect, url_for
 from app import app
-from app.utilities.users import verify_user
+from app.utilities.users import require_login
 from app.utilities.classes import set_canvas_id
 from app.utilities.responses import success_response
 from app.utilities.config import canvas_url
@@ -12,7 +12,7 @@ from app.addons.limiter import limiter
 
 
 @app.route("/classes/canvaslink")
-@verify_user
+@require_login
 def canvaslink():
     """
     Asks the user to link their classes to canvas courses.
@@ -61,7 +61,7 @@ def canvaslink():
 
 @app.route("/classes/canvaslink", methods=["POST"])
 @limiter.limit("2/minute")
-@verify_user
+@require_login
 def canvaslink_post():
     """
     Links the user's classes to canvas courses.
