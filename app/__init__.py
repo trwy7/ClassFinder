@@ -10,12 +10,12 @@ import importlib
 import logging
 import ipaddress
 import re
+import signal
 from datetime import datetime
 from flask import Flask, request
 from flask_apscheduler import APScheduler
 import requests
 from app.utilities.config import devmode
-import signal
 start_init_time = datetime.now()
 
 app = Flask(__name__, template_folder="pages", static_folder="static")
@@ -33,7 +33,7 @@ app.config['END_OF_SEMESTER'] = os.environ.get('END_OF_SEMESTER', None)
 if app.config['END_OF_SEMESTER'] is not None:
     app.config['END_OF_SEMESTER'] = datetime.strptime(app.config['END_OF_SEMESTER'], '%Y-%m-%d').date()
 
-from app.utilities.users import auth_user
+from app.utilities.users import auth_user # pylint: disable=wrong-import-position # This import wont work if it is at the top of the file as it causes a circular import
 @app.before_request
 def before_request2():
     """

@@ -77,7 +77,7 @@ def timer():
     else:
         time_left_readable = f"{seconds}s"
 
-    seconds_until_end_readable = f"{seconds_left} seconds"
+    # seconds_until_end_readable = f"{seconds_left} seconds"
     response = make_response(render_template(
         'timer.html',
         nextclass=end_time_unix_seconds,
