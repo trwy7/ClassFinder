@@ -18,8 +18,6 @@ from app.utilities.config import devmode
 import signal
 start_init_time = datetime.now()
 
-# TODO: Move templates into folders
-# TODO: Use jinja2 template extends to reduce code duplication
 app = Flask(__name__, template_folder="pages", static_folder="static")
 
 def stop_server():
