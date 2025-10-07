@@ -5,13 +5,14 @@ from collections import defaultdict, Counter
 from datetime import datetime
 from flask import render_template, request
 from app import app, get_logs, get_request_logs, start_init_time
-from app.utilities.users import verify_user
+from app.utilities.users import require_login, require_role
 
 # Most of this was AI, I have attempted making it more readable, but this code needs work anyway.
 
 @app.route("/admin/logs")
 @app.route("/admin/analytics")
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def logs():
     """
     Display the logs analytics dashboard.

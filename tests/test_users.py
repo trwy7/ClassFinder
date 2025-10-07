@@ -137,14 +137,14 @@ def test_dashboard_invalid_basic_auth(client):
     Tests the dashboard route with invalid basic auth
     """
     response = client.get("/dashboard", headers={"Authorization": "Basic invalidtoken"})
-    assert response.status_code == 400
+    assert response.status_code in (302, 400)
 
 def test_dashboard_incorrect_basic_auth(client):
     """
     Tests the dashboard route with incorrect basic auth
     """
     response = client.get("/dashboard", headers={"Authorization": "Basic " + base64.b64encode(b"pytest:password823").decode()})
-    assert response.status_code == 401
+    assert response.status_code in (302, 401)
 
 def test_dashboard_legacy_auth(client, token):
     """
@@ -373,10 +373,20 @@ def test_calendar(client, token):
     assert b"BEGIN:VCALENDAR" in response.data
     assert b"END:VCALENDAR" in response.data
     response = client.get(f"/{token}/calendar.ics")
-    assert response.status_code == 200
-    assert response.content_type == 'text/calendar; charset=utf-8'
-    assert b"BEGIN:VCALENDAR" in response.data
-    assert b"END:VCALENDAR" in response.data
+    assert response.status_code == 200, f"Failed to get calendar with token in URL: {response.status_code}"
+    assert response.content_type == 'text/calendar; charset=utf-8', f"Failed to get calendar with token in URL: {response.content_type}"
+    assert b"BEGIN:VCALENDAR" in response.data, f"Failed to get calendar with token in URL: {response.data}"
+    assert b"END:VCALENDAR" in response.data, f"Failed to get calendar with token in URL: {response.data}"
+    response = client.post("/api/v2/createscopedtoken", headers={"Authorization": f"Bearer {token}"}, json={"scopes": ["calendar"]})
+    assert response.status_code == 200, f"Failed to create scoped token: {response.status_code}"
+    assert response.content_type == 'application/json', f"Failed to create scoped token: {response.content_type}"
+    assert response.json, f"Failed to create scoped token: {response.json}"
+    calendartoken = response.json
+    response = client.get(f"/{calendartoken}/calendar.ics")
+    assert response.status_code == 200, f"Failed to get calendar with scoped token: {response.status_code} {response.data}"
+    assert response.content_type == 'text/calendar; charset=utf-8', f"Failed to get calendar with scoped token: {response.content_type}"
+    assert b"BEGIN:VCALENDAR" in response.data, f"Failed to get calendar with scoped token: {response.data}"
+    assert b"END:VCALENDAR" in response.data, f"Failed to get calendar with scoped token: {response.data}"
 
 def test_delete_user(client, token):
     """

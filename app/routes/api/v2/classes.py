@@ -5,12 +5,13 @@ These endpoints are used to get information about the user's classes and schedul
 from datetime import datetime
 from flask import request
 from app import app
-from app.utilities.users import verify_user
+from app.utilities.users import require_login, require_scopes
 from app.utilities.classes import get_user_current_period, get_today_courses, get_current_period
 from app.utilities.responses import success_response, error_response
 
 @app.route("/api/v2/classes/current")
-@verify_user(onfail=lambda:(error_response("You must be logged in to do that."), 401), required_scopes=[["read-classes"]])
+@require_login
+@require_scopes([["read-classes"]])
 def current_classes():
     """
     Returns the current classes for the user.
@@ -27,7 +28,8 @@ def current_classes():
                 "room": c.room,
                 "lunch": c.lunch,
                 "verified": c.verified,
-                "canvasid": c.canvasid
+                "canvasid": c.canvasid,
+                "teacher": c.teacher
             } for c in get_today_courses(user)
         },
         "period": currentperiod['period'] if currentperiod is not None else None,
@@ -38,7 +40,8 @@ def current_classes():
     })
 
 @app.route("/api/v2/classes/all")
-@verify_user(onfail=lambda:(error_response("You must be logged in to do that."), 401), required_scopes=[["read-classes"]])
+@require_login
+@require_scopes([["read-classes"]])
 def all_classes():
     """
     Returns all classes for the user.
@@ -53,7 +56,8 @@ def all_classes():
                 "period": c.period,
                 "lunch": c.lunch,
                 "verified": c.verified,
-                "canvasid": c.canvasid
+                "canvasid": c.canvasid,
+                "teacher": c.teacher
             } for c in user.classes
         }
     })

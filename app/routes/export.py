@@ -5,12 +5,12 @@ Allows exporting user data to json.
 from datetime import datetime
 from flask import request
 from app import app
-from app.utilities.users import verify_user
+from app.utilities.users import require_login
 from app.utilities.responses import success_response
 
 
 @app.route("/export")
-@verify_user
+@require_login
 def export():
     """
     This route allows the user to export their data.

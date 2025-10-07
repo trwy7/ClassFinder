@@ -5,7 +5,7 @@ Hosts the dashboard route.
 from datetime import datetime
 from flask import render_template, request, make_response
 from app import app
-from app.utilities.users import verify_user
+from app.utilities.users import require_login
 from app.utilities.classes import (
     get_today_courses,
     neededperiods,
@@ -17,7 +17,7 @@ from app.utilities.config import canvas_url, devmode, status
 from app.addons.limiter import limiter
 
 @app.route("/dashboard")
-@verify_user
+@require_login
 def dashboard():
     """
     Hosts the dashboard route.

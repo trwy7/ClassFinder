@@ -6,7 +6,7 @@ import random
 from flask import request, render_template, redirect, url_for
 from app import app
 from app.utilities.responses import success_response, error_response
-from app.utilities.users import create_token, verify_user
+from app.utilities.users import create_token, require_login
 from app.addons.limiter import limiter
 
 
@@ -56,7 +56,7 @@ def redir_link():
     return redirect(url_for("account_link"))
 
 @app.route("/account/link")
-@verify_user
+@require_login
 def account_link():
     """
     The account linking page.
@@ -65,7 +65,7 @@ def account_link():
     return render_template("link.html", user=user)
 
 @app.route("/account/link/<int:code>")
-@verify_user
+@require_login
 def account_link_code(code):
     """
     Link the user's account to an external application.
@@ -76,7 +76,7 @@ def account_link_code(code):
     return render_template("finallink.html", user=user, code=code, codedata=link_codes[code], ip=request.remote_addr)
 
 @app.route("/account/link/<int:code>", methods=["POST"])
-@verify_user
+@require_login
 def account_link_confirm(code):
     """
     Confirm the linking of the user's account to an external application.
