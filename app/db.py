@@ -15,7 +15,7 @@ if db_path == "sqlite:///:memory:":
     app.logger.info("Using in-memory database, probably for testing purposes. Data will not be saved.")
 app.config["SQLALCHEMY_DATABASE_URI"] = db_path
 db = SQLAlchemy(app)
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"connect_args": {"cache_size": -64000}}
+# app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"connect_args": {"cache_size": -64000}}
 
 # if not os.path.exists(db_path):
 #     os.makedirs(db_path)

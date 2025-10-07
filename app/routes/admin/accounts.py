@@ -4,7 +4,8 @@ Allows the admin to manage user accounts.
 from flask import render_template, request, redirect, url_for
 from app import app
 from app.utilities.users import (
-    verify_user,
+    require_login,
+    require_role,
     get_user,
     delete_user,
     create_token,
@@ -19,7 +20,8 @@ from app.utilities.responses import error_response, success_response
 
 
 @app.route("/admin/account/<username>", methods=["DELETE"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def delete_account(username):
     """
     Deletes a user account.
@@ -39,7 +41,8 @@ def delete_account(username):
 
 
 @app.route("/admin/account/<username>/login", methods=["POST", "GET"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def login_as(username):
     """
     Logs in as a user.
@@ -73,7 +76,8 @@ def login_as(username):
 
 
 @app.route("/admin/create/account")
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def create_account():
     """"
     Creates a new user account.
@@ -82,7 +86,8 @@ def create_account():
 
 
 @app.route("/admin/create/account", methods=["POST"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def create_account_post():
     """
     Creates a new user account.
@@ -109,7 +114,8 @@ def create_account_post():
     return success_response("User created."), 200
 
 @app.route("/admin/account/<username>/edit")
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def edit_account(username):
     """"
     Edits a user account.
@@ -120,7 +126,8 @@ def edit_account(username):
     return error_response("User not found."), 404
 
 @app.route("/admin/account/<username>/edit", methods=["POST"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def edit_account_post(username):
     """"
     Edits a user account.

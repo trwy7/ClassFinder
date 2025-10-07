@@ -4,10 +4,9 @@ This file contains the route for exporting a schedule to a PDF.
 from flask import request, send_file, render_template
 from app import app
 from app.utilities.times import create_schedule_pdf
-from app.utilities.users import verify_user
+from app.utilities.users import require_login
 
 @app.route("/classes/exportschedule", methods=["GET"])
-@verify_user(required=False)
 def exportpdf():
     """
     Shows PDF export options.
@@ -16,7 +15,6 @@ def exportpdf():
     return render_template("pdf.html", user=user)
 
 @app.route("/classes/schedulepdf", methods=["GET"])
-@verify_user(required=False)
 def schedulepdf():
     """
     Exports the user's schedule to a PDF.
@@ -25,7 +23,6 @@ def schedulepdf():
     return send_file(create_schedule_pdf(user), download_name="schedule.pdf")
 
 @app.route("/classes/schedulepdf/<days>", methods=["GET"])
-@verify_user(required=False)
 def schedulepdfday(days):
     """
     Exports the user's schedule to a PDF for specific days.

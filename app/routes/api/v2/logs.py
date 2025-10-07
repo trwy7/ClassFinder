@@ -3,10 +3,11 @@ Allows administrators to view logs.
 """
 from flask import request
 from app import app, get_logs, get_request_logs
-from app.utilities.users import verify_user
+from app.utilities.users import require_login, require_role
 
 @app.route("/api/v2/logs", methods=["GET"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def get_logs_route():
     """
     Returns the logs of the application.
@@ -16,7 +17,8 @@ def get_logs_route():
     return logs, 200
 
 @app.route("/api/v2/request_logs", methods=["GET"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def get_request_logs_route():
     """
     Returns the request logs of the application.

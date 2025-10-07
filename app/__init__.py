@@ -76,6 +76,14 @@ def before_request3():
     app.logger.warning("People may be able to bypass rate limits.")
     return None
 
+from app.utilities.users import auth_user
+@app.context_processor
+def inject_user():
+    """
+    Injects the user into the template context.
+    """
+    return dict(user=auth_user()[0], devmode=devmode)
+
 # Analytics
 logs: list[dict[str, any]] = []
 ## Logs structure:
