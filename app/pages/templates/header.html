@@ -1,9 +1,9 @@
-<header>
+<header{% if devmode %} style="background: linear-gradient(to bottom, #ff4d4d 0%, #7d2828 100%);"{% endif %}>
     <nav>
         <ul>
             <li><a href="/dashboard">Dashboard</a></li>
             {% if currentperiod is not none %}<li><a href="/timer" id="timertext">Timer</a></li>{% endif %}
-            <li><a href="/account">Account</a></li>
+            <li><a href="/account">{% if user is none %}Account{% else %}{{ user.username }}{% endif %}</a></li>
         </ul>
     </nav>
 </header>

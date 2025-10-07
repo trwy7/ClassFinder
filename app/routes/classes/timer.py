@@ -6,15 +6,15 @@ from flask import render_template, url_for, redirect, request, make_response
 from app import app
 from app.utilities.config import status
 from app.utilities.classes import get_user_current_period, get_current_period
-from app.utilities.users import verify_user
 
+@app.route('/timer')
 @app.route('/timer/')
-@verify_user(required=False)
 def timer():
     """
     Handles the timer page
     """
     user = request.user
+    app.logger.debug(f"User: {user}")
     # Determine server local timezone once
     local_tz = datetime.now().astimezone().tzinfo
     app.logger.debug(request.args.get('noredirect', "false"))
@@ -77,7 +77,7 @@ def timer():
     else:
         time_left_readable = f"{seconds}s"
 
-    seconds_until_end_readable = f"{seconds_left} seconds"
+    # seconds_until_end_readable = f"{seconds_left} seconds"
     response = make_response(render_template(
         'timer.html',
         nextclass=end_time_unix_seconds,

@@ -10,16 +10,14 @@ import importlib
 import logging
 import ipaddress
 import re
+import signal
 from datetime import datetime
 from flask import Flask, request
 from flask_apscheduler import APScheduler
 import requests
 from app.utilities.config import devmode
-import signal
 start_init_time = datetime.now()
 
-# TODO: Move templates into folders
-# TODO: Use jinja2 template extends to reduce code duplication
 app = Flask(__name__, template_folder="pages", static_folder="static")
 
 def stop_server():
@@ -35,6 +33,7 @@ app.config['END_OF_SEMESTER'] = os.environ.get('END_OF_SEMESTER', None)
 if app.config['END_OF_SEMESTER'] is not None:
     app.config['END_OF_SEMESTER'] = datetime.strptime(app.config['END_OF_SEMESTER'], '%Y-%m-%d').date()
 
+from app.utilities.users import auth_user # pylint: disable=wrong-import-position # This import wont work if it is at the top of the file as it causes a circular import
 @app.before_request
 def before_request2():
     """
@@ -47,8 +46,10 @@ def before_request2():
     request.remote_addr = request.headers.get("Cf-Connecting-Ip", request.origin_remote_addr)
     # app.logger.debug("Remote address: %s", request.remote_addr)
     # The below is not used for cloudflare, but is here for other code, feel free to move it to a new function
-    request.user = None
-    request.token = None
+    # request.user = None
+    # request.token = None
+    request.user, request.token = None, None
+    request.user, request.token = auth_user()
 
 @app.before_request
 def before_request3():
@@ -75,6 +76,13 @@ def before_request3():
     app.logger.warning("CLOUDFLARE_IP_RANGES not set. We cannot access https://www.cloudflare.com/ips-v4.")
     app.logger.warning("People may be able to bypass rate limits.")
     return None
+
+@app.context_processor
+def inject_user():
+    """
+    Injects the user into the template context.
+    """
+    return dict(user=auth_user()[0], devmode=devmode)
 
 # Analytics
 logs: list[dict[str, any]] = []

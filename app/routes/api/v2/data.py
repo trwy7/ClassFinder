@@ -4,11 +4,12 @@ Allows getting data of a user. Used differently from /export as this is to be us
 
 from flask import request
 from app import app
-from app.utilities.users import verify_user
+from app.utilities.users import require_login, require_scopes
 from app.utilities.responses import error_response, success_response
 
 @app.route("/api/v2/data", methods=["GET"])
-@verify_user(required_scopes=[])
+@require_login
+@require_scopes([])
 def get_user_data():
     """
     Allows getting data of a user. Used differently from /export as this is to be used by scoped tokens to get user data.

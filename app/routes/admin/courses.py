@@ -5,13 +5,14 @@ import shutil
 import datetime
 from flask import render_template, abort, request
 from app import app
-from app.utilities.users import verify_user
+from app.utilities.users import require_login, require_role
 from app.utilities.classes import get_course_by_id, remove_class, get_all_courses, search_classes
 from app.utilities.responses import success_response, error_response
 from app.db import db
 
 @app.route("/admin/class/<courseid>", methods=["DELETE"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def delete_course(courseid):
     """
     Deletes a course.
@@ -23,7 +24,8 @@ def delete_course(courseid):
     return error_response("Course not found."), 404
 
 @app.route("/admin/class/<courseid>/edit")
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def edit_course(courseid):
     """
     Displays the edit course page.
@@ -35,7 +37,8 @@ def edit_course(courseid):
     return abort(404)
 
 @app.route("/admin/class/<courseid>/edit", methods=["POST"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def edit_course_post(courseid):
     """
     Handles the edit course form submission.
@@ -60,7 +63,8 @@ def edit_course_post(courseid):
 
 
 @app.route("/admin/class/<courseid>/verify", methods=["POST"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def verify_course(courseid):
     """
     Verifies a course.
@@ -75,7 +79,8 @@ def verify_course(courseid):
     return error_response("Course not found."), 404
 
 @app.route("/admin/class/all", methods=["DELETE"])
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def delete_all_courses():
     """
     Deletes all courses.
@@ -94,7 +99,8 @@ def delete_all_courses():
     return success_response("All courses deleted."), 200
 
 @app.route("/admin/class/search")
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def search_courses():
     """
     Searches for courses.

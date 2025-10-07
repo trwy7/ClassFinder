@@ -4,11 +4,11 @@ This handles external authentication.
 from urllib.parse import urlparse
 from flask import request, render_template
 from app import app
-from app.utilities.users import verify_user, create_token, readable_scopes
+from app.utilities.users import require_login, create_token, readable_scopes
 from app.utilities.responses import error_response, success_response
 
 @app.route('/auth')
-@verify_user
+@require_login
 def external_auth():
     """
     This is the main entry point for external authentication.
@@ -57,7 +57,7 @@ def external_auth():
     )
 
 @app.route('/auth', methods=['POST'])
-@verify_user
+@require_login
 def external_auth_post():
     """
     This handles the POST request for external authentication.
