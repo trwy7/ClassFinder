@@ -3,13 +3,13 @@ This file contains the route for leaving a class
 """
 from flask import request
 from app import app
-from app.utilities.users import verify_user
+from app.utilities.users import require_login
 from app.utilities.responses import success_response, error_response
 from app.utilities.classes import remove_user_from_class
 from app.utilities.config import allow_leave
 
 # @app.route("/classes/<classid>/leave", methods=["POST"])
-# @verify_user
+# @require_login
 # def leave_class(classid):
 #     """
 #     Leave a class
@@ -28,7 +28,7 @@ from app.utilities.config import allow_leave
 #     return success_response("Left class successfully")
 
 @app.route("/classes/all/leave", methods=["POST"])
-@verify_user
+@require_login
 def leave_all_classes():
     """
     Leave all classes

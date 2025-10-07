@@ -4,7 +4,7 @@ Account routes
 
 from flask import render_template, request
 from app import app
-from app.utilities.users import verify_user, delete_user, change_username, revoke_external_token, create_temp_passcode, set_color
+from app.utilities.users import require_login, delete_user, change_username, revoke_external_token, create_temp_passcode, set_color, readable_scopes
 from app.utilities.responses import success_response
 from app.utilities.classes import (
     get_today_courses,
@@ -15,7 +15,7 @@ from app.utilities.config import canvas_url, allow_leave
 
 
 @app.route("/account")
-@verify_user
+@require_login
 def account():
     """
     This route displays the user's account information.
@@ -40,6 +40,16 @@ def account():
             for period in neededperiods
             if period not in get_periods_of_user_classes(user)
         ],
+        authorized_sites=[
+            (
+                token.granted_to,
+                [
+                    readable_scopes[scope]
+                    for scope in token.scopes.split(" ")
+                ]
+            )
+            for token in user.tokens if token.granted_to is not None and token.type == "ext"
+        ],
         neededperiods=neededperiods,
         canvasurl=canvas_url,
         needcanvaslink=needcanvaslink,
@@ -48,6 +58,7 @@ def account():
     )
 
 @app.route("/account/delete", methods=["GET"])
+@require_login
 def account_delete_get():
     """
     This route displays the account deletion page.
@@ -55,7 +66,7 @@ def account_delete_get():
     return render_template("account/account_delete.html")
 
 @app.route("/account/delete", methods=["POST"])
-@verify_user
+@require_login
 def account_delete():
     """
     This route deletes the user's account.
@@ -64,17 +75,17 @@ def account_delete():
     return success_response("User deleted successfully")
 
 @app.route("/account/changeusername")
-@verify_user
+@require_login
 def account_changeusername_get():
     """
     This route displays the username change page.
     """
     if not request.user.requires_username_change:
-        return {"error": "Username change not required"}, 400
+        return render_template("templates/error.html", status_code=403, error_message="You do not currently need to change your name"), 403
     return render_template("changeusername.html")
 
 @app.route("/account/changeusername", methods=["POST"])
-@verify_user
+@require_login
 def account_changeusername():
     """
     This route changes the user's username.
@@ -88,7 +99,7 @@ def account_changeusername():
     return success_response("Username changed successfully")
 
 @app.route("/account/revoke_token", methods=["POST"])
-@verify_user
+@require_login
 def account_revoke_token():
     """
     This route revokes an external token granted to the user.
@@ -100,7 +111,7 @@ def account_revoke_token():
     return success_response("Token revoked successfully")
 
 @app.route("/account/temp_passcode", methods=["GET"])
-@verify_user
+@require_login
 def account_temp_passcode():
     """
     This route generates a temporary passcode for the user.
@@ -109,7 +120,7 @@ def account_temp_passcode():
     return success_response(f"Temporary passcode created successfully: {passcode}", {"passcode": passcode})
 
 @app.route("/account/set_color", methods=["POST"])
-@verify_user
+@require_login
 def account_set_color():
     """
     This route sets the user's preferred color.

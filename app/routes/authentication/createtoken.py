@@ -5,11 +5,11 @@ Allows users to create a token for the API.
 from datetime import datetime, timedelta
 from flask import request
 from app import app
-from app.utilities.users import verify_user, create_token
+from app.utilities.users import require_login, create_token
 from app.utilities.responses import success_response, error_response
 
 @app.route("/createtoken", methods=["POST", "GET"])
-@verify_user
+@require_login
 def createtoken():
     """
     Allows users to create a token for the API.

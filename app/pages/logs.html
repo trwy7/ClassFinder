@@ -4,10 +4,14 @@
 {% block content %}
     <div class="analytics-summary">
         <div class="analytics-count">
-            <h1>{{ total_requests - analytics.api_requests }}</h1>
+            <h1>{{ total_requests }}</h1>
             <p>Total Requests</p>
+            <h1>{{ (total_requests - analytics.api_requests) - analytics.cal_requests }}</h1>
+            <p>Normal Requests</p>
             <h1>{{ analytics.api_requests }}</h1>
             <p>API Requests</p>
+            <h1>{{ analytics.cal_requests }}</h1>
+            <p>Calendar Requests</p>
         </div>
             <a href="/admin/logs" class="refresh-button">Refresh Analytics</a>
         </div>

@@ -14,7 +14,7 @@
     <button onclick="window.location.href = '/classes/exportschedule'">Print your schedule</button>
     <button onclick="window.location.href = '/classes/calendar'">Create calendar</button>
     <button onclick="getTempPasscode()">Get temporary passcode</button>
-    <button onclick="leaveClasses(event)">My classes changed</button>
+    {% if allow_leave %}<button onclick="leaveClasses(event)">My classes changed</button>{% endif %}
     <button onclick="window.location.href = '/logout'">Log out</button>
     <button onclick="window.location.href = '/account/delete'">Delete account</button>
     {% if user.classes|length > 0%}

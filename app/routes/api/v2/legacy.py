@@ -4,11 +4,11 @@ This file is used for plain API endpoints, for applications like cURL
 import datetime
 from flask import request
 from app import app
-from app.utilities.users import verify_user
+from app.utilities.users import require_login
 from app.utilities.classes import get_user_current_period
 
 @app.route("/api/plain/endtime")
-@verify_user
+@require_login
 def api_plain_endtime():
     """
     Returns the end time for the current period.
@@ -21,7 +21,7 @@ def api_plain_endtime():
     return "0"
 
 @app.route("/api/plain/timeuntilclassend")
-@verify_user
+@require_login
 def api_plain_timeuntilclassend():
     """
     Returns the time until the current class ends.

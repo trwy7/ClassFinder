@@ -4,12 +4,12 @@ This file has the legacy class API endpoints
 from datetime import datetime
 from flask import jsonify, request
 from app import app
-from app.utilities.users import verify_user
+from app.utilities.users import require_login
 from app.utilities.responses import error_response
 from app.utilities.classes import get_user_current_period, get_today_courses, get_current_period
 
 @app.route('/api/v1/currentcourses/', methods=['GET'])
-@verify_user(onfail=lambda:(error_response("You must be logged in to do that."), 401))
+@require_login
 def apicurrentcourses():
     """
     Returns the current courses for the user.
@@ -35,7 +35,6 @@ def apicurrentcourses():
     })
 
 @app.route('/api/v1/currentperiod/', methods=['GET'])
-@verify_user(onfail=lambda:(error_response("You must be logged in to do that."), 401), required=False)
 def apicurrentperiod():
     """
     Returns the current period for the user.

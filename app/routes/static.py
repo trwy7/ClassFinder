@@ -7,7 +7,6 @@ from flask import Response, request
 from flask import send_from_directory, render_template
 from app import app
 from app.utilities.config import devmode
-from app.utilities.users import verify_user
 from app.addons.limiter import limiter
 import re
 
@@ -21,7 +20,6 @@ def load_css():
 index_css = load_css()
 
 @app.route("/index.css")
-@verify_user(required=False)
 def index_cssf():
     """
     Serves the index.css file.

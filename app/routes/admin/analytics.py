@@ -5,13 +5,14 @@ from collections import defaultdict, Counter
 from datetime import datetime
 from flask import render_template, request
 from app import app, get_logs, get_request_logs, start_init_time
-from app.utilities.users import verify_user
+from app.utilities.users import require_login, require_role
 
 # Most of this was AI, I have attempted making it more readable, but this code needs work anyway.
 
 @app.route("/admin/logs")
 @app.route("/admin/analytics")
-@verify_user(allowed_roles=["admin"])
+@require_login
+@require_role(["admin"])
 def logs():
     """
     Display the logs analytics dashboard.
@@ -65,6 +66,7 @@ def calculate_analytics(request_logs):
     path_count = Counter()
 
     api_requests = 0
+    cal_requests = 0
 
     for log in request_logs:
         # Skip 308 redirects, these are done by flask, also most 404s are bots
@@ -79,7 +81,7 @@ def calculate_analytics(request_logs):
         method = log.get("method", "GET")
         if path.endswith("/calendar.ics"):
             path = "/calendar.ics"
-            api_requests += 1
+            cal_requests += 1
         elif path.startswith("/resetpassword") and path != "/resetpassword":
             path = "/resetpassword/final"
         elif path.startswith("/register") and path != "/register":
@@ -140,5 +142,6 @@ def calculate_analytics(request_logs):
     ][:20]  # Top 20
 
     analytics["api_requests"] = api_requests
+    analytics["cal_requests"] = cal_requests
 
     return analytics
