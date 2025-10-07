@@ -385,7 +385,9 @@ def verify_user( # pylint: disable=dangerous-default-value, too-many-statements
 
     This populates the request object with the user and token.
     """
-
+    # TODO: Recreate this whole function in a cleaner way, this is a mess
+    # Right now, unauthorized and forbidden responses both return the same thing
+    # Also, we should have a seperate auth() function, and an in memory token cache
     def decorator(func): # pylint: disable=too-many-statements
         @functools.wraps(func)
         def wrapper(*args, **kwargs): # pylint: disable=too-many-branches, too-many-statements # I have no idea why too-many-branches is flagged

@@ -4,7 +4,7 @@ Account routes
 
 from flask import render_template, request
 from app import app
-from app.utilities.users import verify_user, delete_user, change_username, revoke_external_token, create_temp_passcode, set_color
+from app.utilities.users import verify_user, delete_user, change_username, revoke_external_token, create_temp_passcode, set_color, readable_scopes
 from app.utilities.responses import success_response
 from app.utilities.classes import (
     get_today_courses,
@@ -40,6 +40,16 @@ def account():
             for period in neededperiods
             if period not in get_periods_of_user_classes(user)
         ],
+        authorized_sites=[
+            (
+                token.granted_to,
+                [
+                    readable_scopes[scope]
+                    for scope in token.scopes.split(" ")
+                ]
+            )
+            for token in user.tokens if token.granted_to is not None and token.type == "ext"
+        ],
         neededperiods=neededperiods,
         canvasurl=canvas_url,
         needcanvaslink=needcanvaslink,
@@ -70,7 +80,7 @@ def account_changeusername_get():
     This route displays the username change page.
     """
     if not request.user.requires_username_change:
-        return {"error": "Username change not required"}, 400
+        return render_template("templates/error.html", status_code=403, error_message="You do not currently need to change your name"), 403
     return render_template("changeusername.html")
 
 @app.route("/account/changeusername", methods=["POST"])
