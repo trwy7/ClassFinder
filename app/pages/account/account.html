@@ -41,7 +41,7 @@
     {% endif %}
     {% if has_external_tokens %}
         <h2>Authorized apps</h2>
-        <ul id="externaltokens">
+        <ul id="tokens">
         {% for token in user.tokens %}
             {% if token.granted_to is not none %}
                 <li class="token">
