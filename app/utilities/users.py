@@ -310,11 +310,12 @@ def revoke_external_token(user: User, granted_to: str):
     Returns:
         None
     """
-    token = Token.query.filter_by(user_id=user.username, granted_to=granted_to).first()
-    if token:
-        delete_token(token)
+    tokens = Token.query.filter_by(user_id=user.username, granted_to=granted_to).all()
+    if tokens:
+        for token in tokens:
+            delete_token(token)
     else:
-        raise ValueError("No external token found for this user and granted_to value.")
+        raise ValueError("No external tokens found for this user and granted_to value.")
 
 def delete_user(user: User):
     """
