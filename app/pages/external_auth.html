@@ -1,6 +1,7 @@
 {% extends "templates/base.html" %}
 {% block title %}Authorize{% endblock %}
 {% block mainid %}authpage{% endblock %}
+{% block content %}
     <h1>Authorize {{redirect_domain}}</h1>
     <p>{{redirect_domain}} will get access to:</p>
     <ul>
@@ -10,6 +11,7 @@
         {% endfor %}
     </ul>
     <button id="authorize-button" onclick="authorizeApp(event)">Authorize</button>
+{% endblock %}
 {% block script %}
     <script>
         function authorizeApp(event) {
