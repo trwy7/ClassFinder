@@ -1,0 +1,1 @@
+The partial folder is for html files that should be included in others
