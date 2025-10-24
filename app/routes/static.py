@@ -34,9 +34,16 @@ def index_cssf():
                 return send_from_directory("static", "legacycss.css")
         except ValueError:
             pass
-    if (request.user and request.user.color_hue) or devmode:
+    if (request.user and request.user.color_hue) or devmode or request.cookies.get("color_hue"):
         # If the user has a color, we add it to the CSS
-        if request.user is not None:
+        if request.cookies.get("color_hue"):
+            try:
+                color_hue = int(request.cookies.get("color_hue"))
+                if not (0 <= color_hue <= 360):
+                    color_hue = "234"
+            except ValueError:
+                color_hue = "234"
+        elif request.user is not None:
             color_hue = request.user.color_hue
         else:
             color_hue = "234"

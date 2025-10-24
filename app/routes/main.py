@@ -32,9 +32,7 @@ def dashboard():
             classes=user.classes,
             user=user,
             currentperiod=currentperiod,
-            endtime=datetime.combine(datetime.today(), currentperiod['end']).strftime(
-                '%m/%d/%Y %I:%M:%S %p'
-                ) if (currentperiod is not None) else None,
+            endtime=None if (currentperiod is None) else int(datetime.combine(datetime.today(), currentperiod['end']).timestamp()),
             currentclasses=get_today_courses(user),
             classestoadd=len(
                 [

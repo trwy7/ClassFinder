@@ -599,7 +599,7 @@ readable_days = {
     9: "Development"
 }
 
-# TODO: Webhooks?
+# TODO: Webhooks with custom data? Possibly for ntfy/discord notifications?
 
 BELL_DELAY = 4 if not app.config['TESTING'] else 0 # Seconds to add to each time to account for bell delay.
 PASSING_BELL_DELAY = 4.006 if not app.config['TESTING'] else 0 # Not used, just for reference.
