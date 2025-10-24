@@ -218,12 +218,14 @@ def add_class(name: str, period: int, room: str, created_by: str, teacher: str, 
         Class: The newly created class object.
     """
     nid = f"{room}p{period}"
-    if room == "PTECH":
+    if room == "PTECH" or room.startswith("PTECH-"):
+        app.logger.debug("Generating unique ID for PTECH class")
         nid = f"PTECH{random.randint(0, 9999)}p{period}"
         while get_course_by_id(nid):
             nid = f"PTECH{random.randint(0, 9999)}p{period}"
     if campusname is None:
         campusname = name
+    app.logger.debug(f"Adding class {name} with ID {nid}")
     newclass = Class(
         id=nid,
         name=name,

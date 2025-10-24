@@ -101,12 +101,14 @@ def process_class(class_info, user, needed_periods):
             add_user_to_class(user, pclass)
             return None
         app.logger.debug(f"Creating new PTECH class {course} for user {user.username}")
-    if check_if_class_exists(room, period):
+    elif check_if_class_exists(room, period):
+        app.logger.debug(f"Class already exists for room {room} and period {period}, adding to user {user.username}")
         add_user_to_class(user, get_course(period, room))
         return None
     if profanity.contains_profanity(course):
         app.logger.warning(f"Profanity detected in course name: {course}")
         return error_response("Invalid class name"), 400
+    app.logger.debug(f"Creating new class {course} for user {user.username}")
     nclass = add_class(course, period, room, user.id, teacher, course, commit=False)
     add_user_to_class(user, nclass)
     app.logger.debug(f"Added class {course} to user {user.username}")
