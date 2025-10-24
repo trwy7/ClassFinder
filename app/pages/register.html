@@ -1,10 +1,11 @@
 {% extends "templates/base.html" %}
 {% block title %}Register{% endblock %}
 {% block mainid %}registerpage{% endblock %}
+{% block content %}
     <h1>Sign up</h1>
     <form onsubmit="attemptRegister(event, null)"></form>
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" required><br>
+        <input type="email" id="email" name="email" required size="40" style="width:40ch;"><br>
         <button onclick="attemptRegister(event, this)">Register</button><br>
     </form>
     <div class="loader" id="spinner" style="display:none;"></div>
