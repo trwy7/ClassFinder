@@ -1,6 +1,7 @@
 {% extends "templates/base.html" %}
 {% block title %}Edit Account{% endblock %}
 {% block mainid %}editaccountpage{% endblock %}
+{% block content %}
     <h1>Editing user: {{user.username}}</h1>
     <form onsubmit="attemptEdit(event)"></form>
         <label for="username">Username</label>
