@@ -23,7 +23,8 @@ def login_post():
     """
     Handle the login form submission.
     """
-    if request.form.get("username") and request.form.get("password") and request.form.get("privacyPolicy") == "on": # legacy clients
+    app.logger.debug(request.form)
+    if request.form.get("username") and request.form.get("password"): # legacy clients
         if check_password(request.form.get("username").lower(), request.form.get("password")):
             response = Response(render_template("account/legacy_login.html", username=request.form.get("username").lower()))
             response.set_cookie(
