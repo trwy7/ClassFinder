@@ -28,9 +28,9 @@ def index_cssf():
     ua = (request.headers.get("User-Agent") or "").lower()
     app.logger.debug(f"User-Agent: {ua}")
     m = re.search(r"os (\d+)[_.]", ua)
-    if m and any(x in ua for x in ("iphone", "ipad", "ipod", "cpu")):
+    if m and any(x in ua for x in ("iphone", "ipad", "ipod", "cpu")) or "wiiu" in ua:
         try:
-            if int(m.group(1)) <= 8:
+            if (not m) or int(m.group(1)) <= 8:
                 return send_from_directory("static", "legacycss.css")
         except ValueError:
             pass
