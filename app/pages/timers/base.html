@@ -1,0 +1,147 @@
+{% set noheader = true %}
+{% extends 'templates/base.html' %}
+{% block title %}Timer{% endblock %}
+{% block mainid %}timerpage{% endblock %}
+{% block mainclasses %}vcenter hcenter{% endblock %}
+{% block content %}
+<meta name="endtime" content="{{ period_end/1000 }}"/>
+<meta name="starttime" content="{{ period_start/1000 }}"/>
+<meta name="currentepoch" content="{{ current_epoch/1000 }}"/>
+<noscript>You need javascript to use this page. Class ends at {{ period.end.strftime("%I:%M %p") }}.</noscript>
+<p id="sitestatus" style="position: absolute; bottom:20px;right:20px;">{% if site_status %}{{site_status}}{% endif %}</p>
+{% block tcontent required %}{% endblock %}
+{% endblock %}
+{% block script %}
+<script>
+    // Initial variables
+    var hasSynced = false;
+    const startTime = parseFloat(document.querySelector('meta[name="starttime"]').getAttribute('content')) * 1000;
+    const endTime = parseFloat(document.querySelector('meta[name="endtime"]').getAttribute('content')) * 1000;
+    // template settings
+    var autoreload = true;
+    // calculate time offset from server
+    const serverTime = parseFloat(document.querySelector('meta[name="currentepoch"]').getAttribute('content')) * 1000;
+    const clientTime = Date.now();
+    var timeOffset = serverTime - clientTime;
+    console.debug('Initial time offset', { serverTime, clientTime, timeOffset });
+    let lastUpdate;
+    var runTimer = true;
+    // -----AI-----
+    // More accurate server time sync using round-trip measurement and multiple samples.
+    // Estimates offset = serverTime - (clientSend + rtt/2) and returns the best/median result.
+    async function getNTPTime(samples = 6, delayMs = 60) {
+        console.debug('getNTPTime: start', { samples, delayMs });
+        const results = [];
+        for (let i = 0; i < samples; i++) {
+            const t0 = Date.now();
+            try {
+                // Avoid caching and include a small random query to reduce proxy caching
+                console.debug(`getNTPTime: sample ${i + 1}/${samples} - send`, { t0 });
+                const resp = await fetch('/api/v2/server-time?_=' + Date.now(), { cache: 'no-store' });
+                const t1 = Date.now();
+                const rtt = t1 - t0;
+                console.debug(`getNTPTime: sample ${i + 1}/${samples} - recv`, { t1, rtt, status: resp.status });
+
+                if (!resp.ok) {
+                    console.warn('getNTPTime: non-ok response, skipping sample', { status: resp.status });
+                    await new Promise(r => setTimeout(r, delayMs));
+                    continue;
+                }
+
+                const data = await resp.json();
+                if (!data || typeof data.time !== 'number') {
+                    console.warn('getNTPTime: invalid response payload, skipping sample', { data });
+                    await new Promise(r => setTimeout(r, delayMs));
+                    continue;
+                }
+
+                const serverTime = data.time;
+                // client clock estimate at server response midpoint
+                const midpoint = t0 + rtt / 2;
+                const offset = serverTime - midpoint;
+                results.push({ offset, rtt, serverTime, midpoint });
+                console.debug('getNTPTime: recorded sample', { offset, rtt, serverTime, midpoint });
+
+                // small pause between samples to avoid burst effects
+                await new Promise(r => setTimeout(r, delayMs));
+            } catch (err) {
+                console.error('getNTPTime: fetch/error on sample, skipping', { sample: i + 1, error: err });
+                await new Promise(r => setTimeout(r, delayMs));
+                continue;
+            }
+        }
+
+        if (results.length === 0) {
+            console.warn('getNTPTime: no valid samples collected, attempting fallback to meta or zero');
+            const meta = document.querySelector('meta[name="currentepoch"]');
+            if (meta) {
+                const ntpTime = parseFloat(meta.getAttribute('content')) * 1000;
+                const fallbackOffset = ntpTime - Date.now();
+                console.info('getNTPTime: using meta fallback offset', { fallbackOffset });
+                return fallbackOffset;
+            }
+            console.info('getNTPTime: no meta available, returning 0 offset');
+            return 0;
+        }
+
+        console.debug('getNTPTime: valid samples', results.map(r => ({ offset: r.offset, rtt: r.rtt })));
+
+        // Prefer the sample with smallest RTT (most reliable)
+        results.sort((a, b) => a.rtt - b.rtt);
+        const best = results[0];
+
+        // Also compute a robust median offset as a second opinion
+        const offsets = results.map(r => r.offset).sort((a, b) => a - b);
+        const mid = Math.floor(offsets.length / 2);
+        const median = offsets.length % 2 === 1 ? offsets[mid] : (offsets[mid - 1] + offsets[mid]) / 2;
+
+        // If best RTT sample is consistent with median, use it; otherwise use median
+        const chosen = Math.abs(best.offset - median) < Math.max(50, best.rtt) ? best.offset : median;
+        console.info('getNTPTime: chosen offset', { chosen, bestOffset: best.offset, median, bestRtt: best.rtt });
+
+        return chosen;
+    }
+    // ----NOAI----
+    function alignToSecond() {
+        // Calculate milliseconds until the next full second (use adjusted server time)
+        const now = new Date(Date.now() + timeOffset);
+        return 1000 - now.getMilliseconds();
+    }
+</script>
+{% block tscript required %}{% endblock %}
+<script>
+    function uUpdateTimer(){
+        if (!runTimer) return;
+        const now = Date.now() + timeOffset;
+        let timeLeft = endTime - now;
+
+        if (timeLeft < 0) {
+            timeLeft = 0;
+        }
+        updateTimer(timeLeft);
+        lastUpdate = timeLeft;
+        if (timeLeft === 0) {
+            // Time's up - clear intervals
+            console.info('Timer ended, reloading page');
+            runTimer = false;
+            if (autoreload) location.reload();
+        }
+    }
+    uUpdateTimer();
+    let udi = [];
+    setTimeout(function() {
+        uUpdateTimer();
+        udi[0] = setInterval(uUpdateTimer, 1000);
+    }, alignToSecond());
+    // Initial NTP sync
+    getNTPTime().then(offset => {
+        timeOffset = offset;
+        hasSynced = true;
+        setTimeout(function() {
+            uUpdateTimer();
+            udi[1] = setInterval(uUpdateTimer, 500);
+        }, alignToSecond());
+        uUpdateTimer();
+    });
+</script>
+{% endblock %}

@@ -2,13 +2,13 @@
 """
 Static routes for the application.
 """
+import re
 import os
 from flask import Response, request
 from flask import send_from_directory, render_template
 from app import app
 from app.utilities.config import devmode
 from app.addons.limiter import limiter
-import re
 
 def load_css():
     """

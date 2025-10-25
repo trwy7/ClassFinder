@@ -45,10 +45,17 @@
     padding: 0;
     box-sizing: border-box;
 }
+html, body {
+    height: 100%;
+    width: 100%;
+}
 body {
     font-family: 'Inter', 'Roboto', sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
+}
+body:has(main.twosections) {
+    overflow: hidden;
 }
 header {
     background: linear-gradient(to bottom, var(--navbar-color) 0%, var(--navbar-color) 10%, var(--navbar-bottom-color) 100%);
@@ -57,7 +64,7 @@ header {
     top: 0;
     z-index: 1000;
 }
-#timertext {
+#timertext, #timeleft {
     font-family: "Space Mono", monospace;
     font-weight: 700;
     font-style: normal;
@@ -65,9 +72,104 @@ header {
 main {
     padding: 1rem;
 }
+main#landingpage > section > picture > img {
+    display: block;
+    margin: 5px auto;
+    width: min(520px, 90%);
+    height: auto;
+    border-radius: 10px;
+    border: 2px solid var(--tertiary-color);
+}
+main#landingpage #cards {
+    position: relative;
+    width: min(520px, 90%);
+    min-height: 220px;
+    margin: 10px auto;
+}
+main#landingpage #cards img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-origin: center center;
+    transform: translate(-50%, -50%) rotate(0deg);
+    transition: transform 180ms ease, box-shadow 180ms ease;
+    max-width: 92%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    border: 2px solid var(--tertiary-color);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.32);
+}
+
+main#landingpage #cards img:nth-child(1) { transform: translate(-50%, -115%) rotate(calc(0 * 10deg)); z-index: 1; }
+main#landingpage #cards img:nth-child(2) { transform: translate(-50%, -73%) rotate(calc(0 * 10deg)); z-index: 2; }
+main#landingpage #cards img:nth-child(3) { transform: translate(-50%, -50%) rotate(calc(0 * 10deg)); z-index: 3; }
+
+/* main#landingpage #cards:hover img {
+    box-shadow: 0 10px 28px rgba(0,0,0,0.38);
+} */
+main#landingpage #cards img:nth-child(1):hover {
+    transform: translate(-50%, -125%) rotate(0deg) scale(1.02);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.38);
+}
+main#landingpage #cards img:nth-child(2):hover {
+    transform: translate(-50%, -83%) rotate(0deg) scale(1.02);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.38);
+}
+main#landingpage #cards img:nth-child(3):hover {
+    transform: translate(-50%, -60%) rotate(0deg) scale(1.02);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.38);
+}
+/* main#landingpage #cards:hover img:nth-last-child(1) {
+    transform: translate(-50%, -54%) rotate(0deg) scale(1.02);
+} */
+
+main.twosections {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
+    flex-direction: row !important;
+    position: relative;
+    -moz-top: -150px;
+    -webkit-top: 500px;
+    top: -150px;
+    padding-top: 150px;
+    height: calc(100vh + 150px);
+    overflow: hidden;
+}
+main.twosections > section {
+    flex: 1 !important;
+    overflow: auto;
+    max-height: 100%;
+    padding-bottom: 150px;
+}
+section.leftsection {
+    margin-right: 10px;
+}
+section.rightsection {
+    margin-left: 10px;
+}
 @media (max-width: 450px) {
     main {
         text-align: center;
+    }
+    main.twosections {
+        flex-direction: column !important;
+        height: auto;
+        top: 0;
+        padding-top: 0;
+        overflow: visible;
+    }
+    main.twosections > section {
+        max-height: none;
+        margin: 0 !important;
+        padding-bottom: 50px;
+    }
+    body:has(main.twosections) {
+        overflow: auto;
+    }
+    main#landingpage > section.rightsection {
+        display:none;
     }
 }
 /* Header */
@@ -99,8 +201,14 @@ header nav ul {
     display: flex;
     justify-content: center;
 }
+.vcenter {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
 /* Forms */
-main#landingpage, main:has(form), main#error {
+.centered, .hcenter, main:has(form), main#error {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -439,18 +547,6 @@ li.action[onclick]:hover {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    #timel {
-        transition: opacity 0.5s ease-in-out;
-        animation: fadeIn 0.8s forwards;
-    }
-
-    #time {
-        transition: opacity 0.5s ease-in-out;
-        opacity: 0;
-        animation: fadeIn 0.8s forwards;
-        animation-delay: 0.4s;
-    }
-
     #nextclassalert {
         transition: opacity 0.5s ease-in-out;
         opacity: 0;
@@ -471,4 +567,7 @@ li.action[onclick]:hover {
     to {
         opacity: 1;
     }
+}
+#loadOverlay {
+    display: none;
 }

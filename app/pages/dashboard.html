@@ -3,7 +3,7 @@
 {% block mainid %}dashboard{% endblock %}
 {% block mainclasses %}dashboard {% if currentperiod and currentperiod.passing %}passing{% endif %}{% endblock %}
 {% block content %}
-    {% if endtime %}<meta name="endtime" content="{{ endtime }}"/>{% endif %}
+    <meta name="endtime" content="{{ endtime }}"/>
     {% if devmode %}
         <div class="devmode">
             <h3>Development mode</h1>

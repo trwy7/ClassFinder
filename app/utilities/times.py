@@ -555,14 +555,14 @@ classtime_dict = {
     9: {
         "classtimes": [
             {
-                "start": now.time(),
-                "end": (now + timedelta(minutes=5)).time(),
+                "start": (now - timedelta(minutes=3)).time(),
+                "end": (now + timedelta(minutes=0.2)).time(),
                 "period": "1",
                 "passing": True,
                 "lunchactive": False,
             },
             {
-                "start": (now + timedelta(minutes=5)).time(),
+                "start": (now + timedelta(minutes=0.2)).time(),
                 "end": (now + timedelta(minutes=10)).time(),
                 "period": "2",
                 "passing": True,
@@ -601,8 +601,10 @@ readable_days = {
 
 # TODO: Webhooks with custom data? Possibly for ntfy/discord notifications?
 
-BELL_DELAY = 4 if not app.config['TESTING'] else 0 # Seconds to add to each time to account for bell delay.
-PASSING_BELL_DELAY = 4.006 if not app.config['TESTING'] else 0 # Not used, just for reference.
+# BELL_DELAY = 4 if not app.config['TESTING'] else 0 # Seconds to add to each time to account for bell delay.
+# PASSING_BELL_DELAY = 4.006 if not app.config['TESTING'] else 0 # Not used, just for reference.
+
+BELL_DELAY = 0
 
 for d, dtimes in classtime_dict.items():
     app.logger.debug(f"Setting times for {readable_days[d]}")

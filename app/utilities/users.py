@@ -124,7 +124,7 @@ def create_token( # pylint: disable=too-many-arguments, too-many-positional-argu
             if tokentype in ("api", "app"):
                 nexpiry += timedelta(days=60)
             elif tokentype == "refresh":
-                nexpiry += timedelta(days=30)
+                nexpiry += timedelta(days=31)
             elif tokentype == "system":
                 nexpiry += timedelta(days=14)
             elif tokentype == "admin":

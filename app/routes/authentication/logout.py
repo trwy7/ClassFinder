@@ -14,7 +14,7 @@ def logout():
     """
     token = get_token(request.cookies.get("token"))
     delete_token(token)
-    response = redirect(url_for("account"))
+    response = redirect(url_for("index"))
     response.set_cookie(
         "token", "", httponly=True, samesite="Lax", secure=True, max_age=0
     )

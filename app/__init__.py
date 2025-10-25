@@ -15,7 +15,7 @@ from datetime import datetime
 from flask import Flask, request
 from flask_apscheduler import APScheduler
 import requests
-from app.utilities.config import devmode
+from app.utilities.config import devmode, status
 start_init_time = datetime.now()
 
 app = Flask(__name__, template_folder="pages", static_folder="static")
@@ -89,7 +89,7 @@ def inject_devmode():
     """
     Injects the devmode variable into the template context.
     """
-    return {"devmode": devmode}
+    return {"devmode": devmode, "site_status": status}
 
 # Analytics
 logs: list[dict[str, any]] = []
