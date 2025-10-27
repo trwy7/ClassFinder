@@ -69,7 +69,7 @@
                 if (Math.floor(lastUpdate / 1000) !== Math.floor(timeLeft / 1000)) {
                     const tl = document.getElementById('timeleft');
                     const container = document.getElementById('timercontainer');
-
+                    // ---- AI -----
                     // Improve 3D flip perception
                     container.style.perspective = '800px';
                     tl.style.transformStyle = 'preserve-3d';
@@ -104,6 +104,7 @@
                         tl.style.opacity = '1';
                         delete tl._anim;
                     };
+                    // --- NOAI ----
                 }
             } else {
                 document.getElementById('timeleft').textContent = seconds;
