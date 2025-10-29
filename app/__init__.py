@@ -182,6 +182,7 @@ def log_request():
         "PUT": "\033[95m",  # purple
         "DELETE": "\033[91m", # red
         "PATCH": "\033[94m", # blue
+        "OPTIONS": "\033[93m", # yellow
     }
     method_color = method_colors.get(request.method, "\033[97m")  # white
     if request.content_type == "application/json":
@@ -220,9 +221,10 @@ def log_response(response):
         301: "\033[96m",  # cyan
         302: "\033[96m",  # cyan
         400: "\033[93m",  # yellow
-        401: "\033[91m",  # red
-        403: "\033[91m",  # red
-        404: "\033[91m",  # red
+        401: "\033[93m",  # yellow
+        403: "\033[93m",  # yellow
+        404: "\033[93m",  # yellow
+        405: "\033[93m",  # yellow
         429: "\033[93m",  # yellow
         500: "\033[91m",  # red
     }
@@ -282,10 +284,10 @@ def import_routes(directory):
                     .replace(os.sep, ".")
                     .replace(".py", "")
                 )
-                imbtime = datetime.now()
+                # imbtime = datetime.now()
                 importlib.import_module(module_name)
-                imatime = datetime.now()
-                app.logger.debug(f"Imported {module_name.removeprefix("app.routes.")} in {(imatime - imbtime).total_seconds()}s")
+                # imatime = datetime.now()
+                # app.logger.debug(f"Imported {module_name.removeprefix("app.routes.")} in {(imatime - imbtime).total_seconds()}s")
 
 def get_logs():
     """

@@ -43,7 +43,7 @@ def index_cssf():
                     color_hue = "234"
             except ValueError:
                 color_hue = "234"
-        elif request.user is not None:
+        elif request.user is not None and request.user.color_hue:
             color_hue = request.user.color_hue
         else:
             color_hue = "234"

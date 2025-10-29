@@ -13,3 +13,4 @@ services:
     environment:
       - DB_PATH=sqlite:////data/db.sqlite3
       - LOG_DIR=/logs
+      - BELL_DELAY_PATH=/data/bell_delay.txt

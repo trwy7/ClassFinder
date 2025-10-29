@@ -7,6 +7,18 @@
 <meta name="endtime" content="{{ period_end/1000 }}"/>
 <meta name="starttime" content="{{ period_start/1000 }}"/>
 <meta name="currentepoch" content="{{ current_epoch/1000 }}"/>
+{% if user.role == 'admin' %}
+<style>
+    @media (min-width: 650px) {
+        #syncbutton { display: none !important; }
+    }
+</style>
+<div style="position: absolute; bottom:20px;left:20px;">
+    <p id="syncstatus"></p>
+    <!-- <button id="syncbutton" onclick="sync();">Sync Time</button> -->
+    <button id="commitbutton" onclick="commitChanges();" hidden>Commit</button>
+</div>
+{% endif %}
 <noscript>You need javascript to use this page. Class ends at {{ period.end.strftime("%I:%M %p") }}.</noscript>
 <p id="sitestatus" style="position: absolute; bottom:20px;right:20px;">{% if site_status %}{{site_status}}{% endif %}</p>
 {% block tcontent required %}{% endblock %}
@@ -15,6 +27,7 @@
 <script>
     // Initial variables
     var hasSynced = false;
+    var doReload = true;
     const startTime = parseFloat(document.querySelector('meta[name="starttime"]').getAttribute('content')) * 1000;
     const endTime = parseFloat(document.querySelector('meta[name="endtime"]').getAttribute('content')) * 1000;
     // template settings
@@ -29,28 +42,28 @@
     // -----AI-----
     // More accurate server time sync using round-trip measurement and multiple samples.
     // Estimates offset = serverTime - (clientSend + rtt/2) and returns the best/median result.
-    async function getNTPTime(samples = 6, delayMs = 60) {
-        console.debug('getNTPTime: start', { samples, delayMs });
+    async function getOffset(samples = 6, delayMs = 60) {
+        console.debug('getOffset: start', { samples, delayMs });
         const results = [];
         for (let i = 0; i < samples; i++) {
             const t0 = Date.now();
             try {
                 // Avoid caching and include a small random query to reduce proxy caching
-                console.debug(`getNTPTime: sample ${i + 1}/${samples} - send`, { t0 });
+                console.debug(`getOffset: sample ${i + 1}/${samples} - send`, { t0 });
                 const resp = await fetch('/api/v2/server-time?_=' + Date.now(), { cache: 'no-store' });
                 const t1 = Date.now();
                 const rtt = t1 - t0;
-                console.debug(`getNTPTime: sample ${i + 1}/${samples} - recv`, { t1, rtt, status: resp.status });
+                console.debug(`getOffset: sample ${i + 1}/${samples} - recv`, { t1, rtt, status: resp.status });
 
                 if (!resp.ok) {
-                    console.warn('getNTPTime: non-ok response, skipping sample', { status: resp.status });
+                    console.warn('getOffset: non-ok response, skipping sample', { status: resp.status });
                     await new Promise(r => setTimeout(r, delayMs));
                     continue;
                 }
 
                 const data = await resp.json();
                 if (!data || typeof data.time !== 'number') {
-                    console.warn('getNTPTime: invalid response payload, skipping sample', { data });
+                    console.warn('getOffset: invalid response payload, skipping sample', { data });
                     await new Promise(r => setTimeout(r, delayMs));
                     continue;
                 }
@@ -60,31 +73,31 @@
                 const midpoint = t0 + rtt / 2;
                 const offset = serverTime - midpoint;
                 results.push({ offset, rtt, serverTime, midpoint });
-                console.debug('getNTPTime: recorded sample', { offset, rtt, serverTime, midpoint });
+                console.debug('getOffset: recorded sample', { offset, rtt, serverTime, midpoint });
 
                 // small pause between samples to avoid burst effects
                 await new Promise(r => setTimeout(r, delayMs));
             } catch (err) {
-                console.error('getNTPTime: fetch/error on sample, skipping', { sample: i + 1, error: err });
+                console.error('getOffset: fetch/error on sample, skipping', { sample: i + 1, error: err });
                 await new Promise(r => setTimeout(r, delayMs));
                 continue;
             }
         }
 
         if (results.length === 0) {
-            console.warn('getNTPTime: no valid samples collected, attempting fallback to meta or zero');
+            console.warn('getOffset: no valid samples collected, attempting fallback to meta or zero');
             const meta = document.querySelector('meta[name="currentepoch"]');
             if (meta) {
-                const ntpTime = parseFloat(meta.getAttribute('content')) * 1000;
-                const fallbackOffset = ntpTime - Date.now();
-                console.info('getNTPTime: using meta fallback offset', { fallbackOffset });
+                const offsetTime = parseFloat(meta.getAttribute('content')) * 1000;
+                const fallbackOffset = offsetTime - Date.now();
+                console.info('getOffset: using meta fallback offset', { fallbackOffset });
                 return fallbackOffset;
             }
-            console.info('getNTPTime: no meta available, returning 0 offset');
+            console.info('getOffset: no meta available, returning 0 offset');
             return 0;
         }
 
-        console.debug('getNTPTime: valid samples', results.map(r => ({ offset: r.offset, rtt: r.rtt })));
+        console.debug('getOffset: valid samples', results.map(r => ({ offset: r.offset, rtt: r.rtt })));
 
         // Prefer the sample with smallest RTT (most reliable)
         results.sort((a, b) => a.rtt - b.rtt);
@@ -97,7 +110,7 @@
 
         // If best RTT sample is consistent with median, use it; otherwise use median
         const chosen = Math.abs(best.offset - median) < Math.max(50, best.rtt) ? best.offset : median;
-        console.info('getNTPTime: chosen offset', { chosen, bestOffset: best.offset, median, bestRtt: best.rtt });
+        console.info('getOffset: chosen offset', { chosen, bestOffset: best.offset, median, bestRtt: best.rtt });
 
         return chosen;
     }
@@ -133,8 +146,8 @@
         uUpdateTimer();
         udi[0] = setInterval(uUpdateTimer, 1000);
     }, alignToSecond());
-    // Initial NTP sync
-    getNTPTime().then(offset => {
+    // Initial sync
+    getOffset().then(offset => {
         timeOffset = offset;
         hasSynced = true;
         setTimeout(function() {
@@ -143,5 +156,67 @@
         }, alignToSecond());
         uUpdateTimer();
     });
+    // Full screen on space bar
+    document.addEventListener('keydown', function(event) {
+        if (event.code === 'Space') {
+            event.preventDefault();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen()
+                .then(() => {
+                    document.body.style.cursor = 'none';
+                });
+            } else {
+                document.exitFullscreen();
+                document.body.style.cursor = 'default';
+            }
+        }
+    });
 </script>
+{% if user.role == 'admin' %}
+    <script>
+        let syncReady = false;
+        // Updates the bell delay
+        const syncStatusElem = document.getElementById('syncstatus');
+        const commitButton = document.getElementById('commitbutton');
+        var delayChange = 0;
+        /// setup function
+        function sync() {
+            if (syncReady) {
+                const now = Date.now() + timeOffset;
+                const timeLeft = endTime - now;
+                syncStatusElem.textContent = `${timeLeft}ms (${-timeLeft / 1000}s)`;
+                delayChange = -timeLeft / 1000;
+                commitButton.hidden = false;
+            } else {
+                syncReady = true;
+                doReload = false;
+                syncStatusElem.textContent = 'Ready!'
+            }
+        }
+        /// Check if C is pressed
+        document.addEventListener('keydown', function(event) {
+            if (event.key.toLowerCase() === 'c') {
+                sync();
+            }
+        });
+        function commitChanges() {
+            fetch('/admin/bell-delay', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ delay: delayChange })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Updated.');
+                    location.reload();
+                } else {
+                    alert('Error updating bell delay: ' + data.message);
+                }
+            })
+        }
+    </script>
+{% endif %}
 {% endblock %}

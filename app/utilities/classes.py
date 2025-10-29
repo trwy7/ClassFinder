@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import typing
 import random
 from app.utilities.times import get_classtimes, get_lunchtimes, classtime_dict
-from app.db import User, Class, db
+from app.db import User, Class, db, user_class_association
 from app import app
 
 neededperiods = []
@@ -189,7 +189,7 @@ def get_today_courses(user: User, day: int = None):
         list: A list of courses that the user has scheduled for today.
     """
     app.logger.debug(f"Retrieving today's courses for user {user.username}")
-    user_periods = list(set([time["period"] for time in get_classtimes(day)]))
+    user_periods = list(dict.fromkeys([time["period"] for time in get_classtimes(day)]))
     app.logger.debug(f"User {user.username} periods: {user_periods}")
     newcourses = []
     for course in user.classes:
@@ -252,6 +252,9 @@ def add_user_to_class(user: User, course: Class):
     Returns:
         User: The updated user object.
     """
+    if course in user.classes:
+        app.logger.debug(f"User {user.username} is already in class {course.name}")
+        return user
     user.classes.append(course)
     db.session.commit()
     return user
@@ -283,6 +286,8 @@ def remove_class(course: Class):
     Returns:
         None
     """
+    for user in course.users:
+        user.classes.remove(course)
     db.session.delete(course)
     db.session.commit()
 

@@ -66,6 +66,7 @@ def calculate_analytics(request_logs):
     path_count = Counter()
 
     api_requests = 0
+    time_requests = 0
     cal_requests = 0
 
     for log in request_logs:
@@ -88,6 +89,8 @@ def calculate_analytics(request_logs):
             path = "/register/final"
         elif path.startswith("/admin/"):
             continue  # Skip admin paths for now, this can be expanded later
+        elif path == "/api/v2/server-time":
+            time_requests += 1
         if path.startswith("/api/"):
             api_requests += 1
         path_method = f"{method} {path}"
@@ -143,5 +146,6 @@ def calculate_analytics(request_logs):
 
     analytics["api_requests"] = api_requests
     analytics["cal_requests"] = cal_requests
+    analytics["time_requests"] = time_requests
 
     return analytics

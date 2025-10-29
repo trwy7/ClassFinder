@@ -4,29 +4,28 @@
     <input type="text" id="username" name="username" required><br>
     <label for="password">Password</label>
     <input type="password" id="password" name="password" required><br>
-    <label for="privacyPolicy" id="privacyPolicy">Agree to our <a href="/privacy">Privacy Policy</a></label>
-    <input type="checkbox" id="privacyPolicy" name="privacyPolicy" required><br>
     <button type="submit">Login</button><br>
+    <p id="status">{{status_message}}</p>
 </form>
 <div>
-    <!-- <button onclick="getLinkCode()">Login with another device</button> -->
-    <button onclick="gotoRegister(event)">Sign up</button>
-    <button onclick="window.location.href = '/resetpassword'">Reset password</button>
+    <p>By logging in, you agree to our <a href="/privacy">Privacy Policy</a>.</p>
+    <p>Don't have an account? <a href="/register" onclick="gotoRegister(event)">Sign up</a></p>
+    <p>Forgot your password? <a href="/resetpassword">Reset it</a></p>
 </div>
-{% if status is not none %}
-<p>{{status}}</p>
+{% if site_status is not none %}
+<p>{{site_status}}</p>
 {% endif %}
-{% if devmode %}
-<p>Data may be randomly deleted</p>
-{% endif %}
-<p id="status">{{status_message}}</p>
 <script>
-    linkcode = null
+    document.getElementById('username').addEventListener('input', function() {
+        document.getElementById('status').innerText = '';
+    });
+    document.getElementById('password').addEventListener('input', function() {
+        document.getElementById('status').innerText = '';
+    });
     function attemptLogin(event) {
         event.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        const privacyPolicy = document.getElementById('privacyPolicy').checked;
 
         fetch('/login', {
             method: 'POST',
@@ -35,8 +34,7 @@
             },
             body: JSON.stringify({
                 username: username,
-                password: password,
-                privacyPolicy: privacyPolicy
+                password: password
             }),
             credentials: 'include'
         })
@@ -74,6 +72,7 @@
     }
     function gotoRegister(event) {
         event.preventDefault();
+        event.stopPropagation();
         if (!document.getElementById('registersection')) {
             window.location.href = '/register';
             return;

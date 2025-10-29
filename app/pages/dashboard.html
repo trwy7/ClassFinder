@@ -4,12 +4,6 @@
 {% block mainclasses %}dashboard {% if currentperiod and currentperiod.passing %}passing{% endif %}{% endblock %}
 {% block content %}
     <meta name="endtime" content="{{ endtime }}"/>
-    {% if devmode %}
-        <div class="devmode">
-            <h3>Development mode</h1>
-            <h4>Chronis is currently in development mode. This means that some features may not work as expected, and your data may randomly dissapear.</h2>
-        </div>
-    {% endif %}
     {%if user.requires_username_change%}
         <h2>You have been requested to change your username <a href="/account/changeusername">here</a>.</h2>
     {%endif%}
@@ -27,7 +21,7 @@
     {% else %}
         <h1>Dashboard</h1><br>
         {% if currentclasses|length == 0 %}
-            <h2>No classes today.</h2>{% if classestoadd > 0 %}<br><h2>Some classes may not be shown, as you still need to add {{classestoadd}} classes. You can add them <a href="/addclasses">here</a>.</h2>{% endif %}
+            {% if classestoadd > 0 %}<h2>You still need to add {{classestoadd}} classes! You can add them <a href="/addclasses">here</a>.</h2>{% else %}<h2>No classes today.</h2>{% endif %}
         {% else %}
         {% if not haslunch %}
             <h3 style="padding-bottom: 30px;">There is no lunch today</h2>

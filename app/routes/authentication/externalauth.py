@@ -30,7 +30,7 @@ def external_auth():
         if scope in readable_scopes:
             scopes_readable.append(readable_scopes[scope])
         else:
-            scopes_readable.append(scope)
+            return error_response("Invalid scope requested", {"scope": scope, "valid_scopes": readable_scopes})
 
     redirect_url = request.args.get('redirect_url')
 
@@ -51,7 +51,7 @@ def external_auth():
             }
         )
     for token in request.user.tokens:
-        if token.granted_to == redirect_domain and token.token_type == 'ext':
+        if token.granted_to == redirect_domain and token.type == 'ext':
             for scope in scopes:
                 if scope not in token.scopes.split(' '):
                     break
@@ -93,11 +93,17 @@ def external_auth_post():
             if len(redirect_domain) > 50:
                 return error_response("Redirect domain is too long", {"redirect_url": redirect_url})
             for token in request.user.tokens:
-                if token.granted_to == redirect_domain and token.token_type == 'ext':
+                if token.granted_to == redirect_domain and token.type == 'ext':
                     token.scopes = ' '.join(list(set(token.scopes.split(' ') + scopes)))
                     db.session.commit()
                     app.logger.debug(f"Updated existing token for user {request.user.username} for domain {redirect_domain}")
-                    return redirect(f"{redirect_url}?token={token.token}" if "?" not in redirect_url else f"{redirect_url}&token={token.token}")
+                    # return redirect(f"{redirect_url}?token={token.token}" if "?" not in redirect_url else f"{redirect_url}&token={token.token}")
+                    return success_response(
+                        "Redirecting to external application",
+                        {
+                            "redirect_to": f"{redirect_url}?token={token.token}" if "?" not in redirect_url else f"{redirect_url}&token={token.token}"
+                        }
+                    )
             token = create_token(request.user.username, 'ext', None, scopes, granted_to=redirect_domain)
             #return redirect(f"{redirect_url}?token={token.token}")
             return success_response(

@@ -2,10 +2,11 @@
 Account routes
 """
 
+import re
 from flask import render_template, request
 from app import app
 from app.utilities.users import require_login, delete_user, change_username, revoke_external_token, create_temp_passcode, set_color, readable_scopes
-from app.utilities.responses import success_response
+from app.utilities.responses import success_response, error_response
 from app.utilities.classes import (
     get_today_courses,
     neededperiods,
@@ -31,6 +32,8 @@ def account():
         if token.granted_to is not None:
             has_external_tokens = True
             break
+    init = "".join([part[0] for part in user.email.split("@")[0].split(".")]).upper()
+    
     return render_template(
         "account/account.html",
         user=user,
@@ -44,7 +47,7 @@ def account():
             (
                 token.granted_to,
                 [
-                    readable_scopes[scope]
+                    readable_scopes[scope] if scope.strip() in readable_scopes else scope
                     for scope in token.scopes.split(" ")
                 ]
             )
@@ -55,6 +58,7 @@ def account():
         needcanvaslink=needcanvaslink,
         allow_leave=allow_leave,
         has_external_tokens=has_external_tokens,
+        init=init,
     )
 
 @app.route("/account/delete", methods=["GET"])
@@ -71,6 +75,8 @@ def account_delete():
     """
     This route deletes the user's account.
     """
+    if request.user.role == "admin":
+        return error_response("Admin accounts cannot be deleted")
     delete_user(request.user)
     return success_response("User deleted successfully")
 

@@ -8,6 +8,7 @@ from app import app
 from app.utilities.users import require_login, require_role
 from app.utilities.classes import get_course_by_id, remove_class, get_all_courses, search_classes
 from app.utilities.responses import success_response, error_response
+from app.utilities.times import change_bell_delay, reset_bell_delay
 from app.db import db
 
 @app.route("/admin/class/<courseid>", methods=["DELETE"])
@@ -114,3 +115,32 @@ def search_courses():
         serialized.pop("teacher", None)
         results.append(serialized)
     return {"results": results}, 200
+
+@app.route("/admin/bell-delay", methods=["POST"])
+@require_login
+@require_role(["admin"])
+def modify_bell_delay():
+    """
+    Modifies the bell delay.
+    """
+    if not request.is_json:
+        return error_response("Invalid request."), 400
+    data = request.json
+    if "delay" not in data:
+        return error_response("Missing delay."), 400
+    try:
+        delay = float(data["delay"])
+    except ValueError:
+        return error_response("Invalid delay."), 400
+    change_bell_delay(delay)
+    return success_response(f"Bell delay changed by {delay} seconds."), 200
+
+@app.route("/admin/reset-bell-delay", methods=["POST"])
+@require_login
+@require_role(["admin"])
+def reset_bell_delay_route():
+    """
+    Resets the bell delay to zero.
+    """
+    reset_bell_delay()
+    return success_response("Bell delay reset to zero."), 200

@@ -1,14 +1,15 @@
 {% extends "templates/base.html" %}
 {% block title %}Create Calendar{% endblock %}
 {% block mainid %}createcalendar{% endblock %}
+{% block mainclasses %}centered{% endblock %}
 {% block content %} 
     <h1>Create Calendar</h1>
     <div id="calform">
         <div id="options">
             <label for="showpassing">Add passing periods</label>
-            <input type="checkbox" id="showpassing" name="showpassing">
+            <input type="checkbox" id="showpassing" name="showpassing"><br>
             <label for="showdaytype">Add day type</label>
-            <input type="checkbox" id="showdaytype" name="showdaytype" checked>
+            <input type="checkbox" id="showdaytype" name="showdaytype" checked><br>
         </div>
         <button id="generate" onclick="genCalLink(event)">Generate Calendar Link</button>
         <button id="download" onclick="downloadCal(event)">Download Calendar</button>
