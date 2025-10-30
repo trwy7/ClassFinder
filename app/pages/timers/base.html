@@ -16,7 +16,7 @@
 <div style="position: absolute; bottom:20px;left:20px;">
     <p id="syncstatus"></p>
     <!-- <button id="syncbutton" onclick="sync();">Sync Time</button> -->
-    <button id="commitbutton" onclick="commitChanges();" hidden>Commit</button>
+    <button id="commitbutton" onclick="commitBChanges();" hidden>Commit</button>
 </div>
 {% endif %}
 <noscript>You need javascript to use this page. Class ends at {{ period.end.strftime("%I:%M %p") }}.</noscript>
@@ -199,7 +199,12 @@
                 sync();
             }
         });
-        function commitChanges() {
+        function commitBChanges() {
+            if (delayChange > 10 || delayChange < -10) {
+                if (!confirm('The delay change is quite large (' + delayChange + ' seconds). Are you sure you want to proceed?')) {
+                    return;
+                }
+            }
             fetch('/admin/bell-delay', {
                 method: 'POST',
                 headers: {

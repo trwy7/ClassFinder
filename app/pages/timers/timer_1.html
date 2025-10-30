@@ -66,7 +66,7 @@
         } else {
             if (seconds < 10) {
                 const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-                if (mediaQuery && mediaQuery.matches) {
+                if ((mediaQuery && mediaQuery.matches) || doReload) {
                     document.getElementById('timeleft').textContent = seconds;
                 } else {
                     if (Math.floor(lastUpdate / 1000) !== Math.floor(timeLeft / 1000)) {
@@ -129,12 +129,12 @@
         document.getElementById('progressbar').style.width = donePercent + '%';
         if (timeLeft === 0) {
             const container = document.getElementById('timercontainer');
-            if (animFinished) {
+            if (animFinished && !doReload) {
                 container.style.transform = 'translateY(20px)';
                 container.style.opacity = '-0.2';
             }
             const progressBarContainer = document.getElementById('progressbarcontainer');
-            if (animFinished) {
+            if (animFinished && !doReload) {
                 progressBarContainer.style.opacity = '0';
             }
             setTimeout(() => {
