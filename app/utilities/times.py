@@ -613,7 +613,7 @@ if os.environ.get("BELL_DELAY_PATH") and os.path.isfile(os.environ.get("BELL_DEL
         loaded_bell_delay = float(bf.read().strip())
         app.logger.info(f"Loaded bell delay of {loaded_bell_delay} seconds from {os.environ.get('BELL_DELAY_PATH')}")
 
-def change_bell_delay(delay_seconds: float):
+def change_bell_delay(delay_seconds: float, commit: bool=True):
     """
     Change the bell delay for all class times.
 
@@ -623,24 +623,20 @@ def change_bell_delay(delay_seconds: float):
     global bell_delay
     # last_bell_delay = bell_delay
     bell_delay += delay_seconds
-    if os.environ.get("BELL_DELAY_PATH") and delay_seconds != 0.0:
-        try:
-            with open(os.environ.get("BELL_DELAY_PATH"), "w", encoding="utf-8") as f:
-                f.write(str(bell_delay))
-                app.logger.info(f"Saved bell delay of {bell_delay} seconds to {os.environ.get('BELL_DELAY_PATH')}")
-        except Exception as e:
-            app.logger.error(f"Failed to save bell delay to {os.environ.get('BELL_DELAY_PATH')}: {e}")
-    for d, dtimes in classtime_dict.items():
-        app.logger.debug(f"Setting times for {readable_days[d]} with delay {bell_delay} seconds")
-        for time_entry in dtimes['classtimes']:
-            start_dt = datetime.combine(date.today(), time_entry['start'])
-            end_dt = datetime.combine(date.today(), time_entry['end'])
-            start_dt += timedelta(seconds=delay_seconds)
-            end_dt += timedelta(seconds=delay_seconds)
-            time_entry['start'] = start_dt.time()
-            time_entry['end'] = end_dt.time()
+    if os.environ.get("BELL_DELAY_PATH") and delay_seconds != 0.0 and commit:
+        with open(os.environ.get("BELL_DELAY_PATH"), "w", encoding="utf-8") as f:
+            f.write(str(bell_delay))
+            app.logger.info(f"Saved bell delay of {bell_delay} seconds to {os.environ.get('BELL_DELAY_PATH')}")    # for d, dtimes in classtime_dict.items():
+    #     app.logger.debug(f"Setting times for {readable_days[d]} with delay {bell_delay} seconds")
+    #     for time_entry in dtimes['classtimes']:
+    #         start_dt = datetime.combine(date.today(), time_entry['start'])
+    #         end_dt = datetime.combine(date.today(), time_entry['end'])
+    #         start_dt += timedelta(seconds=delay_seconds)
+    #         end_dt += timedelta(seconds=delay_seconds)
+    #         time_entry['start'] = start_dt.time()
+    #         time_entry['end'] = end_dt.time()
 
-change_bell_delay(loaded_bell_delay)  # Apply the loaded bell delay
+change_bell_delay(loaded_bell_delay, commit=False)  # Apply the loaded bell delay
 
 def reset_bell_delay():
     """
@@ -648,6 +644,15 @@ def reset_bell_delay():
     """
     global bell_delay
     change_bell_delay(-bell_delay)
+
+def get_bell_delay() -> float:
+    """
+    Get the current bell delay.
+
+    Returns:
+        float: The current bell delay in seconds.
+    """
+    return bell_delay
 
 def get_current_day(oday: date=None):
     """

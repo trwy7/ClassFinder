@@ -4,8 +4,8 @@ This module contains utility functions for managing courses, as well as a users 
 from datetime import datetime, timedelta
 import typing
 import random
-from app.utilities.times import get_classtimes, get_lunchtimes, classtime_dict
-from app.db import User, Class, db, user_class_association
+from app.utilities.times import get_classtimes, get_lunchtimes, classtime_dict, get_bell_delay
+from app.db import User, Class, db
 from app import app
 
 neededperiods = []
@@ -19,7 +19,7 @@ lunchperiods = list(set(lunchperiods))
 neededperiods = sorted(set(neededperiods))
 # TODO: Move most of these functions to a function within a course class
 
-def get_current_period():
+def get_current_period(include_delay: bool=True):
     """
     Determine the current period.
     Returns:
@@ -29,10 +29,15 @@ def get_current_period():
             - "end" (datetime.time): The end time of the current period.
             - "start" (datetime.time): The start time of the current period.
     """
+    bell_delay = get_bell_delay()
     current_time = datetime.now().time()
     for time in get_classtimes():
         app.logger.debug(f"Checking period {time['period']}")
-        if time["start"] <= current_time <= time["end"]:
+        if not include_delay:
+            if datetime.combine(datetime.today(), time["start"]).time() <= current_time <= datetime.combine(datetime.today(), time["end"]).time():
+                app.logger.debug(f"Current period is {time['period']}")
+                return time.copy()
+        if (datetime.combine(datetime.today(), time["start"]) + timedelta(seconds=bell_delay)).time() <= current_time <= (datetime.combine(datetime.today(), time["end"]) + timedelta(seconds=bell_delay)).time():
             app.logger.debug(f"Current period is {time['period']}")
             return time.copy()
     app.logger.debug("No current period")
@@ -55,7 +60,8 @@ def get_user_current_period(user: User):
         Various debug information about the current period, lunch status, and course checking.
     """
     current_time = datetime.now().time()
-    current_period = get_current_period()
+    current_period = get_current_period(include_delay=False)
+    bell_delay = get_bell_delay()
     lunchtimes = get_lunchtimes()
     app.logger.debug(f"Current period: {current_period}")
     if current_period is None:
@@ -102,6 +108,15 @@ def get_user_current_period(user: User):
                     # Save everything back to the dict
                     current_period['start'] = modified_start_time.time()
                     current_period['end'] = modified_end_time.time()
+                    app.logger.debug(f"Modified start time: {current_period['start']}, Modified end time: {current_period['end']}")
+                else:
+                    app.logger.debug(f"User {user.username} is in a non-PTECH class.")
+                    # current_period['start'] += timedelta(seconds=bell_delay)
+                    # current_period['end'] += timedelta(seconds=bell_delay)
+                    modified_start_time = (datetime.combine(datetime.today(), current_period["start"]) + timedelta(seconds=bell_delay)).time()
+                    modified_end_time = (datetime.combine(datetime.today(), current_period["end"]) + timedelta(seconds=bell_delay)).time()
+                    current_period['start'] = modified_start_time
+                    current_period['end'] = modified_end_time
                     app.logger.debug(f"Modified start time: {current_period['start']}, Modified end time: {current_period['end']}")
                 return current_period | {"lunch": None, "course": returncourse}
         app.logger.debug(f"No course found for period {current_period['period']} and user {user.username}")

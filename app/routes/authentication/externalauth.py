@@ -15,9 +15,8 @@ def external_auth():
     This is the main entry point for external authentication.
     It verifies the user and redirects them to the appropriate page.
     """
-    # TODO: Prevent sites from creating multiple tokens, if more scopes are required they should
-    # be added to the existing token instead, returning the existing token. This should also
-    # show users what scopes they have already granted, and what scopes they are requesting
+    # TODO: Localhost handling should require an "name" parameter to identify the app on the account page, instead of localhost
+    # TODO: implement a different method of authing users, like OAuth2
     scopes = request.args.get('scopes')
     if scopes:
         scopes = scopes.strip().split(',')
