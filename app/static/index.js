@@ -34,7 +34,7 @@ if (timerTextElement) {
         timerTextElement.style.display = "inline";
     } else {
         const endtime = parseInt(localStorage.getItem("currentperiod_endtime"));
-        function updateTimer() {
+        function updateHeaderTimer() {
             const now = new Date().getTime();
             const distance = endtime - now;
             if (distance <= 0 || isNaN(distance)) {
@@ -51,8 +51,8 @@ if (timerTextElement) {
                 (minutes > 0 ? minutes + "m " : "") + 
                 seconds + "s";
         }
-        const timerInterval = setInterval(updateTimer, 1000);
-        updateTimer(); // initial call
+        const timerInterval = setInterval(updateHeaderTimer, 1000);
+        updateHeaderTimer(); // initial call
         timerTextElement.style.display = "inline";
     }
 }

@@ -1,12 +1,24 @@
 {% set noheader = true %}
 {% extends 'timers/base.html' %}
-{% block head %}
+{% block style %}
 <style>
     #timercontainer {
         transition: all 0.7s ease-in-out;
     }
     #progressbarcontainer {
         transition: opacity 0.7s ease-in-out;
+    }
+    #passingstatus {
+        transform: translateY(-10px);
+        opacity: 0;
+        transition: all 0.6s ease-in-out;
+    }
+    #progressbar {
+        width:0%;
+        height:100%;
+        background:linear-gradient(to left, var(--secondary-color), var(--tertiary-color));
+        border-radius:10px 0 0 10px;
+        transition: width 1s ease-in-out;
     }
     @media (prefers-reduced-motion: reduce) {
         #timercontainer {
@@ -15,17 +27,30 @@
         #progressbarcontainer {
             transition: none;
         }
+        #passingstatus {
+            animation: none;
+            transform: none;
+            opacity: 1;
+        }
+        #progressbar {
+            transition: none;
+        }
     }
 </style>
 {% endblock %}
 {% block tcontent %}
 <div id="timercontainer" style="transform: translateY(-20px); opacity:0;">
+    {% if period is not none %}
     <h3 id="periodtime">{{ period.start.strftime("%I:%M %p") }} - {{ period.end.strftime("%I:%M %p") }}</h3>
     <h1 id="timeleft" style="font-size:5rem;" {% if user.role == 'admin' %} onclick="sync();" {% endif %}>00:00:00</h1>
+    {% endif %}
 </div>
 <div id="progressbarcontainer" style="width:min(90%, 400px); height:20px; background-color:#ddd; border-radius:10px; overflow:hidden; margin-top:20px; opacity: 0;">
-    <div id="progressbar" style="width:0%; height:100%; background:linear-gradient(to left, var(--secondary-color), var(--tertiary-color)); border-radius:10px 0 0 10px; transition: width 1s ease-in-out;"></div>
+    <div id="progressbar"></div>
 </div>
+{% if period is not none and period.passing %}
+<p id="passingstatus" style="margin-top:10px">Go to {{period.course.name}} in room {{period.course.room}}</p>
+{% endif %}
 {% endblock %}
 {% block tscript %}
 <script>
@@ -41,6 +66,11 @@
             runningAnim = true;
             setTimeout(() => {
                 const container = document.getElementById('timercontainer');
+                const passingStatus = document.getElementById('passingstatus');
+                setTimeout(() => {
+                    passingStatus.style.transform = 'translateY(0px)';
+                    passingStatus.style.opacity = '1';
+                }, allowAnim ? 800 : 0);
                 container.style.transform = 'translateY(0px)';
                 container.style.opacity = '1';
                 const progressBarContainer = document.getElementById('progressbarcontainer');
@@ -48,7 +78,7 @@
                 setTimeout(() => {
                     animFinished = true;
                 }, 850);
-            }, 100);
+            }, allowAnim ? 100 : 0);
         }
         const hours = Math.floor(timeLeft / (1000 * 60 * 60));
         const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
@@ -132,6 +162,7 @@
             if (animFinished && !doReload) {
                 container.style.transform = 'translateY(20px)';
                 container.style.opacity = '-0.2';
+
             }
             const progressBarContainer = document.getElementById('progressbarcontainer');
             if (animFinished && !doReload) {
