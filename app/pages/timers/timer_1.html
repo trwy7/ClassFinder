@@ -95,8 +95,7 @@
                 String(seconds).padStart(2, '0');
         } else {
             if (seconds < 10) {
-                const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-                if ((mediaQuery && mediaQuery.matches) || doReload) {
+                if (!allowAnim || !doReload) {
                     document.getElementById('timeleft').textContent = seconds;
                 } else {
                     if (Math.floor(lastUpdate / 1000) !== Math.floor(timeLeft / 1000)) {
@@ -159,18 +158,18 @@
         document.getElementById('progressbar').style.width = donePercent + '%';
         if (timeLeft === 0) {
             const container = document.getElementById('timercontainer');
-            if (animFinished && !doReload) {
-                container.style.transform = 'translateY(20px)';
-                container.style.opacity = '-0.2';
-
-            }
+            const passingstatus = document.getElementById('passingstatus');
             const progressBarContainer = document.getElementById('progressbarcontainer');
-            if (animFinished && !doReload) {
+            if (animFinished && doReload) {
+                container.style.transform = 'translateY(20px)';
+                container.style.opacity = '0';
+                passingstatus.style.transform = 'translateY(10px)';
+                passingstatus.style.opacity = '0';
                 progressBarContainer.style.opacity = '0';
             }
             setTimeout(() => {
                 if (doReload) location.reload();
-            }, 600);
+            }, 800);
         }
     }
 </script>

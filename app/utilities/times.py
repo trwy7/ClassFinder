@@ -76,7 +76,7 @@ classtime_dict = {
         "lunchtimes": {
             "A": {"start": time(11, 35), "end": time(12, 5)},
             "B": {"start": time(12, 15), "end": time(12, 45)},
-            "C": {"start": time(13, 15), "end": time(13, 45)},
+            "C": {"start": time(13, 10), "end": time(13, 45)},
         }
     },
     1: { # Tuesday
@@ -141,7 +141,7 @@ classtime_dict = {
         "lunchtimes": {
             "A": {"start": time(11, 35), "end": time(12, 5)},
             "B": {"start": time(12, 15), "end": time(12, 45)},
-            "C": {"start": time(13, 15), "end": time(13, 45)},
+            "C": {"start": time(13, 10), "end": time(13, 45)},
         }
     },
     2: { # Wednesday
@@ -220,7 +220,7 @@ classtime_dict = {
         "lunchtimes": {
             "A": {"start": time(12, 5), "end": time(12, 35)},
             "B": {"start": time(12, 40), "end": time(13, 10)},
-            "C": {"start": time(13, 35), "end": time(14, 5)},
+            "C": {"start": time(13, 30), "end": time(14, 5)},
         }
     },
     3: { # Thursday
@@ -299,7 +299,7 @@ classtime_dict = {
         "lunchtimes": {
             "A": {"start": time(12, 5), "end": time(12, 35)},
             "B": {"start": time(12, 40), "end": time(13, 10)},
-            "C": {"start": time(13, 35), "end": time(14, 5)},
+            "C": {"start": time(13, 30), "end": time(14, 5)},
         }
     },
     4: { # Friday
@@ -420,7 +420,7 @@ classtime_dict = {
         "lunchtimes": {
             "A": {"start": time(11, 20), "end": time(11, 50)},
             "B": {"start": time(11, 55), "end": time(12, 25)},
-            "C": {"start": time(12, 30), "end": time(13, 0)},
+            "C": {"start": time(12, 25), "end": time(13, 0)},
         }
     },
     5: { # No school
