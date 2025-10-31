@@ -226,6 +226,7 @@ def test_ptech_times(client, token):
     assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
     assert response.json['endtime'] != 1756129800, "The PTECH start delay was not accounted for"
     assert response.json['endtime'] == 1756130100, f"The PTECH start delay messed up somewhere, got {response.json['endtime']}, expected 1756130100"
+    assert response.json['passing'] is True, "It does not think it is passing time"
 
 @freezegun.freeze_time("2025-8-25 13:50:30")
 def test_ptech_times_duringbefore(client, token):
@@ -238,6 +239,7 @@ def test_ptech_times_duringbefore(client, token):
     assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
     assert response.json['endtime'] != 1756135500, "It thinks it is durring class"
     assert response.json['endtime'] == 1756130100, f"The PTECH start delay messed up somewhere, got {response.json['endtime']}, expected 1756130100"
+    assert response.json['passing'] is True, "It does not think it is passing time"
 
 @freezegun.freeze_time("2025-8-25 13:55:30")
 def test_ptech_times_during_class(client, token):
@@ -250,6 +252,7 @@ def test_ptech_times_during_class(client, token):
     assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
     app.logger.debug(f"Response JSON: {response.json}")
     assert response.json['endtime'] == 1756135500, f"The PTECH end delay messed up somewhere, got {response.json['endtime']}, expected 1756135500"
+    assert response.json['passing'] is False, "It does not think it is class time"
 
 @freezegun.freeze_time("2025-8-25 15:25:30")
 def test_ptech_times_afterduring_eos(client, token):

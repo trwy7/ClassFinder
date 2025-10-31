@@ -88,6 +88,7 @@ def get_user_current_period(user: User):
                         app.logger.debug("We are in the first 5 minutes of normal class, so PTECH starts now")
                         modified_end_time = modified_start_time + timedelta(minutes=5)
                         modified_start_time -= timedelta(minutes=5)
+                        current_period['passing'] = True
                     elif (datetime.now() > (modified_end_time - timedelta(minutes=5))):
                         # We are in the last 5 minutes of normal class, so PTECH leaves now
                         app.logger.debug("We are in the last 5 minutes of normal class, so PTECH leaves now")
@@ -99,6 +100,7 @@ def get_user_current_period(user: User):
                             return None
                         modified_end_time += timedelta(minutes=5)
                         current_period['leavingptech'] = True
+                        current_period['passing'] = True
                         returncourse = None
                     else:
                         # Normal class time, so PTECH leaves 5 minutes early and starts 5 minutes late
