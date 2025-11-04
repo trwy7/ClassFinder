@@ -11,6 +11,11 @@
             }
         </style>
     {% endif %}
+    <style>
+        body {
+            background: radial-gradient(closest-side, var(--background-color), #000);
+        }
+    </style>
     {% block style %}{% endblock %}
 {% endblock %}
 {% block content %}
@@ -35,6 +40,7 @@
 {% if period.passing %}
 {% endif %}
 {% block tcontent required %}{% endblock %}
+<p id="jsstatus" style="text-align:center;"></p>
 {% endblock %}
 {% block script %}
 <script>
@@ -44,6 +50,7 @@
     const startTime = parseFloat(document.querySelector('meta[name="starttime"]').getAttribute('content')) * 1000;
     const endTime = parseFloat(document.querySelector('meta[name="endtime"]').getAttribute('content')) * 1000;
     const allowAnim = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const jsStatusElem = document.getElementById('jsstatus');
     // template settings
     var autoreload = true;
     // calculate time offset from server
@@ -137,6 +144,11 @@
 </script>
 {% block tscript required %}{% endblock %}
 <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const alSync = urlParams.get('genericMode') === 'true';
+    if (alSync) {
+        jsStatusElem.textContent = 'Viewing the generic timer.';
+    }
     function uUpdateTimer(){
         if (!runTimer) return;
         const now = Date.now() + timeOffset;
@@ -183,16 +195,38 @@
                 document.exitFullscreen();
                 document.body.style.cursor = 'default';
             }
+        } else if (event.code === 'KeyS') {
+            const sitestatus = document.getElementById('sitestatus');
+            if (sitestatus.style.display === 'none') {
+                sitestatus.style.display = 'block';
+            } else {
+                sitestatus.style.display = 'none';
+            }
+        } else if (event.code === 'KeyG') {
+            if (alSync) {
+                const curl = new URL(window.location.href);
+                curl.searchParams.delete('genericMode');
+                window.location.href = curl.toString();
+            } else {
+                const curl = new URL(window.location.href);
+                curl.searchParams.set('genericMode', 'true');
+                window.location.href = curl.toString();
+            }
         }
     });
 </script>
 {% if user.role == 'admin' %}
     <script>
         let syncReady = false;
-        // Updates the bell delay
         const syncStatusElem = document.getElementById('syncstatus');
         const commitButton = document.getElementById('commitbutton');
         const syncButton = document.getElementById('syncbutton');
+        if (alSync) {
+            syncReady = true;
+            doReload = false;
+            syncStatusElem.textContent = 'Ready!'
+            syncButton.hidden = false;
+        }
         var delayChange = 0;
         /// setup function
         function sync() {
@@ -203,10 +237,10 @@
                 delayChange = -timeLeft / 1000;
                 commitButton.hidden = false;
             } else {
-                syncReady = true;
-                doReload = false;
-                syncStatusElem.textContent = 'Ready!'
-                syncButton.hidden = false;
+                const curl = new URL(window.location.href);
+                curl.searchParams.set('genericMode', 'true');
+                syncStatusElem.textContent = 'Loading...';
+                window.location.href = curl.toString();
             }
         }
         /// Check if C is pressed
@@ -230,8 +264,8 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    alert('Updated.');
+                if (data.status === 'success') {
+                    alert(data.message);
                     location.reload();
                 } else {
                     alert('Error updating bell delay: ' + data.message);

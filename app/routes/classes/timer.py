@@ -114,7 +114,7 @@ def timer(version=1):
 
     user = request.user
 
-    current_period = get_user_current_period(user) if user else get_current_period()
+    current_period = get_user_current_period(user) if user and (not request.args.get('genericMode') == "true") else get_current_period()
 
     if current_period is None:
         if request.args.get('noredirect', "false") != "false":
