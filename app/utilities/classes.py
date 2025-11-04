@@ -33,13 +33,15 @@ def get_current_period(include_delay: bool=True):
     current_time = datetime.now().time()
     for time in get_classtimes():
         app.logger.debug(f"Checking period {time['period']}")
-        if not include_delay:
-            if datetime.combine(datetime.today(), time["start"]).time() <= current_time <= datetime.combine(datetime.today(), time["end"]).time():
-                app.logger.debug(f"Current period is {time['period']}")
-                return time.copy()
-        if (datetime.combine(datetime.today(), time["start"]) + timedelta(seconds=bell_delay)).time() <= current_time <= (datetime.combine(datetime.today(), time["end"]) + timedelta(seconds=bell_delay)).time():
-            app.logger.debug(f"Current period is {time['period']}")
-            return time.copy()
+        if include_delay:
+            ttime = time.copy()
+            ttime['start'] = (datetime.combine(datetime.today(), time['start']) + timedelta(seconds=bell_delay)).time()
+            ttime['end'] = (datetime.combine(datetime.today(), time['end']) + timedelta(seconds=bell_delay)).time()
+        else:
+            ttime = time.copy()
+        if ttime["start"] <= current_time <= ttime["end"]:
+            app.logger.debug(f"Current period found: {ttime}")
+            return ttime
     app.logger.debug("No current period")
     return None
 
