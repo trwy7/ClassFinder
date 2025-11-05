@@ -12,12 +12,39 @@
     {% block style %}{% endblock %}
 {% endblock %}
 {% block content %}
+<p id="sitestatus" style="position: absolute; bottom:20px;right:20px;">{% if site_status %}{{site_status}}{% endif %}</p>
 <div id="ntimercontainer" class="vcenter hcenter column">
     <p id="ntimertext">Nothing here right now!</p>
-    {% if user is none %}
-        <button onclick="location.reload();">Refresh</button>
-    {% else %}
+    {% if user is not none %}
         <a href="/dashboard">Go to Dashboard</a>
     {% endif %}
 </div>
+{% endblock %}
+{% block script %}
+{% block ntscript %}{% endblock %}
+<script>
+    // Keep fetching /api/v2/classes/timeuntilend every minute to see if a class has started
+    lastAttempt = Date.now();
+    async function checkForClassStart() {
+        try {
+            const response = await fetch('/api/v2/classes/timeuntilend');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.time !== null) {
+                    console.log('Class has started, reloading page.');
+                    if (typeof animatedReload === 'function') animatedReload();
+                    else location.reload();
+                }
+            }
+        } catch (error) {
+            console.error('Error checking for class start:', error);
+        }
+    }
+    setInterval(() => {
+        if (Date.now() - lastAttempt >= 30000) {
+            lastAttempt = Date.now();
+            checkForClassStart();
+        }
+    }, 1000); // This is done a weird way in hopes that it should automatically reload when the page is woken from a sleep state
+</script>
 {% endblock %}
