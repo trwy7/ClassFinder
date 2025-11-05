@@ -117,7 +117,7 @@ def timer(version=1):
     current_period = get_user_current_period(user) if user and (not request.args.get('genericMode') == "true") else get_current_period()
 
     if current_period is None:
-        if request.args.get('noredirect', "false") != "false":
+        if request.args.get('noredirect', "false") != "false" or request.args.get('genericMode') == "true" or (not user):
             return render_template(f'timers/timer_{version}.html', nextclass="nothing", period=None)
         return redirect(url_for('dashboard'))
 
