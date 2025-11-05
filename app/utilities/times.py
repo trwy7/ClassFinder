@@ -553,7 +553,7 @@ classtime_dict = {
         ],
         "lunchtimes": {}
     },
-    9: {
+    9: { # For development/testing purposes
         "classtimes": [
             {
                 "start": (now - timedelta(minutes=3)).time(),
@@ -585,6 +585,10 @@ classtime_dict = {
             }
         ],
         "lunchtimes": {}
+    },
+    10: { # Special schedule placeholder
+        "classtimes": [],
+        "lunchtimes": {}
     }
 }
 readable_days = {
@@ -597,7 +601,8 @@ readable_days = {
     6: "No school",
     7: "Early Release Blue",
     8: "Early Release Gold",
-    9: "Development"
+    9: "Development",
+    10: "Special Schedule",
 }
 
 # TODO: Webhooks with custom data? Possibly for ntfy/discord notifications?

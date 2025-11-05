@@ -13,8 +13,7 @@ from app.utilities.classes import (
     get_user_current_period,
 )
 from app.utilities.times import get_lunchtimes
-from app.utilities.config import canvas_url, devmode, status
-from app.addons.limiter import limiter
+from app.utilities.config import canvas_url, devmode
 
 @app.route("/dashboard")
 @require_login
@@ -43,8 +42,7 @@ def dashboard():
             ),
             canvasurl=canvas_url,
             haslunch='A' in lunchtimes,
-            devmode=devmode,
-            status=status
+            devmode=devmode
         ),
     )
     # if currentperiod is not None:

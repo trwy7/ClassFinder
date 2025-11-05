@@ -9,11 +9,14 @@ from app.utilities.config import status
 from app.utilities.classes import get_user_current_period, get_current_period
 
 valid_versions = []
+valid_notimes = []
 for file in os.listdir(os.path.join(app.root_path, app.template_folder, 'timers')):
-    if file.endswith('.html'):
+    if file.endswith('.html') and file.startswith('timer_'):
         try:
             version_num = int(file.removeprefix('timer_').removesuffix('.html'))
             valid_versions.append(version_num)
+            if os.path.exists(os.path.join(app.root_path, app.template_folder, 'timers', f'notime_{version_num}.html')):
+                valid_notimes.append(version_num)
         except ValueError:
             continue
 
@@ -118,7 +121,8 @@ def timer(version=1):
 
     if current_period is None:
         if request.args.get('noredirect', "false") != "false" or request.args.get('genericMode') == "true" or (not user):
-            return render_template(f'timers/timer_{version}.html', nextclass="nothing", period=None)
+            # return render_template(f'timers/timer_{version}.html', nextclass="nothing", period=None)
+            return render_template(f'timers/notime_{version}.html' if version in valid_notimes else 'timers/ntbase.html', period=None)
         return redirect(url_for('dashboard'))
 
     app.logger.debug(f"User: {user}")

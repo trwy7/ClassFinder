@@ -15,7 +15,7 @@ def register():
     """
     Display the registration page.
     """
-    return render_template("register.html", status=status, devmode=devmode)
+    return render_template("register.html", devmode=devmode)
 
 
 @app.route("/register", methods=["POST"])
