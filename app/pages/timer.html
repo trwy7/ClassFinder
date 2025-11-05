@@ -549,11 +549,16 @@
             // Update animated digits instead of raw innerHTML
             // Always show HH:MM:SS; leading zeros will be displayed
             if (typeof window.updateTimerDigits === 'function') {
-                // pass adjusted values when showMillis is active
-                if (showMillis) {
-                    window.updateTimerDigits(displayHours, displayMinutes, displaySeconds);
-                } else {
-                    window.updateTimerDigits(hours, minutes, seconds);
+                // Throttle updateTimerDigits to at most once per second
+                window._lastDigitUpdate = window._lastDigitUpdate || 0;
+                const nowMsForDigits = now; // 'now' is defined above in this function (ms since epoch, adjusted)
+                if (first || (nowMsForDigits - window._lastDigitUpdate >= 1000) || distance <= 0) {
+                    if (showMillis) {
+                        window.updateTimerDigits(displayHours, displayMinutes, displaySeconds);
+                    } else {
+                        window.updateTimerDigits(hours, minutes, seconds);
+                    }
+                    window._lastDigitUpdate = nowMsForDigits;
                 }
                  // If showMillis is enabled, compute the first two decimals (hundredths) of the remaining second
                  // Do NOT animate this element (simple text update)
