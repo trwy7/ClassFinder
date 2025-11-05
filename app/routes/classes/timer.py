@@ -3,7 +3,7 @@ Handles the timer page
 """
 import os
 from datetime import datetime
-from flask import render_template, url_for, redirect, request, make_response
+from flask import render_template, url_for, redirect, request
 from app import app
 from app.utilities.classes import get_user_current_period, get_current_period
 
@@ -119,10 +119,8 @@ def timer(version=1):
     current_period = get_user_current_period(user) if user and (not request.args.get('genericMode') == "true") else get_current_period()
 
     if current_period is None:
-        if request.args.get('noredirect', "false") != "false" or request.args.get('genericMode') == "true" or (not user):
-            # return render_template(f'timers/timer_{version}.html', nextclass="nothing", period=None)
-            return render_template(f'timers/notime_{version}.html' if version in valid_notimes else 'timers/ntbase.html', period=None)
-        return redirect(url_for('dashboard'))
+        # if request.args.get('noredirect', "false") != "false" or request.args.get('genericMode') == "true" or (not user):
+        return render_template(f'timers/notime_{version}.html' if version in valid_notimes else 'timers/ntbase.html', period=None)
 
     app.logger.debug(f"User: {user}")
 
