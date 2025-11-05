@@ -48,7 +48,7 @@
 <div id="progressbarcontainer" style="width:min(90%, 400px); height:20px; background-color:#ddd; border-radius:10px; overflow:hidden; margin-top:20px; opacity: 0;">
     <div id="progressbar"></div>
 </div>
-<p id="passingstatus" style="margin-top:10px">{% if period is not none and period.passing %}Go to {{period.course.name}} in room {{period.course.room}}{% endif %}</p>
+<p id="passingstatus" style="margin-top:10px">{% if period is not none and period.passing and period.course %}Go to {{period.course.name}} in room {{period.course.room}}{% endif %}</p>
 {% endblock %}
 {% block tscript %}
 <script>
