@@ -8,7 +8,7 @@ from app.utilities.users import create_user, check_email, get_user_count, create
 from app.utilities.validation import validate_email, validate_username
 from app.addons.limiter import limiter
 from app.utilities.responses import error_response, success_response
-from app.utilities.config import status, devmode
+from app.utilities.config import devmode
 
 @app.route("/register")
 def register():
