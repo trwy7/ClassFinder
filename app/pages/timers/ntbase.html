@@ -3,6 +3,21 @@
 {% block title %}Timer{% endblock %}
 {% block mainid %}nttimerpage{% endblock %}
 {% block mainclasses %}vcenter hcenter{% endblock %}
+{% block head %}
+    <style>
+        body {
+            background: radial-gradient(closest-side, var(--background-color), #000);
+        }
+    </style>
+    {% block style %}{% endblock %}
+{% endblock %}
 {% block content %}
-<p id="ntimertext">Nothing here right now!</p>
+<div id="ntimercontainer" class="vcenter hcenter column">
+    <p id="ntimertext">Nothing here right now!</p>
+    {% if user is none %}
+        <button onclick="location.reload();">Refresh</button>
+    {% else %}
+        <a href="/dashboard">Go to Dashboard</a>
+    {% endif %}
+</div>
 {% endblock %}

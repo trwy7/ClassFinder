@@ -1,7 +1,7 @@
 {% extends 'timers/ntbase.html' %}
-{% block head %}
+{% block style %}
     <style>
-        #ntimertext {
+        #ntimercontainer {
             opacity: 0;
             animation: fadeIn 0.7s ease-in-out forwards;
             transform: translateY(-20px);
@@ -15,7 +15,7 @@
             }
         }
         @media (prefers-reduced-motion: reduce) {
-            #ntimertext {
+            #ntimercontainer {
                 animation: none;
                 opacity: 1;
                 transform: none;
