@@ -563,7 +563,7 @@ classtime_dict = {
                 "lunchactive": False,
             },
             {
-                "start": (now + timedelta(minutes=0.2)).time(),
+                "start": (now + timedelta(minutes=0.3)).time(),
                 "end": (now + timedelta(minutes=10)).time(),
                 "period": "2",
                 "passing": True,

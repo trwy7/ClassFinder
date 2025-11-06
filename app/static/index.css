@@ -61,7 +61,7 @@ header {
     top: 0;
     z-index: 1000;
 }
-#timertext, #timeleft {
+#timertext, #timeleft, #timeleftcontainer {
     font-family: "Space Mono", monospace;
     font-weight: 700;
     font-style: normal;

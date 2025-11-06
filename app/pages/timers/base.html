@@ -53,6 +53,7 @@
     const jsStatusElem = document.getElementById('jsstatus');
     // template settings
     var autoreload = true;
+    var fineUpdates = true;
     // calculate time offset from server
     const serverTime = parseFloat(document.querySelector('meta[name="currentepoch"]').getAttribute('content')) * 1000;
     const clientTime = Date.now();
@@ -156,6 +157,9 @@
 
         if (timeLeft < 0) {
             timeLeft = 0;
+        }
+        if (lastUpdate !== undefined && !fineUpdates && Math.abs(timeLeft - lastUpdate) < 1000) {
+            return;
         }
         updateTimer(timeLeft);
         lastUpdate = timeLeft;

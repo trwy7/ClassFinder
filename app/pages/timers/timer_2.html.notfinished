@@ -1,0 +1,280 @@
+{% set noheader = true %}
+{% extends 'timers/base.html' %}
+{% block style %}
+<style>
+    #timercontainer {
+        transition: all 0.7s ease-in-out;
+    }
+    #progressbarcontainer {
+        transition: opacity 0.7s ease-in-out;
+    }
+    #passingstatus {
+        transform: translateY(-10px);
+        opacity: 0;
+        transition: all 0.6s ease-in-out;
+    }
+    #progressbar {
+        width:0%;
+        height:100%;
+        background:linear-gradient(to left, var(--secondary-color), var(--tertiary-color));
+        border-radius:10px 0 0 10px;
+        transition: width 1s ease-in-out;
+    }
+
+    /* Added CSS for the digit-based timer */
+    #timeleftcontainer {
+        display: flex;                /* full-width flex so contents can be perfectly centered */
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        gap: 0.2em;
+        font-size: 4rem;              /* doubled overall size, JS uses 1em for digit height */
+        line-height: 1;               /* keep 1em = digit height in JS */
+        white-space: nowrap;
+        user-select: none;
+        -webkit-font-smoothing: antialiased;
+        box-sizing: border-box;
+    }
+    /* Each column acts as a mask (fixed height, overflow:hidden) */
+    .digitcolumn {
+        height: 1em;                  /* matches digit height set in JS */
+        overflow: hidden;
+        display: inline-block;
+        vertical-align: middle;
+        text-align: center;
+        box-sizing: content-box;
+    }
+    /* The stack is translated up/down to show a digit */
+    .digitstack {
+        display: flex;
+        flex-direction: column;
+        transform: translateY(0);
+        transition: transform 0.5s ease-in-out;
+        will-change: transform;
+    }
+    /* Individual digit rows */
+    .digit {
+        height: 1em;                  /* matches JS height setting */
+        line-height: 1em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-variant-numeric: tabular-nums;
+        min-width: 0;
+        padding: 0;
+        margin: 0;
+    }
+    /* Separator (:) styling */
+    .digitseparator {
+        padding: 0;
+        color: var(--secondary-color, #333);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        font-size: 0.9em;
+    }
+
+    /* Small / responsive adjustments */
+    @media (max-width:480px) {
+        #timeleftcontainer { font-size: 3.2rem; }
+        .digitcolumn { width: 0.75em; }
+    }
+
+    /* Respect reduced motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+        #timercontainer {
+            transition: none;
+        }
+        #progressbarcontainer {
+            transition: none;
+        }
+        #passingstatus {
+            animation: none;
+            transform: none;
+            opacity: 1;
+        }
+        #progressbar {
+            transition: none;
+        }
+        .digitstack {
+            transition: none;
+        }
+    }
+</style>
+{% endblock %}
+{% block tcontent %}
+<!-- This is really not that good, if you know what you are doing, feel free to rewrite this -->
+<div id="timercontainer" style="transform: translateY(-20px); opacity:0;">
+    {% if period is not none %}
+    <h3 id="periodtime">{{ period.start.strftime("%I:%M %p") }} - {{ period.end.strftime("%I:%M %p") }}</h3>
+    <div id="timeleftcontainer" {% if user.role == 'admin' %} onclick="sync();" {% endif %}>
+        {# Finished via javascript #}
+    </div>
+    {% endif %}
+</div>
+<div id="progressbarcontainer" style="width:min(90%, 400px); height:20px; background-color:#ddd; border-radius:10px; overflow:hidden; margin-top:20px; opacity: 0;">
+    <div id="progressbar"></div>
+</div>
+<p id="passingstatus" style="margin-top:10px">{% if period is not none and period.passing and period.course %}Go to {{period.course.name}} in room {{period.course.room}}{% endif %}</p>
+{% endblock %}
+{% block tscript %}
+<script>
+    // Template settings
+    autoreload = false;
+
+    // Actual script
+    var runningAnim = false;
+    var startPG = false;
+    var animFinished = false;
+    function setupDigits() {
+        function makeColumn(digit) {
+            // outer column acts as a mask (fixed height, overflow:hidden)
+            const col = document.createElement('div');
+            col.classList.add('digitcolumn');
+
+            // inner stack contains the 0-9 digits and is the element we translate
+            const stack = document.createElement('div');
+            stack.classList.add('digitstack');
+
+            for (let i = 0; i <= 9; i++) {
+                const digitDiv = document.createElement('div');
+                digitDiv.classList.add('digit');
+                digitDiv.textContent = i;
+                // ensure each digit has the same fixed height to make % translates predictable
+                digitDiv.style.height = '1em';
+                digitDiv.style.lineHeight = '1em';
+                stack.appendChild(digitDiv);
+            }
+
+            // position the inner stack to show the requested digit
+            // each stack has 10 digits, so move by 10% per digit (10 * 10% = 100%)
+            stack.style.transform = `translateY(-${digit * 10}%)`;
+
+            col.appendChild(stack);
+            return col;
+        }
+        function makeSeperator(char) {
+            const sep = document.createElement('div');
+            sep.classList.add('digitseparator');
+            sep.textContent = char;
+            return sep;
+        }
+        const timeLeftContainer = document.getElementById('timeleftcontainer');
+        timeLeftContainer.appendChild(makeColumn(0)); // Hours tens
+        timeLeftContainer.appendChild(makeColumn(0)); // Hours units
+        timeLeftContainer.appendChild(makeSeperator(':'));
+        timeLeftContainer.appendChild(makeColumn(0)); // Minutes tens
+        timeLeftContainer.appendChild(makeColumn(0)); // Minutes units
+        timeLeftContainer.appendChild(makeSeperator(':'));
+        timeLeftContainer.appendChild(makeColumn(0)); // Seconds tens
+        timeLeftContainer.appendChild(makeColumn(0)); // Seconds units
+
+    }
+    function updateDigits(hours, minutes, seconds) {
+        // target the inner stacks (the elements that should be translated)
+        const stacks = document.querySelectorAll('.digitcolumn .digitstack');
+        // use 10% per digit step (10 digits -> 10% each)
+        stacks[0].style.transform = `translateY(-${Math.floor(hours / 10) * 10}%)`; // Hours tens
+        stacks[1].style.transform = `translateY(-${(hours % 10) * 10}%)`; // Hours units
+        if (hours === 0) {
+            const hoursSeparator = document.querySelectorAll('.digitseparator')[0];
+            hoursSeparator.style.visibility = 'hidden';
+            stacks[0].style.visibility = 'hidden';
+            stacks[1].style.visibility = 'hidden';
+        } else {
+            const hoursSeparator = document.querySelectorAll('.digitseparator')[0];
+            hoursSeparator.style.visibility = 'visible';
+            stacks[0].style.visibility = 'visible';
+            stacks[1].style.visibility = 'visible';
+        }
+        stacks[2].style.transform = `translateY(-${Math.floor(minutes / 10) * 10}%)`; // Minutes tens
+        stacks[3].style.transform = `translateY(-${(minutes % 10) * 10}%)`; // Minutes units
+        if (minutes === 0 && hours === 0) {
+            const minutesSeparator = document.querySelectorAll('.digitseparator')[1];
+            minutesSeparator.style.visibility = 'hidden';
+            stacks[2].style.visibility = 'hidden';
+            stacks[3].style.visibility = 'hidden';
+        } else {
+            const minutesSeparator = document.querySelectorAll('.digitseparator')[1];
+            minutesSeparator.style.visibility = 'visible';
+            stacks[2].style.visibility = 'visible';
+            stacks[3].style.visibility = 'visible';
+        }
+        stacks[4].style.transform = `translateY(-${Math.floor(seconds / 10) * 10}%)`; // Seconds tens
+        stacks[5].style.transform = `translateY(-${(seconds % 10) * 10}%)`; // Seconds units
+        if (seconds < 10 && minutes === 0 && hours === 0) {
+            stacks[4].style.visibility = 'hidden';
+        } else {
+            stacks[4].style.visibility = 'visible';
+        }
+    }
+    setupDigits();
+    function updateTimer(timeLeft) {
+        if (!runningAnim) {
+            runningAnim = true;
+            setTimeout(() => {
+                const container = document.getElementById('timercontainer');
+                const passingStatus = document.getElementById('passingstatus');
+                setTimeout(() => {
+                    passingStatus.style.transform = 'translateY(0px)';
+                    passingStatus.style.opacity = '1';
+                }, allowAnim ? 800 : 0);
+                container.style.transform = 'translateY(0px)';
+                container.style.opacity = '1';
+                const progressBarContainer = document.getElementById('progressbarcontainer');
+                progressBarContainer.style.opacity = '1';
+                setTimeout(() => {
+                    animFinished = true;
+                }, 850);
+            }, allowAnim ? 100 : 0);
+        }
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        if (hours > 0) {
+            //document.getElementById('timeleft').textContent =
+            //    String(hours).padStart(2, '0') + ':' +
+            //    String(minutes).padStart(2, '0') + ':' +
+            //    String(seconds).padStart(2, '0');
+        } else if (minutes > 0) {
+            //document.getElementById('timeleft').textContent =
+            //    String(minutes).padStart(2, '0') + ':' +
+            //    String(seconds).padStart(2, '0');
+        } else {
+            //document.getElementById('timeleft').textContent = seconds;
+        }
+        updateDigits(hours, minutes, seconds);
+        if (startPG && !animFinished) {
+            return;
+        } else {
+            startPG = true;
+        }
+        const now = (typeof timeOffset !== 'undefined') ? Date.now() + timeOffset : Date.now();
+        let donePercent = 0;
+        if (typeof startTime !== 'undefined' && typeof endTime !== 'undefined' && endTime !== startTime) {
+            donePercent = ((now - startTime) / (endTime - startTime)) * 100;
+            if (donePercent < 0) donePercent = 0;
+            if (donePercent > 100) donePercent = 100;
+        }
+        document.getElementById('progressbar').style.width = donePercent + '%';
+        if (timeLeft === 0) {
+            const container = document.getElementById('timercontainer');
+            const passingstatus = document.getElementById('passingstatus');
+            const progressBarContainer = document.getElementById('progressbarcontainer');
+            if (animFinished && doReload) {
+                container.style.transform = 'translateY(20px)';
+                container.style.opacity = '0';
+                passingstatus.style.transform = 'translateY(10px)';
+                passingstatus.style.opacity = '0';
+                progressBarContainer.style.opacity = '0';
+                document.getElementById('progressbar').style.width = '0%';
+            }
+            setTimeout(() => {
+                if (doReload) location.reload();
+            }, 800);
+        }
+    }
+</script>
+{% endblock %}
