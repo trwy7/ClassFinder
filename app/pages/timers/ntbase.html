@@ -18,6 +18,7 @@
     {% if user is not none %}
         <a href="/dashboard">Go to Dashboard</a>
     {% endif %}
+    <button id="ntimerreloadbutton" onclick="doAnimReload();">Reload</button>
 </div>
 {% endblock %}
 {% block script %}
@@ -25,6 +26,12 @@
 <script>
     // Keep fetching /api/v2/classes/timeuntilend every minute to see if a class has started
     lastAttempt = Date.now();
+    function doAnimReload() {
+        const nTimerReloadButton = document.getElementById('ntimerreloadbutton');
+        nTimerReloadButton.disabled = true;
+        if (typeof animatedReload === 'function') animatedReload();
+        else location.reload();
+    }
     async function checkForClassStart() {
         try {
             const response = await fetch('/api/v2/classes/timeuntilend');
@@ -32,8 +39,7 @@
                 const data = await response.json();
                 if (data.time !== null) {
                     console.log('Class has started, reloading page.');
-                    if (typeof animatedReload === 'function') animatedReload();
-                    else location.reload();
+                    doAnimReload();
                 }
             }
         } catch (error) {
