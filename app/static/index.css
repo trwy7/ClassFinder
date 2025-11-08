@@ -69,7 +69,7 @@ header {
 main {
     padding: 1rem;
 }
-main#landingpage > section > picture > img {
+main#aboutpage > picture > img {
     display: block;
     margin: 5px auto;
     width: min(520px, 90%);
@@ -77,13 +77,13 @@ main#landingpage > section > picture > img {
     border-radius: 10px;
     border: 2px solid var(--tertiary-color);
 }
-main#landingpage #cards {
+main#aboutpage #cards {
     position: relative;
     width: min(520px, 90%);
     min-height: 220px;
     margin: 10px auto;
 }
-main#landingpage #cards img {
+main#aboutpage #cards img {
     position: absolute;
     left: 50%;
     top: 50%;
@@ -98,26 +98,26 @@ main#landingpage #cards img {
     box-shadow: 0 8px 22px rgba(0,0,0,0.32);
 }
 
-main#landingpage #cards img:nth-child(1) { transform: translate(-50%, -115%) rotate(calc(0 * 10deg)); z-index: 1; }
-main#landingpage #cards img:nth-child(2) { transform: translate(-50%, -73%) rotate(calc(0 * 10deg)); z-index: 2; }
-main#landingpage #cards img:nth-child(3) { transform: translate(-50%, -50%) rotate(calc(0 * 10deg)); z-index: 3; }
+main#aboutpage #cards img:nth-child(1) { transform: translate(-50%, -115%) rotate(calc(0 * 10deg)); z-index: 1; }
+main#aboutpage #cards img:nth-child(2) { transform: translate(-50%, -73%) rotate(calc(0 * 10deg)); z-index: 2; }
+main#aboutpage #cards img:nth-child(3) { transform: translate(-50%, -50%) rotate(calc(0 * 10deg)); z-index: 3; }
 
-/* main#landingpage #cards:hover img {
+/* main#aboutpage #cards:hover img {
     box-shadow: 0 10px 28px rgba(0,0,0,0.38);
 } */
-main#landingpage #cards img:nth-child(1):hover {
+main#aboutpage #cards img:nth-child(1):hover {
     transform: translate(-50%, -125%) rotate(0deg) scale(1.02);
     box-shadow: 0 10px 28px rgba(0,0,0,0.38);
 }
-main#landingpage #cards img:nth-child(2):hover {
+main#aboutpage #cards img:nth-child(2):hover {
     transform: translate(-50%, -83%) rotate(0deg) scale(1.02);
     box-shadow: 0 10px 28px rgba(0,0,0,0.38);
 }
-main#landingpage #cards img:nth-child(3):hover {
+main#aboutpage #cards img:nth-child(3):hover {
     transform: translate(-50%, -60%) rotate(0deg) scale(1.02);
     box-shadow: 0 10px 28px rgba(0,0,0,0.38);
 }
-/* main#landingpage #cards:hover img:nth-last-child(1) {
+/* main#aboutpage #cards:hover img:nth-last-child(1) {
     transform: translate(-50%, -54%) rotate(0deg) scale(1.02);
 } */
 
@@ -165,7 +165,7 @@ section.rightsection {
     body:has(main.twosections) {
         overflow: auto;
     }
-    main#landingpage > section.rightsection {
+    main#aboutpage > section.rightsection {
         display:none;
     }
 }

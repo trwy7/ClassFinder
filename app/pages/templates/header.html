@@ -1,7 +1,7 @@
 <header{% if devmode and False %} style="background: linear-gradient(to bottom, #ff4d4d 0%, #7d2828 100%);"{% endif %}>
     <nav>
         <ul>
-            {% if user is none %}<li><a href="/">About</a></li>{% endif %}
+            {% if user is none %}<li><a href="/about">About</a></li>{% endif %}
             <li><a href="/dashboard">{% if user is none %}Login{% else %}Dashboard{% endif %}</a></li>
             {% if user is none %}<li><a href="/register">Sign Up</a></li>{% endif %}
             {% if currentperiod is not none %}<li><a href="/timer" id="timertext" style="display:none;">Timer</a></li>{% endif %}
