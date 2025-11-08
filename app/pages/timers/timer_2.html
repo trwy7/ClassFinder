@@ -177,37 +177,10 @@
         // use 10% per digit step (10 digits -> 10% each)
         stacks[0].style.transform = `translateY(-${Math.floor(hours / 10) * 10}%)`; // Hours tens
         stacks[1].style.transform = `translateY(-${(hours % 10) * 10}%)`; // Hours units
-        if (hours === 0) {
-            const hoursSeparator = document.querySelectorAll('.digitseparator')[0];
-            hoursSeparator.style.visibility = 'hidden';
-            stacks[0].style.visibility = 'hidden';
-            stacks[1].style.visibility = 'hidden';
-        } else {
-            const hoursSeparator = document.querySelectorAll('.digitseparator')[0];
-            hoursSeparator.style.visibility = 'visible';
-            stacks[0].style.visibility = 'visible';
-            stacks[1].style.visibility = 'visible';
-        }
         stacks[2].style.transform = `translateY(-${Math.floor(minutes / 10) * 10}%)`; // Minutes tens
         stacks[3].style.transform = `translateY(-${(minutes % 10) * 10}%)`; // Minutes units
-        if (minutes === 0 && hours === 0) {
-            const minutesSeparator = document.querySelectorAll('.digitseparator')[1];
-            minutesSeparator.style.visibility = 'hidden';
-            stacks[2].style.visibility = 'hidden';
-            stacks[3].style.visibility = 'hidden';
-        } else {
-            const minutesSeparator = document.querySelectorAll('.digitseparator')[1];
-            minutesSeparator.style.visibility = 'visible';
-            stacks[2].style.visibility = 'visible';
-            stacks[3].style.visibility = 'visible';
-        }
         stacks[4].style.transform = `translateY(-${Math.floor(seconds / 10) * 10}%)`; // Seconds tens
         stacks[5].style.transform = `translateY(-${(seconds % 10) * 10}%)`; // Seconds units
-        if (seconds < 10 && minutes === 0 && hours === 0) {
-            stacks[4].style.visibility = 'hidden';
-        } else {
-            stacks[4].style.visibility = 'visible';
-        }
     }
     setupDigits();
     function updateTimer(timeLeft) {
