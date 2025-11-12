@@ -25,6 +25,7 @@
 {% block ntscript %}{% endblock %}
 <script>
     // Keep fetching /api/v2/classes/timeuntilend every minute to see if a class has started
+    // TODO: Have the reload time determined server-side, so the client doesn't need to keep reloading
     lastAttempt = Date.now();
     function doAnimReload() {
         const nTimerReloadButton = document.getElementById('ntimerreloadbutton');
