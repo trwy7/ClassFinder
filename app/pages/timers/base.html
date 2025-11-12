@@ -159,7 +159,7 @@
             timeLeft = 0;
         }
         if (lastUpdate !== undefined && !fineUpdates && Math.abs(timeLeft - lastUpdate) < 1000) {
-            return;
+            return; // TODO: Make this align to the next second based on timeLeft
         }
         updateTimer(timeLeft);
         lastUpdate = timeLeft;

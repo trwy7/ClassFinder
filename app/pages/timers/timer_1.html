@@ -2,6 +2,9 @@
 {% extends 'timers/base.html' %}
 {% block style %}
 <style>
+    :root {
+        --timer-font-size: 5rem;
+    }
     #timercontainer {
         transition: all 0.7s ease-in-out;
     }
@@ -20,6 +23,31 @@
         border-radius:10px 0 0 10px;
         transition: width 1s ease-in-out;
     }
+    .timernumberdiv {
+        transition: transform 0.5s ease-in-out;
+    }
+    .timernumber {
+        /* Each digit occupies exactly 1em so the container can show only one */
+        display: block;
+        height: 1em;
+        line-height: 1em;
+    }
+    .timercolumn {
+        display: inline-block;
+        font-size: var(--timer-font-size);
+        height: 1em;
+        overflow: hidden;
+        vertical-align: bottom;
+    }
+    .timerdivider {
+        display: inline-block;
+        font-size: var(--timer-font-size);
+        height: 1em;
+        line-height: 0.8em;
+        vertical-align: bottom;
+        margin: 0 0.1em;
+        overflow: hidden;
+    }
     @media (prefers-reduced-motion: reduce) {
         #timercontainer {
             transition: none;
@@ -35,6 +63,9 @@
         #progressbar {
             transition: none;
         }
+        .timernumberdiv {
+            transition: none;
+        }
     }
 </style>
 {% endblock %}
@@ -42,7 +73,9 @@
 <div id="timercontainer" style="transform: translateY(-20px); opacity:0;">
     {% if period is not none %}
     <h3 id="periodtime">{{ period.start.strftime("%I:%M %p") }} - {{ period.end.strftime("%I:%M %p") }}</h3>
-    <h1 id="timeleft" style="font-size:5rem;" {% if user.role == 'admin' %} onclick="sync();" {% endif %}>00:00:00</h1>
+    <div id="timeleftdiv">
+        <!-- Setup by javascript -->
+    </div>
     {% endif %}
 </div>
 <div id="progressbarcontainer" style="width:min(90%, 400px); height:20px; background-color:#ddd; border-radius:10px; overflow:hidden; margin-top:20px; opacity: 0;">
@@ -59,6 +92,92 @@
     var runningAnim = false;
     var startPG = false;
     var animFinished = false;
+
+    function initTimer() {
+        function createInnerNumberDiv() {
+            const div = document.createElement('div');
+            div.classList.add('timernumberdiv');
+            // Create numbers 0-9
+            for (let i = 0; i <= 9; i++) {
+                const span = document.createElement('span');
+                span.textContent = i;
+                span.classList.add('timernumber');
+                div.appendChild(span);
+            }
+            return div;
+        }
+        function createColumn(id) {
+            const div = document.createElement('div');
+            div.id = id;
+            div.classList.add('timercolumn');
+            div.appendChild(createInnerNumberDiv());
+            return div;
+        }
+        function createDivider(id) {
+            const span = document.createElement('span');
+            span.textContent = ':';
+            span.id = id;
+            span.classList.add('timerdivider');
+            return span;
+        }
+        const timeLeftDiv = document.getElementById('timeleftdiv');
+        timeLeftDiv.appendChild(createColumn('hourstens'));
+        timeLeftDiv.appendChild(createColumn('hoursones'));
+        timeLeftDiv.appendChild(createDivider('divider1'));
+        timeLeftDiv.appendChild(createColumn('minutestens'));
+        timeLeftDiv.appendChild(createColumn('minutesones'));
+        timeLeftDiv.appendChild(createDivider('divider2'));
+        timeLeftDiv.appendChild(createColumn('secondstens'));
+        timeLeftDiv.appendChild(createColumn('secondsones'));
+    }
+    function setDigit(columnId, digit) {
+        const column = document.getElementById(columnId);
+        const innerDiv = column.firstChild;
+        innerDiv.style.transform = `translateY(-${digit}em)`;
+    }
+    function updateDigits(hours, minutes, seconds) {
+        const hTens = Math.floor(hours / 10);
+        const hOnes = hours % 10;
+        const mTens = Math.floor(minutes / 10);
+        const mOnes = minutes % 10;
+        const sTens = Math.floor(seconds / 10);
+        const sOnes = seconds % 10;
+
+        setDigit('hourstens', hTens);
+        setDigit('hoursones', hOnes);
+        if (hours === 0) {
+            // Hide hours if zero
+            document.getElementById('hourstens').style.display = 'none';
+            document.getElementById('hoursones').style.display = 'none';
+            document.getElementById('divider1').style.display = 'none';
+        } else {
+            document.getElementById('hourstens').style.display = 'inline-block';
+            document.getElementById('hoursones').style.display = 'inline-block';
+            document.getElementById('divider1').style.display = 'inline-block';
+        }
+        setDigit('minutestens', mTens);
+        setDigit('minutesones', mOnes);
+        if (minutes === 0 && hours === 0) {
+            // Hide minutes if zero
+            document.getElementById('minutestens').style.display = 'none';
+            document.getElementById('minutesones').style.display = 'none';
+            document.getElementById('divider2').style.display = 'none';
+        } else {
+            document.getElementById('minutestens').style.display = 'inline-block';
+            document.getElementById('minutesones').style.display = 'inline-block';
+            document.getElementById('divider2').style.display = 'inline-block';
+        }
+        setDigit('secondstens', sTens);
+        setDigit('secondsones', sOnes);
+        if (seconds <= 9 && minutes === 0 && hours === 0) {
+            // Hide first digit of seconds if less than 10 seconds left
+            document.getElementById('secondstens').style.display = 'none';
+        } else {
+            document.getElementById('secondstens').style.display = 'inline-block';
+        }
+    }
+    initTimer();
+
     function updateTimer(timeLeft) {
         if (!runningAnim) {
             runningAnim = true;
@@ -82,65 +201,7 @@
         const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
-        if (hours > 0) {
-            document.getElementById('timeleft').textContent =
-                String(hours).padStart(2, '0') + ':' +
-                String(minutes).padStart(2, '0') + ':' +
-                String(seconds).padStart(2, '0');
-        } else if (minutes > 0) {
-            document.getElementById('timeleft').textContent =
-                String(minutes).padStart(2, '0') + ':' +
-                String(seconds).padStart(2, '0');
-        } else {
-            if (seconds < 10) {
-                if (!allowAnim || !doReload) {
-                    document.getElementById('timeleft').textContent = seconds;
-                } else {
-                    if (Math.floor(lastUpdate / 1000) !== Math.floor(timeLeft / 1000)) {
-                        const tl = document.getElementById('timeleft');
-                        const container = document.getElementById('timercontainer');
-                        // ---- AI -----
-                        // Improve 3D flip perception
-                        container.style.perspective = '800px';
-                        tl.style.transformStyle = 'preserve-3d';
-                        tl.style.backfaceVisibility = 'hidden';
-
-                        const duration = 500;
-                        // Cancel any running animation so flips don't stack
-                        if (tl._anim) {
-                            tl._anim.cancel();
-                        }
-
-                        // Use Web Animations API for a smooth, physics-like curve
-                        tl._anim = tl.animate([
-                            { transform: 'rotateY(0deg) scale(1)', opacity: 1 },
-                            { transform: 'rotateY(90deg) scale(0.97)', opacity: 0.6, offset: 0.5 },
-                            { transform: 'rotateY(0deg) scale(1)', opacity: 1 }
-                        ], {
-                            duration: duration,
-                            //easing: 'cubic-bezier(.22,.9,.35,1)',
-                            fill: 'forwards'
-                        });
-
-                        // Swap the text at the halfway point of the flip for a seamless effect
-                        setTimeout(() => {
-                            tl.textContent = seconds;
-                            lastUpdate = timeLeft;
-                        }, duration / 2);
-
-                        // Ensure final state when animation finishes
-                        tl._anim.onfinish = () => {
-                            tl.style.transform = 'rotateY(0deg)';
-                            tl.style.opacity = '1';
-                            delete tl._anim;
-                        };
-                        // --- NOAI ----
-                    }
-                }
-            } else {
-                document.getElementById('timeleft').textContent = seconds;
-            }
-        }
+        updateDigits(hours, minutes, seconds);
         if (startPG && !animFinished) {
             return;
         } else {
