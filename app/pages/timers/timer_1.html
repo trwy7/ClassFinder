@@ -73,7 +73,7 @@
 <div id="timercontainer" style="transform: translateY(-20px); opacity:0;">
     {% if period is not none %}
     <h3 id="periodtime">{{ period.start.strftime("%I:%M %p") }} - {{ period.end.strftime("%I:%M %p") }}</h3>
-    <div id="timeleftdiv">
+    <div id="timeleftdiv"{% if user.role == 'admin' %} onclick="sync();"{% endif %}>
         <!-- Setup by javascript -->
     </div>
     {% endif %}
