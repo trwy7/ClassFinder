@@ -20,21 +20,24 @@
     --listbox-color: hsl(var(--user-prefered-color, 155), 35%, 35%);
 }
 @media (prefers-color-scheme: light) {
+    /* TODO: Fix light mode text contrast issues (check the account page) */
     :root {
         --ex-contrast-color: white;
-        --primary-color: hsl(155, 100%, 64%);
-        --secondary-color: hsl(155, 100%, 58%);
-        --tertiary-color: hsl(155, 100%, 67%);
-        --background-color: hsl(158, 24%, 91%);
-        --navbar-color: hsl(161, 100%, 83%);
-        --text-color: hsl(0, 0%, 34%);
-        --secondary-text-color: hsl(0, 0%, 34%);
-        --current-period-color: hsl(0, 0%, 34%);
-        --action-color: hsl(214, 100%, 69%);
-        --action-hover-color: hsl(214, 73%, 25%);
-        --user-color: hsl(214, 100%, 69%);
-        --user-primary-color: hsl(214, 100%, 80%);
-        --highlighted-inner-user-color: hsl(157, 79%, 49%);
+        --primary-color: hsl(var(--user-prefered-color, 155), 100%, 64%);
+        --secondary-color: hsl(var(--user-prefered-color, 155), 100%, 58%);
+        --tertiary-color: hsl(var(--user-prefered-color, 155), 100%, 67%);
+        --background-color: hsl(var(--user-prefered-color, 155), 24%, 91%);
+        --navbar-color: hsl(var(--user-prefered-color, 155), 100%, 83%);
+        --navbar-bottom-color: hsla(var(--user-prefered-color, 155), 100%, 83%, 0);
+        --text-color: hsl(var(--user-prefered-color, 155), 30%, 10%);
+        --secondary-text-color: white;
+        --current-period-color: hsl(var(--user-prefered-color, 155), 100%, 40%);
+        --action-color: hsl(214, 77%, 56%);
+        --action-hover-color: hsl(214, 73%, 35%);
+        --user-color: hsl(214, 77%, 56%);
+        --user-primary-color: hsl(214, 77%, 56%);
+        --highlighted-inner-user-color: hsl(var(--user-prefered-color, 155), 60%, 47%);
+        --listbox-color: hsl(var(--user-prefered-color, 155), 35%, 85%);
     }
 }
 /* TODO: Better buttons */
@@ -237,7 +240,7 @@ button, input[type="submit"] {
     padding: 7px;
     border-radius: 5px;
     background-color: var(--tertiary-color);
-    color: var(--text-color);
+    color: var(--secondary-text-color);
     cursor: pointer;
     transition: background-color 0.3s;
     border: 2px solid var(--secondary-color);
@@ -372,7 +375,7 @@ li.action[onclick]:hover {
 }
 .room {
     font-size: 1rem;
-    color: var(--secondary-text-color);
+    color: var(--text-color);
     font-weight: normal;
 }
 .class[onclick]:hover:not(:has(li[onclick]:hover)), .user[onclick]:hover:not(:has(li[onclick]:hover)) {
