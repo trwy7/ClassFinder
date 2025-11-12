@@ -14,11 +14,20 @@
         transition: all 0.6s ease-in-out;
     }
     #progressbar {
-        width:0%;
-        height:100%;
-        background:linear-gradient(to left, var(--secondary-color), var(--tertiary-color));
-        border-radius:10px 0 0 10px;
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-radius: 10px;
         transition: width 1s ease-in-out;
+    }
+    #progressbarcontainer {
+        width: min(90%, 400px);
+        height: 20px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 20px;
+        opacity: 0;
     }
     @media (prefers-reduced-motion: reduce) {
         #timercontainer {
@@ -45,7 +54,7 @@
     <h1 id="timeleft" style="font-size:5rem;" {% if user.role == 'admin' %} onclick="sync();" {% endif %}>00:00:00</h1>
     {% endif %}
 </div>
-<div id="progressbarcontainer" style="width:min(90%, 400px); height:20px; background-color:#ddd; border-radius:10px; overflow:hidden; margin-top:20px; opacity: 0;">
+<div id="progressbarcontainer">
     <div id="progressbar"></div>
 </div>
 <p id="passingstatus" style="margin-top:10px">{% if period is not none and period.passing and period.course %}Go to {{period.course.name}} in room {{period.course.room}}{% endif %}</p>
