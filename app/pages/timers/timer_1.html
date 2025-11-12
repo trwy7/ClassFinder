@@ -186,8 +186,7 @@
         }
     }
     initTimer();
-
-    function updateTimer(timeLeft) {
+    document.addEventListener('DOMContentLoaded', () => {
         if (!runningAnim) {
             runningAnim = true;
             setTimeout(() => {
@@ -206,6 +205,8 @@
                 }, 850);
             }, allowAnim ? 100 : 0);
         }
+    });
+    function updateTimer(timeLeft) {
         const hours = Math.floor(timeLeft / (1000 * 60 * 60));
         const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);

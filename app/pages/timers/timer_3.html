@@ -2,26 +2,14 @@
 <html>
 <head>
     <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timer</title>
-    <!-- Server should provide starttime/endtime/currentepoch as seconds (or empty) -->
-    {% if period_end %}
-    <meta name="endtime" content="{{ period_end/1000 }}"/>
-    <meta name="starttime" content="{{ period_start/1000 }}"/>
-    <meta name="currentepoch" content="{{ current_epoch/1000 }}"/>
-    {% else %}
-    <meta name="endtime" content=""/>
-    <meta name="starttime" content=""/>
-    <meta name="currentepoch" content=""/>
-    {% endif %}
-
     <style>
         /* Simple, no-animation styles for old devices */
-        html,body{height:100%;margin:0;padding:0;font-family:Helvetica,Arial,sans-serif;background:#000;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
-        #timercontainer{margin:0;padding:0;text-align:center;}
+        html,body{height:100%;margin:0;padding:0;font-family:Helvetica,Arial,sans-serif;background:#000;color:#fff;}
+        #timercontainer{margin:0;padding:0;}
         #periodtime{font-size:1rem;margin:0 0 10px 0;color:#ddd;}
         #timeleft{font-size:4rem;margin:0;padding:0;}
-        #progressbarcontainer{width:90%;max-width:400px;height:18px;background:#ddd;border-radius:4px;overflow:hidden;margin-top:16px}
-        #progressbar{width:0%;height:100%;background:#4CAF50;border-radius:4px 0 0 4px}
         #passingstatus{margin-top:10px;color:#ccc}
         /* remove all transitions/animations for old devices */
     </style>
@@ -36,10 +24,6 @@
         {% endif %}
     </div>
 
-    <div id="progressbarcontainer">
-        <div id="progressbar"></div>
-    </div>
-
     <div id="passingstatus">{% if period is not none and period.passing and period.course %}Go to {{period.course.name}} in room {{period.course.room}}{% endif %}</div>
 
 <script>
@@ -52,11 +36,9 @@
         return metas[0].getAttribute('content') || '';
     }
 
-    var startTimeMeta = metaContent('starttime');
-    var endTimeMeta = metaContent('endtime');
-    var currentEpochMeta = metaContent('currentepoch');
+    var endTimeMeta = '{{ period_end/1000 }}';
+    var currentEpochMeta = '{{ current_epoch/1000 }}';
 
-    var startTime = (startTimeMeta !== '') ? parseFloat(startTimeMeta) * 1000 : NaN;
     var endTime = (endTimeMeta !== '') ? parseFloat(endTimeMeta) * 1000 : NaN;
 
     // Compute timeOffset using server-rendered currentepoch if available; otherwise 0
@@ -69,7 +51,6 @@
     }
 
     var timeleftElem = document.getElementById('timeleft');
-    var progressElem = document.getElementById('progressbar');
 
     var timerIntervalId = null;
 
@@ -101,7 +82,6 @@
         var now = (new Date()).getTime() + timeOffset;
         if (isNaN(endTime)) {
             timeleftElem.innerHTML = 'No period';
-            progressElem.style.width = '0%';
             return;
         }
         var timeLeftMs = endTime - now;
@@ -119,16 +99,6 @@
             var mm = Math.floor(totalSec / 60);
             var ss = totalSec % 60;
             timeleftElem.innerHTML = pad2(mm) + ':' + pad2(ss);
-        }
-
-        // Update progress
-        if (!isNaN(startTime) && !isNaN(endTime) && endTime !== startTime) {
-            var donePercent = ((now - startTime) / (endTime - startTime)) * 100;
-            if (donePercent < 0) donePercent = 0;
-            if (donePercent > 100) donePercent = 100;
-            progressElem.style.width = (donePercent + '%');
-        } else {
-            progressElem.style.width = '0%';
         }
 
         // Stop when finished (no reload)

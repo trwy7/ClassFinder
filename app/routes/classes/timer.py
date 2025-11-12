@@ -3,7 +3,7 @@ Handles the timer page
 """
 import os
 from datetime import datetime
-from flask import render_template, url_for, redirect, request
+from flask import render_template, request
 from app import app
 from app.utilities.classes import get_user_current_period, get_current_period
 
