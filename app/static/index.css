@@ -24,7 +24,7 @@
     :root {
         --ex-contrast-color: white;
         --primary-color: hsl(var(--user-prefered-color, 155), 100%, 64%);
-        --secondary-color: hsl(var(--user-prefered-color, 155), 100%, 58%);
+        --secondary-color: hsl(var(--user-prefered-color, 155), 40%, 60%);
         --tertiary-color: hsl(var(--user-prefered-color, 155), 100%, 67%);
         --background-color: hsl(var(--user-prefered-color, 155), 24%, 91%);
         --navbar-color: hsl(var(--user-prefered-color, 155), 100%, 83%);
@@ -38,6 +38,9 @@
         --user-primary-color: hsl(214, 77%, 56%);
         --highlighted-inner-user-color: hsl(var(--user-prefered-color, 155), 60%, 47%);
         --listbox-color: hsl(var(--user-prefered-color, 155), 35%, 85%);
+    }
+    .sidebar [role="tab"][aria-selected="true"] {
+        color: var(--secondary-text-color) !important;
     }
 }
 /* TODO: Better buttons */

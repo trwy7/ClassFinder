@@ -18,6 +18,14 @@ def load_css():
         return f.read()
 
 index_css = load_css()
+light_warm_color = """
+@media (prefers-color-scheme: light) {
+    :root {
+        --secondary-text-color: black;
+    }
+}
+"""
+
 
 @app.route("/index.css")
 def index_cssf():
@@ -49,7 +57,12 @@ def index_cssf():
             color_hue = "234"
         if devmode:
             index_css = load_css()
-        return Response(index_css + f"\n:root {{ --user-prefered-color: {color_hue}; }}", mimetype="text/css")
+        return Response(
+            index_css +
+            f"\n:root {{ --user-prefered-color: {color_hue}; }}" +
+            (light_warm_color if 32 <= int(color_hue) <= 188 else ""),
+            mimetype="text/css"
+        )
     return send_from_directory("static", "index.css")
 
 @app.route("/favicon.ico")
