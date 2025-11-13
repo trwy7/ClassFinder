@@ -98,7 +98,7 @@
             <h2>Customization</h2>
             <div id="color-slider" style="display: block;">
                 <label for="colorRange">Color</label>
-                <input id="colorRange" type="range" min="0" max="360" value="{{user.color_hue|default(155)}}" oninput="updateColor(this.value)" style="width: 60%;">
+                <input id="colorRange" type="range" min="0" max="360" value="{{user.color_hue|default(155)}}" oninput="updateColor(this.value)" style="width: 60%; background: none;">
                 <button onclick="setColor()">Save</button>
             </div>
         </section>
