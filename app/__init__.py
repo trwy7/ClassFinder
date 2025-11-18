@@ -1,9 +1,12 @@
+# pylint: disable=wrong-import-position
 """
 Sets up the flask app and imports all routes.
 This file should not be modified unless you know what you are doing, routes are automatically imported from the routes directory.
 Any pull requests that modify this file will be examined carefully, and may be subject to additional tests.
 """
 
+from datetime import datetime
+start_init_time = datetime.now()
 import os
 import sys
 import importlib
@@ -11,12 +14,10 @@ import logging
 import ipaddress
 import re
 import signal
-from datetime import datetime
 from flask import Flask, request
 from flask_apscheduler import APScheduler
 import requests
 from app.utilities.config import devmode, get_status
-start_init_time = datetime.now()
 
 app = Flask(__name__, template_folder="pages", static_folder="static")
 
@@ -33,7 +34,7 @@ app.config['END_OF_SEMESTER'] = os.environ.get('END_OF_SEMESTER', None)
 if app.config['END_OF_SEMESTER'] is not None:
     app.config['END_OF_SEMESTER'] = datetime.strptime(app.config['END_OF_SEMESTER'], '%Y-%m-%d').date()
 
-from app.utilities.users import auth_user # pylint: disable=wrong-import-position # This import wont work if it is at the top of the file as it causes a circular import
+from app.utilities.users import auth_user
 @app.before_request
 def before_request2():
     """
