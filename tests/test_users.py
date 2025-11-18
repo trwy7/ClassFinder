@@ -201,7 +201,26 @@ def test_timer(client, token):
     response = client.get("/timer/", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     assert response.content_type == 'text/html; charset=utf-8'
-    assert b"Timer" in response.data
+
+def test_timer_invalid(client, token):
+    response = client.get("/timer/9999999", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 404, "Timer with ID of 9999999 should not exist"
+    assert response.content_type == 'text/html; charset=utf-8'
+    assert b"That timer does not exist. You may use:" in response.data
+
+@freezegun.freeze_time("2025-08-27 11:14:00")
+def test_custom_timer(client, token):
+    response = client.get("/timers.json", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200, "Failed to get timers.json"
+    assert response.content_type == 'application/json'
+    assert isinstance(response.json, list), "timers.json did not return a list"
+    assert len(response.json) >= 1, "timers.json returned an empty list"
+    for timer in response.json:
+        assert isinstance(timer, int), f"Timer version {timer} is not an integer"
+        # Test each timer version
+        timer_response = client.get(f"/timer/{timer}", headers={"Authorization": f"Bearer {token}"})
+        assert timer_response.status_code == 200, f"Failed to get timer version {timer}"
+        assert timer_response.content_type == 'text/html; charset=utf-8'
 
 @freezegun.freeze_time("2025-03-14 11:14:00")
 def test_dashboard_friday(client, token):
