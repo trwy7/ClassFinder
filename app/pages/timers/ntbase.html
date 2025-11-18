@@ -1,0 +1,57 @@
+{% set noheader = true %}
+{% extends 'templates/base.html' %}
+{% block title %}Timer{% endblock %}
+{% block mainid %}nttimerpage{% endblock %}
+{% block mainclasses %}vcenter hcenter{% endblock %}
+{% block head %}
+    <style>
+        body {
+            background: radial-gradient(closest-side, var(--background-color), #000);
+        }
+    </style>
+    {% block style %}{% endblock %}
+{% endblock %}
+{% block content %}
+<p id="sitestatus" style="position: absolute; bottom:20px;right:20px;">{% if site_status %}{{site_status}}{% endif %}</p>
+<div id="ntimercontainer" class="vcenter hcenter column">
+    <p id="ntimertext">Nothing here right now!</p>
+    {% if user is not none %}
+        <a href="/dashboard">Go to Dashboard</a>
+    {% endif %}
+    <button id="ntimerreloadbutton" onclick="doAnimReload();">Reload</button>
+</div>
+{% endblock %}
+{% block script %}
+{% block ntscript %}{% endblock %}
+<script>
+    // Keep fetching /api/v2/classes/timeuntilend every minute to see if a class has started
+    // TODO: Have the reload time determined server-side, so the client doesn't need to keep reloading
+    lastAttempt = Date.now();
+    function doAnimReload() {
+        const nTimerReloadButton = document.getElementById('ntimerreloadbutton');
+        nTimerReloadButton.disabled = true;
+        if (typeof animatedReload === 'function') animatedReload();
+        else location.reload();
+    }
+    async function checkForClassStart() {
+        try {
+            const response = await fetch('/api/v2/classes/timeuntilend');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.time !== null) {
+                    console.log('Class has started, reloading page.');
+                    doAnimReload();
+                }
+            }
+        } catch (error) {
+            console.error('Error checking for class start:', error);
+        }
+    }
+    setInterval(() => {
+        if (Date.now() - lastAttempt >= 30000) {
+            lastAttempt = Date.now();
+            checkForClassStart();
+        }
+    }, 1000); // This is done a weird way in hopes that it should automatically reload when the page is woken from a sleep state
+</script>
+{% endblock %}

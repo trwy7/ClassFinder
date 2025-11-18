@@ -1,0 +1,83 @@
+<h1>Login</h1>
+<form onsubmit="attemptLogin(event)" method="post" action="/login">
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" required><br>
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required><br>
+    <button type="submit">Login</button><br>
+    <p id="status">{{status_message}}</p>
+</form>
+<div>
+    <p>By logging in, you agree to our <a href="/privacy">Privacy Policy</a>.</p>
+    <p>Don't have an account? <a href="/register" onclick="gotoRegister(event)">Sign up</a></p>
+    <p>Forgot your password? <a href="/resetpassword">Reset it</a></p>
+</div>
+{% if site_status is not none %}
+<p>{{site_status}}</p>
+{% endif %}
+<script>
+    document.getElementById('username').addEventListener('input', function() {
+        document.getElementById('status').innerText = '';
+    });
+    document.getElementById('password').addEventListener('input', function() {
+        document.getElementById('status').innerText = '';
+    });
+    function attemptLogin(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            }),
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status == "success") {
+                document.getElementById('status').innerText = 'Login successful!';
+                // redirect to the cookie redirect_to if it exists, else to the dashboard
+                const cookies = document.cookie.split('; ').reduce((acc, cookie) => {
+                    const [name, value] = cookie.split('=');
+                    acc[name] = value;
+                    return acc;
+                }, {});
+                const redirectTo = cookies['redirect_to'] ? decodeURIComponent(cookies['redirect_to']) : '/dashboard';
+                // remove only the redirect_to cookie (don't overwrite other cookies)
+                var key = encodeURIComponent('redirect_to') + '=';
+                // expire for default path
+                document.cookie = key + '; Max-Age=0; path=/';
+                // also attempt with current hostname and dotted domain (covers common domain variants)
+                try {
+                    var host = location.hostname;
+                    document.cookie = key + '; Max-Age=0; path=/; domain=' + host;
+                    if (host.indexOf('.') !== -1) {
+                        document.cookie = key + '; Max-Age=0; path=/; domain=.' + host;
+                    }
+                } catch(e) {}
+                window.location.href = redirectTo;
+            } else {
+                document.getElementById('status').innerText = 'Login failed: ' + data.message;
+            }
+        })
+        .catch(error => {
+            document.getElementById('status').innerText = 'An error occurred: ' + error.message;
+        });
+    }
+    function gotoRegister(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!document.getElementById('registersection')) {
+            window.location.href = '/register';
+            return;
+        }
+        document.getElementById('loginsection').style.display = 'none';
+        document.getElementById('registersection').style.display = 'block';
+    }
+</script>

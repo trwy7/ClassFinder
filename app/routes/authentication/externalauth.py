@@ -2,8 +2,9 @@
 This handles external authentication.
 """
 from urllib.parse import urlparse
-from flask import request, render_template
+from flask import request, render_template, redirect
 from app import app
+from app.db import db
 from app.utilities.users import require_login, create_token, readable_scopes
 from app.utilities.responses import error_response, success_response
 
@@ -14,9 +15,8 @@ def external_auth():
     This is the main entry point for external authentication.
     It verifies the user and redirects them to the appropriate page.
     """
-    # TODO: Prevent sites from creating multiple tokens, if more scopes are required they should
-    # be added to the existing token instead, returning the existing token. This should also
-    # show users what scopes they have already granted, and what scopes they are requesting
+    # TODO: Localhost handling should require an "name" parameter to identify the app on the account page, instead of localhost
+    # TODO: implement a different method of authing users, like OAuth2
     scopes = request.args.get('scopes')
     if scopes:
         scopes = scopes.strip().split(',')
@@ -29,7 +29,7 @@ def external_auth():
         if scope in readable_scopes:
             scopes_readable.append(readable_scopes[scope])
         else:
-            scopes_readable.append(scope)
+            return error_response("Invalid scope requested", {"scope": scope, "valid_scopes": readable_scopes})
 
     redirect_url = request.args.get('redirect_url')
 
@@ -49,6 +49,15 @@ def external_auth():
                 "valid_scopes": readable_scopes
             }
         )
+    for token in request.user.tokens:
+        if token.granted_to == redirect_domain and token.type == 'ext':
+            for scope in scopes:
+                if scope not in token.scopes.split(' '):
+                    break
+            else:
+                app.logger.debug(f"Reusing existing token for user {request.user.username} for domain {redirect_domain}")
+                return redirect(f"{redirect_url}?token={token.token}" if "?" not in redirect_url else f"{redirect_url}&token={token.token}")
+            break
     return render_template(
         "external_auth.html",
         scopes_readable=scopes_readable,
@@ -78,8 +87,23 @@ def external_auth_post():
     if redirect_url:
         # Check if redirect_url is a valid URL
         parsed_url = urlparse(redirect_url)
-        if parsed_url.scheme and parsed_url.netloc:
-            token = create_token(request.user.username, 'ext', None, scopes, granted_to=parsed_url.netloc)
+        redirect_domain = parsed_url.netloc
+        if parsed_url.scheme and redirect_domain:
+            if len(redirect_domain) > 50:
+                return error_response("Redirect domain is too long", {"redirect_url": redirect_url})
+            for token in request.user.tokens:
+                if token.granted_to == redirect_domain and token.type == 'ext':
+                    token.scopes = ' '.join(list(set(token.scopes.split(' ') + scopes)))
+                    db.session.commit()
+                    app.logger.debug(f"Updated existing token for user {request.user.username} for domain {redirect_domain}")
+                    # return redirect(f"{redirect_url}?token={token.token}" if "?" not in redirect_url else f"{redirect_url}&token={token.token}")
+                    return success_response(
+                        "Redirecting to external application",
+                        {
+                            "redirect_to": f"{redirect_url}?token={token.token}" if "?" not in redirect_url else f"{redirect_url}&token={token.token}"
+                        }
+                    )
+            token = create_token(request.user.username, 'ext', None, scopes, granted_to=redirect_domain)
             #return redirect(f"{redirect_url}?token={token.token}")
             return success_response(
                 "Redirecting to external application",

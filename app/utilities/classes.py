@@ -4,7 +4,7 @@ This module contains utility functions for managing courses, as well as a users 
 from datetime import datetime, timedelta
 import typing
 import random
-from app.utilities.times import get_classtimes, get_lunchtimes, classtime_dict
+from app.utilities.times import get_classtimes, get_lunchtimes, classtime_dict, get_bell_delay
 from app.db import User, Class, db
 from app import app
 
@@ -19,7 +19,7 @@ lunchperiods = list(set(lunchperiods))
 neededperiods = sorted(set(neededperiods))
 # TODO: Move most of these functions to a function within a course class
 
-def get_current_period():
+def get_current_period(include_delay: bool=True):
     """
     Determine the current period.
     Returns:
@@ -29,12 +29,19 @@ def get_current_period():
             - "end" (datetime.time): The end time of the current period.
             - "start" (datetime.time): The start time of the current period.
     """
+    bell_delay = get_bell_delay()
     current_time = datetime.now().time()
     for time in get_classtimes():
         app.logger.debug(f"Checking period {time['period']}")
-        if time["start"] <= current_time <= time["end"]:
-            app.logger.debug(f"Current period is {time['period']}")
-            return time.copy()
+        if include_delay:
+            ttime = time.copy()
+            ttime['start'] = (datetime.combine(datetime.today(), time['start']) + timedelta(seconds=bell_delay)).time()
+            ttime['end'] = (datetime.combine(datetime.today(), time['end']) + timedelta(seconds=bell_delay)).time()
+        else:
+            ttime = time.copy()
+        if ttime["start"] <= current_time <= ttime["end"]:
+            app.logger.debug(f"Current period found: {ttime}")
+            return ttime
     app.logger.debug("No current period")
     return None
 
@@ -55,7 +62,8 @@ def get_user_current_period(user: User):
         Various debug information about the current period, lunch status, and course checking.
     """
     current_time = datetime.now().time()
-    current_period = get_current_period()
+    current_period = get_current_period(include_delay=False)
+    bell_delay = get_bell_delay()
     lunchtimes = get_lunchtimes()
     app.logger.debug(f"Current period: {current_period}")
     if current_period is None:
@@ -82,6 +90,7 @@ def get_user_current_period(user: User):
                         app.logger.debug("We are in the first 5 minutes of normal class, so PTECH starts now")
                         modified_end_time = modified_start_time + timedelta(minutes=5)
                         modified_start_time -= timedelta(minutes=5)
+                        current_period['passing'] = True
                     elif (datetime.now() > (modified_end_time - timedelta(minutes=5))):
                         # We are in the last 5 minutes of normal class, so PTECH leaves now
                         app.logger.debug("We are in the last 5 minutes of normal class, so PTECH leaves now")
@@ -93,6 +102,7 @@ def get_user_current_period(user: User):
                             return None
                         modified_end_time += timedelta(minutes=5)
                         current_period['leavingptech'] = True
+                        current_period['passing'] = True
                         returncourse = None
                     else:
                         # Normal class time, so PTECH leaves 5 minutes early and starts 5 minutes late
@@ -102,6 +112,15 @@ def get_user_current_period(user: User):
                     # Save everything back to the dict
                     current_period['start'] = modified_start_time.time()
                     current_period['end'] = modified_end_time.time()
+                    app.logger.debug(f"Modified start time: {current_period['start']}, Modified end time: {current_period['end']}")
+                else:
+                    app.logger.debug(f"User {user.username} is in a non-PTECH class.")
+                    # current_period['start'] += timedelta(seconds=bell_delay)
+                    # current_period['end'] += timedelta(seconds=bell_delay)
+                    modified_start_time = (datetime.combine(datetime.today(), current_period["start"]) + timedelta(seconds=bell_delay)).time()
+                    modified_end_time = (datetime.combine(datetime.today(), current_period["end"]) + timedelta(seconds=bell_delay)).time()
+                    current_period['start'] = modified_start_time
+                    current_period['end'] = modified_end_time
                     app.logger.debug(f"Modified start time: {current_period['start']}, Modified end time: {current_period['end']}")
                 return current_period | {"lunch": None, "course": returncourse}
         app.logger.debug(f"No course found for period {current_period['period']} and user {user.username}")
@@ -189,7 +208,7 @@ def get_today_courses(user: User, day: int = None):
         list: A list of courses that the user has scheduled for today.
     """
     app.logger.debug(f"Retrieving today's courses for user {user.username}")
-    user_periods = list(set([time["period"] for time in get_classtimes(day)]))
+    user_periods = list(dict.fromkeys([time["period"] for time in get_classtimes(day)]))
     app.logger.debug(f"User {user.username} periods: {user_periods}")
     newcourses = []
     for course in user.classes:
@@ -218,12 +237,14 @@ def add_class(name: str, period: int, room: str, created_by: str, teacher: str, 
         Class: The newly created class object.
     """
     nid = f"{room}p{period}"
-    if room == "PTECH":
+    if room == "PTECH" or room.startswith("PTECH-"):
+        app.logger.debug("Generating unique ID for PTECH class")
         nid = f"PTECH{random.randint(0, 9999)}p{period}"
         while get_course_by_id(nid):
             nid = f"PTECH{random.randint(0, 9999)}p{period}"
     if campusname is None:
         campusname = name
+    app.logger.debug(f"Adding class {name} with ID {nid}")
     newclass = Class(
         id=nid,
         name=name,
@@ -250,6 +271,9 @@ def add_user_to_class(user: User, course: Class):
     Returns:
         User: The updated user object.
     """
+    if course in user.classes:
+        app.logger.debug(f"User {user.username} is already in class {course.name}")
+        return user
     user.classes.append(course)
     db.session.commit()
     return user
@@ -281,6 +305,8 @@ def remove_class(course: Class):
     Returns:
         None
     """
+    for user in course.users:
+        user.classes.remove(course)
     db.session.delete(course)
     db.session.commit()
 

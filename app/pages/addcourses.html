@@ -2,16 +2,16 @@
 {% block title %}Add Classes{% endblock %}
 {% block mainid %}addclasses{% endblock %}
 {% block content %}
-        <h1>Add Classes</h1>
-        <p>Copy and paste your schedule from <a href="{{ campus_url }}" target="_blank" rel="noopener">infinite campus</a></p>
-        <form onsubmit="sendClasses(event)">
-            <textarea id="classes" name="classes" rows="25" cols="40" style="resize: vertical;" required></textarea><br>
-            <button type="submit" id="submitbutton">Submit</button><button onclick="showHelp(event)">Help</button>
-        </form>
-        <div class="loader" id="spinner" style="display:none;"></div>
-        <p id="status"></p>
-        <h2>Remaining Periods</h2>
-        {% for class in neededperiods %}<h3 style="display: inline;">{{class}}</h3>{% endfor %}
+    <h1>Add Classes</h1>
+    <p>Copy and paste your schedule from <a href="{{ campus_url }}" target="_blank" rel="noopener">infinite campus</a></p>
+    <form onsubmit="sendClasses(event)">
+        <textarea id="classes" name="classes" rows="25" cols="40" style="resize: vertical;" required></textarea><br>
+        <button type="submit" id="submitbutton">Submit</button><button onclick="showHelp(event)">Help</button>
+    </form>
+    <div class="loader" id="spinner" style="display:none;"></div>
+    <p id="status"></p>
+    <h2>Remaining Periods</h2>
+    {% for class in neededperiods %}<h3 style="display: inline;">{{class}}</h3>{% endfor %}
 {% endblock %}
 {% block script %}
 <script>
@@ -63,6 +63,7 @@
         helpPopup.style.padding = '20px';
         helpPopup.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
         helpPopup.innerHTML = `
+            <p>Go to the schedule page in infinite campus, select the entire schedule (including period numbers, class names, and room numbers), and copy it. Then paste it into the text area and submit. You may CTRL+A CTRL+C</p>
             <img src="/addclasses/help.gif" alt="Help Image" style="max-width: 100%; height: auto;"><br>
             <button onclick="closeHelp()">Close</button>
         `;

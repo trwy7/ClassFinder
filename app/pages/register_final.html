@@ -5,7 +5,8 @@
     <h1>Sign up</h1>
     <form onsubmit="attemptRegister(event)"></form>
         <label for="username">Username</label>
-        <input type="text" id="username" name="username" required><br>
+        <p>Pick whatever you want, this will be shown to other people. It doesn't have to be your real name. (lowercase and numbers only)</p>
+        <input type="text" id="username" name="username" required minlength="3" maxlength="15" pattern="^[a-z0-9]{3,15}$" title="3-15 characters, lowercase letters and numbers only"><br>
         <label for="Password">Password</label>
         <input type="password" id="password" name="password" required><br>
         <button onclick="attemptRegister(event)">Register</button><br>

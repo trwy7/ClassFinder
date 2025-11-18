@@ -1,0 +1,75 @@
+<h1>Sign up</h1>
+<form onsubmit="attemptRegister(event, null)"></form>
+    <noscript>
+        <p>JavaScript is required to register. Please enable JavaScript in your browser settings and try again.</p>
+    </noscript>
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" required size="40" style="width:40ch;"><br>
+    <button onclick="attemptRegister(event, this)">Register</button><br>
+</form>
+<div class="loader" id="spinner" style="display:none;"></div>
+{% if site_status is not none %}
+<p>{{site_status}}</p>
+{% endif %}
+<p id="status"></p>
+<p>Already have an account? <a href="/login" onclick="gotoLogin(event)">Log in</a></p>
+<script>
+    function attemptRegister(event, thisButton) {
+        event.preventDefault();
+        const email = document.getElementById('email').value;
+        if (thisButton) {
+            thisButton.disabled = true;
+        }
+        document.getElementById('spinner').style.display = 'inline-block';
+        document.getElementById('status').innerText = '...';
+        fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email
+            }),
+            credentials: 'include'
+        })
+        .then(response => {
+            document.getElementById('spinner').style.display = 'none';
+            if (response.status === 429) {
+                throw new Error('Too many requests. Please try again later.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status == "success") {
+                document.getElementById('status').innerText = data.message;
+                thisButton.remove();
+                // Redirect or perform other actions on successful login
+            } else {
+                document.getElementById('status').innerText = 'Registration failed: ' + data.message;
+                setTimeout(() => {
+                    if (thisButton) {
+                        thisButton.disabled = false;
+                    }
+                }, 2500);
+            }
+        })
+        .catch(error => {
+            document.getElementById('status').innerText = 'An error occurred: ' + error.message;
+            document.getElementById('spinner').style.display = 'none';
+            setTimeout(() => {
+                if (thisButton) {
+                    thisButton.disabled = false;
+                }
+            }, 2000);
+        });
+    }
+    function gotoLogin(event) {
+        event.preventDefault();
+        if (!document.getElementById('loginsection')) {
+            window.location.href = '/login';
+            return;
+        }
+        document.getElementById('registersection').style.display = 'none';
+        document.getElementById('loginsection').style.display = 'block';
+    }
+</script>

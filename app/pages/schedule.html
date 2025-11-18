@@ -1,6 +1,7 @@
 {% extends "templates/base.html" %}
 {% block title %}Schedules{% endblock %}
 {% block mainid %}schedule{% endblock %}
+{% block content %}
     <h1>Add schedule</h1>
     <form onsubmit="setSchedule(event)"></form>
         <button onclick="document.getElementById('start').value = new Date().toLocaleDateString('en-CA'); document.getElementById('end').value = new Date().toLocaleDateString('en-CA');">Today</button><br>
@@ -76,7 +77,7 @@
             .then(data => {
                 if (data.status == "success") {
                     document.getElementById('status').innerText = data.message;
-                    window.getElementById(day).remove();
+                    document.getElementById(day).remove();
                 } else {
                     document.getElementById('status').innerText = 'Failed: ' + data.message;
                 }

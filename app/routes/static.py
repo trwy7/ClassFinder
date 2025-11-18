@@ -2,13 +2,13 @@
 """
 Static routes for the application.
 """
+import re
 import os
 from flask import Response, request
 from flask import send_from_directory, render_template
 from app import app
 from app.utilities.config import devmode
 from app.addons.limiter import limiter
-import re
 
 def load_css():
     """
@@ -18,6 +18,14 @@ def load_css():
         return f.read()
 
 index_css = load_css()
+light_warm_color = """
+@media (prefers-color-scheme: light) {
+    :root {
+        --secondary-text-color: black;
+    }
+}
+"""
+
 
 @app.route("/index.css")
 def index_cssf():
@@ -28,21 +36,33 @@ def index_cssf():
     ua = (request.headers.get("User-Agent") or "").lower()
     app.logger.debug(f"User-Agent: {ua}")
     m = re.search(r"os (\d+)[_.]", ua)
-    if m and any(x in ua for x in ("iphone", "ipad", "ipod", "cpu")):
+    if ((m and any(x in ua for x in ("iphone", "ipad", "ipod", "cpu"))) or "wiiu" in ua or "3ds" in ua or "msie" in ua or "trident" in ua or "iemobile" in ua):
         try:
-            if int(m.group(1)) <= 8:
+            if (not m) or int(m.group(1)) <= 8:
                 return send_from_directory("static", "legacycss.css")
         except ValueError:
             pass
-    if (request.user and request.user.color_hue) or devmode:
+    if (request.user and request.user.color_hue) or devmode or request.cookies.get("color_hue"):
         # If the user has a color, we add it to the CSS
-        if request.user is not None:
+        if request.cookies.get("color_hue"):
+            try:
+                color_hue = int(request.cookies.get("color_hue"))
+                if not (0 <= color_hue <= 360):
+                    color_hue = "234"
+            except ValueError:
+                color_hue = "234"
+        elif request.user is not None and request.user.color_hue:
             color_hue = request.user.color_hue
         else:
             color_hue = "234"
         if devmode:
             index_css = load_css()
-        return Response(index_css + f"\n:root {{ --user-prefered-color: {color_hue}; }}", mimetype="text/css")
+        return Response(
+            index_css +
+            f"\n:root {{ --user-prefered-color: {color_hue}; }}" +
+            (light_warm_color if 32 <= int(color_hue) <= 188 else ""),
+            mimetype="text/css"
+        )
     return send_from_directory("static", "index.css")
 
 @app.route("/favicon.ico")

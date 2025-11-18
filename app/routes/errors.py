@@ -3,12 +3,13 @@
 Handles error codes.
 """
 
+from datetime import datetime
 import traceback
 import os
 import random
 from flask import render_template, request, abort
 from flask_limiter.errors import RateLimitExceeded
-from app import app, start_init_time
+from app import app
 from app.utilities.responses import error_response
 from app.utilities.config import devmode
 
@@ -61,13 +62,13 @@ def internal_server_error(e):
                 existing_content = f.read()
                 f.seek(0, 0)
                 new_entry = (
-                    f"Error code: {errorcode} at " + start_init_time.strftime('%Y-%m-%d %I:%M:%S %p') + "\n"
+                    f"Error code: {errorcode} at " + datetime.now().strftime('%Y-%m-%d %I:%M:%S %p') + "\n"
                 )
                 f.write(new_entry + existing_content)
         else:
             with open(f"{os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')}/{error_details_log}.error.log", "w", encoding="utf-8") as f:
                 f.write(f"Error code: {errorcode}\n")
-                f.write("Date/Time: " + start_init_time.strftime('%Y-%m-%d %I:%M:%S %p') + "\n")
+                f.write("Date/Time: " + datetime.now().strftime('%Y-%m-%d %I:%M:%S %p') + "\n")
                 f.write(str(e) + "\n")
                 f.write(traceback.format_exc() + "\n")
                 # for rlog in request_logs:
@@ -89,6 +90,15 @@ def internal_server_error(e):
         error_details=error_details_vis
     ), 500
     
+@app.errorhandler(405)
+def method_not_allowed(e): # pylint: disable=unused-argument
+    """
+    Handles the 405 page
+    """
+    if request.path.startswith("/api/") or request.method != "GET":
+        return error_response("Method not allowed"), 405
+    return render_template("templates/error.html", status_code=405, error_message="Method not allowed"), 405
+
 @app.route("/sim500")
 def simulate_500():
     """

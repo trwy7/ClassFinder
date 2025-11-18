@@ -2,58 +2,117 @@
 {% block title %}Account{% endblock %}
 {% block mainid %}accountmain{% endblock %}
 {% block content %}
-    <h1 style="display: inline;">Hello, {{user.username}}!  </h1><br><p class="hidden-text"><!--email_off-->{{user.email}}<!--/email_off--></p><br>
-    {% if user.role == "admin" %}<button onclick="window.location.href = '/admin'">Admin</button>{%endif %}
-    {% if classestoadd|length > 0 %}<h2>You still need to add {{classestoadd|length}} classes.</h2> <button onclick="window.location.href = '/addclasses'">Add classes</button>{% endif %}
-    {% if needcanvaslink %}<button onclick="window.location.href = '/classes/canvaslink'">Link canvas classes</button>{% endif %}
-    <button onclick="showSlider()" id="changecolor">Change color</button>
-    <div id="color-slider" style="display: none;">
-        <input type="range" min="0" max="360" value="{{user.color_hue|default(155)}}" oninput="updateColor(this.value)" style="width: 25%;">
-        <button onclick="setColor()">Set color</button>
-    </div>
-    <button onclick="window.location.href = '/classes/exportschedule'">Print your schedule</button>
-    <button onclick="window.location.href = '/classes/calendar'">Create calendar</button>
-    <button onclick="getTempPasscode()">Get temporary passcode</button>
-    {% if allow_leave %}<button onclick="leaveClasses(event)">My classes changed</button>{% endif %}
-    <button onclick="window.location.href = '/logout'">Log out</button>
-    <button onclick="window.location.href = '/account/delete'">Delete account</button>
-    {% if user.classes|length > 0%}
-    <h2>Your classes:</h2>
-    <button onclick="showUsers(); this.style.display = 'none';">Show people</button>
-    <button id="highlightusers" onclick="user = prompt('Enter the username of the person you want to highlight'); highlightUser(user)" style="display:none;">Highlight a person</button>
-    <ul id="classes">
-        {% for class in user.classes|sort(attribute='period') %}
-            <li class="class" id="{{class.id}}" {% if class.canvasid %} onclick="window.location.href = '{{canvasurl}}/courses/{{class.canvasid}}'" {%endif%}>{{class.name}}
-                <ul class="actions">
-                    {% if class.lunch is none and (class.period == "6" or class.period == "5")%}<li class="action" onclick="window.location.href = '/class/{{class.id}}/setlunch'">Set lunch</li>{% endif %}
-                </ul>
-                <ul class="classusers" style="display: none;">
-                    {%for user in class.users%}
-                        {% if not user.role == "testing" %}
-                            <li class="classuser" onclick="event.stopPropagation(); highlightUser('{{user.username}}')" data-color="{{user.color_hue}}" style="cursor: pointer;">
-                                {{user.username}}
-                            </li>
-                        {% endif %}
-                    {%endfor%}
-            </ul></li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    {% if has_external_tokens %}
-        <h2>Authorized apps</h2>
-        <ul id="tokens">
-        {% for token in user.tokens %}
-            {% if token.granted_to is not none %}
+<main class="twosections" role="main">
+    <aside class="sidebar" aria-label="Account navigation">
+        <nav role="tablist" aria-orientation="vertical">
+            <button role="tab" id="tab-account" aria-controls="panel-account" aria-selected="true" tabindex="0" onclick="activateTab('account')">Account details</button>
+            <button role="tab" id="tab-tools" aria-controls="panel-tools" aria-selected="false" tabindex="-1" onclick="activateTab('tools')">Tools</button>
+            {% if user.classes|length > 0 %}
+            <button role="tab" id="tab-classes" aria-controls="panel-classes" aria-selected="false" tabindex="-1" onclick="activateTab('classes')">Classes</button>
+            {% endif %}
+            {% if has_external_tokens %}
+            <button role="tab" id="tab-external" aria-controls="panel-external" aria-selected="false" tabindex="-1" onclick="activateTab('external')">External apps</button>
+            {% endif %}
+            <button role="tab" id="tab-custom" aria-controls="panel-custom" aria-selected="false" tabindex="-1" onclick="activateTab('custom')">Customization</button>
+            <button role="tab" id="tab-manage" aria-controls="panel-manage" aria-selected="false" tabindex="-1" onclick="activateTab('manage')">Manage account</button>
+        </nav>
+    </aside>
+
+    <section class="content" aria-live="polite">
+        <section id="panel-account" role="tabpanel" aria-labelledby="tab-account">
+            <h1>Hello, {{user.username}}! <span style="font-size: 0.4em;">({{ init }})</span></h1>
+
+            <div class="account-actions" style="margin-top: 8px;">
+                {% if user.role == "admin" %}<button onclick="window.location.href = '/admin'">Admin</button><br>{%endif %}
+                {% if classestoadd|length > 0 %}<span><strong>You still need to add {{classestoadd|length}} classes.</strong></span> <button onclick="window.location.href = '/addclasses'">Add classes</button>{% endif %}
+            </div>
+        </section>
+
+        <section id="panel-tools" role="tabpanel" aria-labelledby="tab-tools" hidden>
+            <h2>Tools</h2>
+            <div style="margin-top:8px;">
+                {% if needcanvaslink %}<button onclick="window.location.href = '/classes/canvaslink'">Link canvas classes</button>{% endif %}
+                <button onclick="window.location.href = '/classes/exportschedule'">Print your schedule</button>
+                <button onclick="window.location.href = '/classes/calendar'">Create calendar</button>
+            </div>
+        </section>
+
+        <section id="panel-classes" role="tabpanel" aria-labelledby="tab-classes" hidden>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h2>Your classes</h2>
+                <div>
+                    {% if allow_leave %}<button onclick="leaveClasses(event)">My classes changed</button>{% endif %}
+                </div>
+            </div>
+
+            {% if user.classes|length > 0 %}
+            <ul id="classes" aria-live="polite">
+                {% for class in user.classes|sort(attribute='period') %}
+                    <li class="class" id="{{class.id}}" {% if class.canvasid %} onclick="window.location.href = '{{canvasurl}}/courses/{{class.canvasid}}'" {%endif%} aria-label="{{class.name}}">
+                        <div>{{class.name}}</div>
+                        <ul class="actions" aria-hidden="false">
+                            {% if class.lunch is none and (class.period == "6" or class.period == "5")%}
+                                <li class="action" onclick="window.location.href = '/class/{{class.id}}/setlunch'">Set lunch</li>
+                            {% endif %}
+                        </ul>
+                        <ul class="classusers">
+                            {%for cuser in class.users%}
+                                {% if cuser.id != user.id %}
+                                    {% if not cuser.role == "testing" %}
+                                        <li class="classuser" data-color="{{cuser.color_hue}}" style="cursor: pointer;">
+                                            {{cuser.username}}
+                                        </li>
+                                    {% endif %}
+                                {% endif %}
+                            {%endfor%}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </section>
+
+        {% if has_external_tokens %}
+        <section id="panel-external" role="tabpanel" aria-labelledby="tab-external" hidden>
+            <h2>Authorized apps</h2>
+            <ul id="tokens">
+            {% for site, scopes in authorized_sites %}
                 <li class="token">
-                    <span class="token-granted-to">{{ token.granted_to }}</span>
+                    <span class="token-granted-to">{{ site }}</span>
+                    {% for scope in scopes %}
+                        {% if scope != "" %}
+                        <div style="height: 0;"></div>
+                            <span class="token-scope" style="font-size: 0.6em;">{{ scope }}</span>
+                        {% endif %}
+                    {% endfor %}
                     <ul class="actions">
-                        <li class="action" onclick="revokeToken('{{ token.granted_to }}')">Revoke</button>
+                        <li class="action" onclick="revokeToken('{{ site }}')">Revoke</li>
                     </ul>
                 </li>
-            {% endif %}
-        {% endfor %}
-        </ul>
-    {% endif %}
+            {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        <section id="panel-custom" role="tabpanel" aria-labelledby="tab-custom" hidden>
+            <h2>Customization</h2>
+            <div id="color-slider" style="display: block;">
+                <label for="colorRange">Color</label>
+                <input id="colorRange" type="range" min="0" max="360" value="{{user.color_hue|default(155)}}" oninput="updateColor(this.value)" style="width: 60%; background: none;">
+                <button onclick="setColor()">Save</button>
+            </div>
+        </section>
+
+        <section id="panel-manage" role="tabpanel" aria-labelledby="tab-manage" hidden>
+            <h2>Manage account</h2>
+            <div>
+                <button onclick="getTempPasscode()">Get temporary passcode</button>
+                <button onclick="window.location.href = '/logout'">Log out</button>
+                <button onclick="window.location.href = '/account/delete'" class="danger">Delete account</button>
+            </div>
+        </section>
+    </section>
+</main>
 {% endblock %}
 {% block script %}
     <script>
@@ -79,19 +138,6 @@
                     alert('An error occurred while trying to leave the class.');
                 });
             }
-        }
-        function highlightUser(user) {
-            document.querySelectorAll('.classuser').forEach(e => {
-                if (e.innerText == user) {
-                    e.classList.add('highlight');
-                    e.style.cursor = null;
-                    e.removeAttribute('onclick');
-                    const colorHue = e.getAttribute('data-color');
-                    if (colorHue !== "None") {
-                        e.style.backgroundColor = `hsl(${colorHue}, 60%, 35%)`;
-                    }
-                }
-            });
         }
         function showSlider() {
             const slider = document.getElementById('color-slider');
@@ -158,15 +204,43 @@
                 alert('An error occurred while creating the temporary passcode.');
             });
         }
-        function showUsers() {
-            document.querySelectorAll('.classusers').forEach(e => e.style.display = 'block');
-            document.querySelectorAll('.classuser').forEach(e => {
-                const colorHue = e.getAttribute('data-color');
-                if (colorHue !== "None") {
-                    e.style.backgroundColor = `hsl(${colorHue}, 77%, 20%)`;
-                }
-            });
-            document.getElementById('highlightusers').style.display = 'block';
+
+    // Tab controller: click and keyboard navigation (Left/Up, Right/Down)
+    function activateTab(tabKey) {
+        const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+        const panels = Array.from(document.querySelectorAll('[role="tabpanel"]'));
+
+        tabs.forEach(t => {
+            const selected = t.id === `tab-${tabKey}`;
+            t.setAttribute('aria-selected', selected ? 'true' : 'false');
+            t.tabIndex = selected ? 0 : -1;
+        });
+
+        panels.forEach(p => {
+            p.hidden = p.id !== `panel-${tabKey}`;
+        });
+
+        // Move focus to the active tab for keyboard users
+        const activeTab = document.getElementById(`tab-${tabKey}`);
+        if (activeTab) activeTab.focus();
+    }
+
+    // Keyboard support for the vertical tablist
+    document.addEventListener('keydown', function(e) {
+        // --- AI ---
+        const isTablistFocused = document.activeElement && document.activeElement.getAttribute && document.activeElement.getAttribute('role') === 'tab';
+        if (!isTablistFocused) return;
+        const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+        const currentIdx = tabs.indexOf(document.activeElement);
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            const next = tabs[(currentIdx + 1) % tabs.length];
+            next.click();
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const prev = tabs[(currentIdx - 1 + tabs.length) % tabs.length];
+            prev.click();
         }
+    });
     </script>
 {% endblock %}

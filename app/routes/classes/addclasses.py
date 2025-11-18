@@ -48,6 +48,7 @@ def addclasses_post():
     """
     Adds the classes to the user's account.
     """
+    # TODO: Redo this whole function to be less messy  
     user = request.user
     if len(get_periods_of_user_classes(user)) == len(neededperiods):
         return error_response("You already have all of your classes."), 400
@@ -65,11 +66,18 @@ def addclasses_post():
         and not course.strip().lower().startswith("end: ") # I have not confirmed this is a real value, but just in case
     ]
     app.logger.debug(f"Classes: {classes}")
-    classes = re.findall(r"([0-9]|Access)\n *(.*)\n *(?:[0-9]{1,2}:[0-9]{1,2} (?:A|P)M(?: - )?){2}\n *Teacher: (.*), .*\n *Room: ((?:E?[0-9]{3}B?)|MS Cafe|PTECH|PTECH-[0-9]{3}|HS Commons)", "\n".join(classes), re.IGNORECASE)
+    desktop_regex = r"(?P<period>(?:[0-9]|Access))\n *(?P<course>.*)\n *(?:[0-9]{1,2}:[0-9]{1,2} (?:A|P)M(?: - )?){2}\n *Teacher: (?P<teacher>.*), .*\n *Room: (?P<room>(?:E?[0-9]{3}B?)|MS Cafe|PTECH|PTECH-[0-9]{3}|HS Commons)"
+    mobile_regex = r"(?P<period>(?:[0-9]|Access))\n *(?P<course>.*)\n *Teacher: (?P<teacher>.*?), .*?\n *Room: (?P<room>(?:E?[0-9]{3}B?)|MS Cafe|PTECH|PTECH-[0-9]{3}|HS Commons)\n *(?:[0-9]{1,2}:[0-9]{2} (?:A|P)M(?: - [0-9]{1,2}:[0-9]{2} (?:A|P)M)?)?"
+    joined = "\n".join(classes)
+    classes = re.findall(desktop_regex, joined, re.IGNORECASE)
+    app.logger.debug(f"Filtered Classes (desktop): {len(classes)}")
     if len(classes) == 0:
-        return error_response("No valid classes found. If you are on mobile, switch to a desktop browser when copying."), 400
-    classes = list(set(classes))
-    app.logger.debug(f"Filtered Classes: {classes}")
+        classes = re.findall(mobile_regex, joined, re.IGNORECASE)
+        app.logger.debug(f"Filtered Classes (mobile 2): {len(classes)}")
+        if len(classes) == 0:
+            return error_response("No valid classes found. If you are on mobile, try again on desktop."), 400
+    app.logger.debug(f"Filtered Classes: {len(classes)}")
+    classes = list(set(classes))  # Remove duplicates
     had_periods = get_periods_of_user_classes(user)
     needed_periods = [
         period for period in neededperiods if period not in had_periods
@@ -100,15 +108,16 @@ def process_class(class_info, user, needed_periods):
             app.logger.debug(f"Adding existing PTECH class {pclass.name} to user {user.username}")
             add_user_to_class(user, pclass)
             return None
-        else:
-            app.logger.debug(f"Creating new PTECH class {course} for user {user.username}")
-    if check_if_class_exists(room, period):
+        app.logger.debug(f"Creating new PTECH class {course} for user {user.username}")
+    elif check_if_class_exists(room, period):
+        app.logger.debug(f"Class already exists for room {room} and period {period}, adding to user {user.username}")
         add_user_to_class(user, get_course(period, room))
         return None
     if profanity.contains_profanity(course):
         app.logger.warning(f"Profanity detected in course name: {course}")
         return error_response("Invalid class name"), 400
-    nclass = add_class(course, period, room, user.id, teacher, False)
+    app.logger.debug(f"Creating new class {course} for user {user.username}")
+    nclass = add_class(course, period, room, user.id, teacher, course, commit=False)
     add_user_to_class(user, nclass)
     app.logger.debug(f"Added class {course} to user {user.username}")
     db.session.commit()

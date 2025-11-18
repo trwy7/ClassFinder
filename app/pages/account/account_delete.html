@@ -4,13 +4,17 @@
 {% block content %}
     <h1>Delete account</h1>
     <form onsubmit="attemptDelete(event)">
-        <button onclick="attemptDelete(event)">Delete</button><br>
+        <button onclick="attemptDelete(event)" class="danger">Delete</button><br>
     </form>
     <p id="status"></p>
 {% endblock %}
 {% block script %}
     <script>
         function attemptDelete(event) {
+            if (!confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+                event.preventDefault();
+                return;
+            }
             event.preventDefault();
             fetch('/account/delete', {
                 method: 'POST',

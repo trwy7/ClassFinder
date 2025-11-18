@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chronis - {% block title required %}{% endblock %}</title>
     <link rel="stylesheet" href="/index.css">
+    <script src="/static/index.js" defer></script>
     {% block head %}{% endblock %}
 </head>
 <body>
-    {% include 'templates/header.html' %}
+    <div id="loadOverlay" style="background-color:#333; position:absolute; top:0px; left:0px; width:100%; height:100%; z-index:2000;"></div>
+    {% if noheader != true %}{% include 'templates/header.html' %}{% endif %}
     <main id="{% block mainid %}unknownmain{% endblock %}" class="{% block mainclasses %}{% endblock %}">
         {% block content required %}{% endblock %}
     </main>

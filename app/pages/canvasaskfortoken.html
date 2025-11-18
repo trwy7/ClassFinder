@@ -4,12 +4,12 @@
 {% block content %}
     <h1>Canvas token</h1>
     <form onsubmit="attemptToken(event)">
-        <label for="token">Input your canvas token here:</label>
+        <label for="token">Token:</label>
         <input type="text" id="token" name="token" required><br>
         <button type="submit">Submit</button><br>
     </form>
     <h2>Make sure your classes are visible on your canvas dashboard (favorited)</h2>
-    <p>You can get a token from your <a href="{{canvas_url}}/profile/settings">account page</a></p>
+    <p style="max-width: max(50%, 350px);">You can get a token from your <a href="{{canvas_url}}/profile/settings">account page</a>. It will be deleted automatically, and no actions will be performed on your account. This will be used for shortcuts, e.g. clicking a class on the dashboard.</p>
 {% endblock %}
 {% block script %}
     <script>

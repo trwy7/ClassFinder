@@ -2,6 +2,7 @@
 This file contains the functions and data structures for the schedule of the school.
 """
 
+import os
 from datetime import date, timedelta, time, datetime
 from reportlab.pdfgen import canvas
 from app import app
@@ -75,7 +76,7 @@ classtime_dict = {
         "lunchtimes": {
             "A": {"start": time(11, 35), "end": time(12, 5)},
             "B": {"start": time(12, 15), "end": time(12, 45)},
-            "C": {"start": time(13, 15), "end": time(13, 45)},
+            "C": {"start": time(13, 10), "end": time(13, 45)},
         }
     },
     1: { # Tuesday
@@ -140,7 +141,7 @@ classtime_dict = {
         "lunchtimes": {
             "A": {"start": time(11, 35), "end": time(12, 5)},
             "B": {"start": time(12, 15), "end": time(12, 45)},
-            "C": {"start": time(13, 15), "end": time(13, 45)},
+            "C": {"start": time(13, 10), "end": time(13, 45)},
         }
     },
     2: { # Wednesday
@@ -219,7 +220,7 @@ classtime_dict = {
         "lunchtimes": {
             "A": {"start": time(12, 5), "end": time(12, 35)},
             "B": {"start": time(12, 40), "end": time(13, 10)},
-            "C": {"start": time(13, 35), "end": time(14, 5)},
+            "C": {"start": time(13, 30), "end": time(14, 5)},
         }
     },
     3: { # Thursday
@@ -298,7 +299,7 @@ classtime_dict = {
         "lunchtimes": {
             "A": {"start": time(12, 5), "end": time(12, 35)},
             "B": {"start": time(12, 40), "end": time(13, 10)},
-            "C": {"start": time(13, 35), "end": time(14, 5)},
+            "C": {"start": time(13, 30), "end": time(14, 5)},
         }
     },
     4: { # Friday
@@ -419,7 +420,7 @@ classtime_dict = {
         "lunchtimes": {
             "A": {"start": time(11, 20), "end": time(11, 50)},
             "B": {"start": time(11, 55), "end": time(12, 25)},
-            "C": {"start": time(12, 30), "end": time(13, 0)},
+            "C": {"start": time(12, 25), "end": time(13, 0)},
         }
     },
     5: { # No school
@@ -552,17 +553,17 @@ classtime_dict = {
         ],
         "lunchtimes": {}
     },
-    9: {
+    9: { # For development/testing purposes
         "classtimes": [
             {
-                "start": now.time(),
-                "end": (now + timedelta(minutes=5)).time(),
+                "start": (now - timedelta(minutes=3)).time(),
+                "end": (now + timedelta(minutes=0.2)).time(),
                 "period": "1",
                 "passing": True,
                 "lunchactive": False,
             },
             {
-                "start": (now + timedelta(minutes=5)).time(),
+                "start": (now + timedelta(minutes=0.3)).time(),
                 "end": (now + timedelta(minutes=10)).time(),
                 "period": "2",
                 "passing": True,
@@ -584,6 +585,10 @@ classtime_dict = {
             }
         ],
         "lunchtimes": {}
+    },
+    10: { # Special schedule placeholder
+        "classtimes": [],
+        "lunchtimes": {}
     }
 }
 readable_days = {
@@ -596,24 +601,63 @@ readable_days = {
     6: "No school",
     7: "Early Release Blue",
     8: "Early Release Gold",
-    9: "Development"
+    9: "Development",
+    10: "Special Schedule",
 }
 
-# TODO: Webhooks?
+# TODO: Webhooks with custom data? Possibly for ntfy/discord notifications?
 
-BELL_DELAY = 4 if not app.config['TESTING'] else 0 # Seconds to add to each time to account for bell delay.
-PASSING_BELL_DELAY = 4.006 if not app.config['TESTING'] else 0 # Not used, just for reference.
+# bell_delay = 4 if not app.config['TESTING'] else 0 # Seconds to add to each time to account for bell delay.
+# PASSING_BELL_DELAY = 4.006 if not app.config['TESTING'] else 0 # Not used, just for reference.
 
-for d, dtimes in classtime_dict.items():
-    app.logger.debug(f"Setting times for {readable_days[d]}")
-    for time in dtimes['classtimes']:
-        time['start'] = datetime.combine(date.today(), time['start'])
-        time['end'] = datetime.combine(date.today(), time['end'])
-        time['start'] += timedelta(seconds=BELL_DELAY)
-        time['end'] += timedelta(seconds=BELL_DELAY)
-        time['start'] = time['start'].time()
-        time['end'] = time['end'].time()
-        classtime_dict[d]['classtimes'] = dtimes['classtimes']
+loaded_bell_delay = 0.0
+bell_delay = 0.0
+
+if os.environ.get("BELL_DELAY_PATH") and os.path.isfile(os.environ.get("BELL_DELAY_PATH")):
+    with open(os.environ.get("BELL_DELAY_PATH"), "r", encoding="utf-8") as bf:
+        loaded_bell_delay = float(bf.read().strip())
+        app.logger.info(f"Loaded bell delay of {loaded_bell_delay} seconds from {os.environ.get('BELL_DELAY_PATH')}")
+
+def change_bell_delay(delay_seconds: float, commit: bool=True):
+    """
+    Change the bell delay for all class times.
+
+    Args:
+        delay_seconds (float): The delay in seconds to add to each class time.
+    """
+    global bell_delay
+    # last_bell_delay = bell_delay
+    bell_delay += delay_seconds
+    if os.environ.get("BELL_DELAY_PATH") and delay_seconds != 0.0 and commit:
+        with open(os.environ.get("BELL_DELAY_PATH"), "w", encoding="utf-8") as f:
+            f.write(str(bell_delay))
+            app.logger.info(f"Saved bell delay of {bell_delay} seconds to {os.environ.get('BELL_DELAY_PATH')}")    # for d, dtimes in classtime_dict.items():
+    #     app.logger.debug(f"Setting times for {readable_days[d]} with delay {bell_delay} seconds")
+    #     for time_entry in dtimes['classtimes']:
+    #         start_dt = datetime.combine(date.today(), time_entry['start'])
+    #         end_dt = datetime.combine(date.today(), time_entry['end'])
+    #         start_dt += timedelta(seconds=delay_seconds)
+    #         end_dt += timedelta(seconds=delay_seconds)
+    #         time_entry['start'] = start_dt.time()
+    #         time_entry['end'] = end_dt.time()
+
+change_bell_delay(loaded_bell_delay, commit=False)  # Apply the loaded bell delay
+
+def reset_bell_delay():
+    """
+    Reset the bell delay to 0 seconds.
+    """
+    global bell_delay
+    change_bell_delay(-bell_delay)
+
+def get_bell_delay() -> float:
+    """
+    Get the current bell delay.
+
+    Returns:
+        float: The current bell delay in seconds.
+    """
+    return bell_delay
 
 def get_current_day(oday: date=None):
     """

@@ -12,6 +12,7 @@ from app.addons.limiter import limiter
 
 
 @app.route("/classes/canvaslink")
+@limiter.limit("4/minute", exempt_when=lambda: request.args.get("token") is None)
 @require_login
 def canvaslink():
     """

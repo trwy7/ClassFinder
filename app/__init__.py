@@ -1,9 +1,12 @@
+# pylint: disable=wrong-import-position
 """
 Sets up the flask app and imports all routes.
 This file should not be modified unless you know what you are doing, routes are automatically imported from the routes directory.
 Any pull requests that modify this file will be examined carefully, and may be subject to additional tests.
 """
 
+from datetime import datetime
+start_init_time = datetime.now()
 import os
 import sys
 import importlib
@@ -11,12 +14,10 @@ import logging
 import ipaddress
 import re
 import signal
-from datetime import datetime
 from flask import Flask, request
 from flask_apscheduler import APScheduler
 import requests
-from app.utilities.config import devmode
-start_init_time = datetime.now()
+from app.utilities.config import devmode, get_status
 
 app = Flask(__name__, template_folder="pages", static_folder="static")
 
@@ -33,7 +34,7 @@ app.config['END_OF_SEMESTER'] = os.environ.get('END_OF_SEMESTER', None)
 if app.config['END_OF_SEMESTER'] is not None:
     app.config['END_OF_SEMESTER'] = datetime.strptime(app.config['END_OF_SEMESTER'], '%Y-%m-%d').date()
 
-from app.utilities.users import auth_user # pylint: disable=wrong-import-position # This import wont work if it is at the top of the file as it causes a circular import
+from app.utilities.users import auth_user
 @app.before_request
 def before_request2():
     """
@@ -82,7 +83,14 @@ def inject_user():
     """
     Injects the user into the template context.
     """
-    return dict(user=auth_user()[0], devmode=devmode)
+    return {"user": auth_user()[0]}
+
+@app.context_processor
+def inject_devmode():
+    """
+    Injects the devmode variable into the template context.
+    """
+    return {"devmode": devmode, "site_status": get_status()}
 
 # Analytics
 logs: list[dict[str, any]] = []
@@ -175,6 +183,7 @@ def log_request():
         "PUT": "\033[95m",  # purple
         "DELETE": "\033[91m", # red
         "PATCH": "\033[94m", # blue
+        "OPTIONS": "\033[93m", # yellow
     }
     method_color = method_colors.get(request.method, "\033[97m")  # white
     if request.content_type == "application/json":
@@ -213,9 +222,10 @@ def log_response(response):
         301: "\033[96m",  # cyan
         302: "\033[96m",  # cyan
         400: "\033[93m",  # yellow
-        401: "\033[91m",  # red
-        403: "\033[91m",  # red
-        404: "\033[91m",  # red
+        401: "\033[93m",  # yellow
+        403: "\033[93m",  # yellow
+        404: "\033[93m",  # yellow
+        405: "\033[93m",  # yellow
         429: "\033[93m",  # yellow
         500: "\033[91m",  # red
     }
@@ -275,10 +285,10 @@ def import_routes(directory):
                     .replace(os.sep, ".")
                     .replace(".py", "")
                 )
-                imbtime = datetime.now()
+                # imbtime = datetime.now()
                 importlib.import_module(module_name)
-                imatime = datetime.now()
-                app.logger.debug(f"Imported {module_name.removeprefix("app.routes.")} in {(imatime - imbtime).total_seconds()}s")
+                # imatime = datetime.now()
+                # app.logger.debug(f"Imported {module_name.removeprefix("app.routes.")} in {(imatime - imbtime).total_seconds()}s")
 
 def get_logs():
     """
