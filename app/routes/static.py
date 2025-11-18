@@ -18,14 +18,6 @@ def load_css():
         return f.read()
 
 index_css = load_css()
-light_warm_color = """
-@media (prefers-color-scheme: light) {
-    :root {
-        --secondary-text-color: black;
-    }
-}
-"""
-
 
 @app.route("/index.css")
 def index_cssf():
@@ -42,27 +34,6 @@ def index_cssf():
                 return send_from_directory("static", "legacycss.css")
         except ValueError:
             pass
-    if (request.user and request.user.color_hue) or devmode or request.cookies.get("color_hue"):
-        # If the user has a color, we add it to the CSS
-        if request.cookies.get("color_hue"):
-            try:
-                color_hue = int(request.cookies.get("color_hue"))
-                if not (0 <= color_hue <= 360):
-                    color_hue = "234"
-            except ValueError:
-                color_hue = "234"
-        elif request.user is not None and request.user.color_hue:
-            color_hue = request.user.color_hue
-        else:
-            color_hue = "234"
-        if devmode:
-            index_css = load_css()
-        return Response(
-            index_css +
-            f"\n:root {{ --user-prefered-color: {color_hue}; }}" +
-            (light_warm_color if 32 <= int(color_hue) <= 188 else ""),
-            mimetype="text/css"
-        )
     return send_from_directory("static", "index.css")
 
 @app.route("/favicon.ico")
