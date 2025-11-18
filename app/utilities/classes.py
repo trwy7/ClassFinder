@@ -189,7 +189,7 @@ def get_today_courses(user: User, day: int = None):
         list: A list of courses that the user has scheduled for today.
     """
     app.logger.debug(f"Retrieving today's courses for user {user.username}")
-    user_periods = list(set([time["period"] for time in get_classtimes(day)]))
+    user_periods = list(dict.fromkeys([time["period"] for time in get_classtimes(day)]))
     app.logger.debug(f"User {user.username} periods: {user_periods}")
     newcourses = []
     for course in user.classes:
