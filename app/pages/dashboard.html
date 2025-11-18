@@ -7,7 +7,7 @@
     {%if user.requires_username_change%}
         <h2>You have been requested to change your username <a href="/account/changeusername">here</a>.</h2>
     {%endif%}
-    {% if status %}
+    {% if site_status %}
         <div class="status">
             <h3>{{site_status}}</h3>
         </div>
