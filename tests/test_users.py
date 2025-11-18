@@ -358,9 +358,9 @@ def test_schedule_pdf(client, token):
         headers={"Authorization": f"Bearer {token}"}
     )
     if response.status_code != 200:
-        pytest.fail("Failed to get 2nd schedule pdf: {response.status_code}")
+        pytest.fail(f"Failed to get 2nd schedule pdf: {response.status_code}")
     if response.content_type != "application/pdf":
-        pytest.fail("Failed to get 2nd schedule pdf: {response.content_type}")
+        pytest.fail(f"Failed to get 2nd schedule pdf: {response.content_type}")
 
 def test_calendar(client, token):
     """
