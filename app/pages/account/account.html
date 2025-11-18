@@ -101,6 +101,10 @@
                 <input id="colorRange" type="range" min="0" max="360" value="{{user.color_hue|default(155)}}" oninput="updateColor(this.value)" style="width: 60%; background: none;">
                 <button onclick="setColor()">Save</button>
             </div>
+            <div id="customcss" style="display: block;">
+                <textarea id="customcssinput" rows="25" cols="50"></textarea><br>
+                <button onclick="setCustomCSS()">Save CSS</button>
+            </div>
         </section>
 
         <section id="panel-manage" role="tabpanel" aria-labelledby="tab-manage" hidden>
@@ -242,5 +246,44 @@
             prev.click();
         }
     });
+
+    function setCustomCSS() {
+        if (!confirm("This applies to the whole site. You may reset any custom styles at /resetcss. Proceed?")) {
+            return;
+        }
+        const css = document.getElementById('customcssinput').value;
+        fetch('/account/setcss', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ css: css })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Custom CSS updated successfully.');
+                window.location.reload();
+            } else {
+                response.json().then(data => {
+                    alert('Failed to set custom CSS: ' + data.message);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while trying to set the custom CSS.');
+        });
+    }
+    function getExistingCSS() {
+        fetch('/user.css')
+        .then(response => response.text())
+        .then(css => {
+            document.getElementById('customcssinput').value = css;
+        })
+        .catch(error => {
+            console.error('Error fetching existing CSS:', error);
+        });
+    }
+    getExistingCSS();
     </script>
 {% endblock %}

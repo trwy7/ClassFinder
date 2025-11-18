@@ -6,6 +6,9 @@
     <title>Chronis - {% block title required %}{% endblock %}</title>
     <link rel="stylesheet" href="/index.css">
     <link rel="stylesheet" href="/color{{ user.color_hue }}.css">
+    {% if user and user.custom_css and not disablecustomcss %}
+    <link rel="stylesheet" href="/user.css?v={{ user.custom_css_last_updated }}">
+    {% endif %}
     <script src="/static/index.js" defer></script>
     {% block head %}{% endblock %}
 </head>
