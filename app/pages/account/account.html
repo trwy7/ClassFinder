@@ -261,7 +261,6 @@
         })
         .then(response => {
             if (response.ok) {
-                alert('Custom CSS updated successfully.');
                 window.location.reload();
             } else {
                 response.json().then(data => {
