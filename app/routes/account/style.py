@@ -68,15 +68,25 @@ def set_user_css_post():
     """
     Sets the user's custom CSS.
     """
-    data = request.get_json()
-    css = data.get("css", "").strip(" \t\n\r")
+    data = request.get_json(silent=True)
+    css_raw = (data or {}).get("css", "")
+    if css_raw is None:
+        css_raw = ""
+    if not isinstance(css_raw, str):
+        app.logger.debug("Invalid CSS provided (not a string).")
+        return error_response("Invalid CSS provided. Make sure it's a string."), 400
+    css = css_raw.strip(" \t\n\r")
+    app.logger.debug(f"Setting custom CSS: {len(css)}")
     if not css:
+        app.logger.debug("Clearing custom CSS.")
         request.user.custom_css = None
         request.user.custom_css_last_updated = None
         db.session.commit()
         return success_response("Custom CSS cleared successfully.")
-    if not isinstance(css, str) or len(css) > 25000:
-        return error_response("Invalid CSS provided. Make sure it's a string and less than 25,000 characters.")
+    if len(css) > 25000:
+        app.logger.debug("Provided CSS is too long.")
+        return error_response("Custom CSS is too long. Maximum length is 25,000 characters."), 413
+    app.logger.debug("Updating custom CSS.")
     request.user.custom_css = css
     request.user.custom_css_last_updated = datetime.datetime.now().timestamp()
     db.session.commit()
