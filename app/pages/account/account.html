@@ -56,15 +56,11 @@
                             {% endif %}
                         </ul>
                         <ul class="classusers">
-                            {%for cuser in class.users%}
-                                {% if cuser.id != user.id %}
-                                    {% if not cuser.role == "testing" %}
-                                        <li class="classuser" data-color="{{cuser.color_hue}}" style="cursor: pointer;">
-                                            {{cuser.username}}
-                                        </li>
-                                    {% endif %}
-                                {% endif %}
-                            {%endfor%}
+                            {%for cuser in class.users%}{% if cuser.id != user.id and cuser.role != "testing" %}
+                                <li class="classuser" data-color="{{cuser.color_hue}}" style="cursor: pointer;">
+                                    {{cuser.username}}
+                                </li>
+                            {% endif %}{%endfor%}
                         </ul>
                     </li>
                 {% endfor %}

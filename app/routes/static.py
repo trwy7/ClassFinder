@@ -9,6 +9,7 @@ from flask import send_from_directory, render_template
 from app import app
 from app.utilities.config import devmode
 from app.addons.limiter import limiter
+from app.utilities.other import optimize_css
 
 def load_css():
     """
@@ -18,6 +19,22 @@ def load_css():
         return f.read()
 
 index_css = load_css()
+if not devmode:
+    if os.path.exists("/tmp/chroniscache"):
+        app.logger.debug("Clearing chroniscache directory")
+        for file in os.listdir("/tmp/chroniscache"):
+            app.logger.debug(f"Removing cached file: {file}")
+            os.remove(os.path.join("/tmp/chroniscache", file))
+    else:
+        os.mkdir("/tmp/chroniscache")
+
+    # Create optimized CSS version
+    optimized_css_path = "/tmp/chroniscache/optimized_index.css"
+    if not os.path.exists(optimized_css_path):
+        optimized_css = optimize_css(index_css)
+        with open(optimized_css_path, "w", encoding="UTF-8") as f:
+            f.write(optimized_css)
+        app.logger.debug("Created optimized CSS file.")
 
 @app.route("/index.css")
 def index_cssf():
@@ -34,7 +51,8 @@ def index_cssf():
                 return send_from_directory("static", "legacycss.css")
         except ValueError:
             pass
-    return send_from_directory("static", "index.css")
+
+    return send_from_directory("/tmp/chroniscache", "optimized_index.css") if not devmode else Response(optimize_css(load_css()), mimetype="text/css")
 
 @app.route("/favicon.ico")
 def favicon():
