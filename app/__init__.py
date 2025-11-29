@@ -46,51 +46,17 @@ def before_request2():
     # app.logger.debug("Origin address: %s", request.origin_remote_addr)
     request.remote_addr = request.headers.get("Cf-Connecting-Ip", request.origin_remote_addr)
     # app.logger.debug("Remote address: %s", request.remote_addr)
-    # The below is not used for cloudflare, but is here for other code, feel free to move it to a new function
     # request.user = None
     # request.token = None
     request.user, request.token = None, None
     request.user, request.token = auth_user()
 
-@app.before_request
-def before_request3():
-    """
-    Checks if the incoming request is from a Cloudflare IP address.
-    """
-    request.is_cloudflare = False
-    if devmode or app.config.get("TESTING"):
-        return None
-    if app.config.get("CLOUDFLARE_IP_RANGES"):
-        request_ip = ipaddress.ip_address(request.origin_remote_addr)
-        for ip_range in app.config["CLOUDFLARE_IP_RANGES"]:
-            if request_ip in ipaddress.ip_network(ip_range, strict=False):
-                request.is_cloudflare = True
-                return None
-        app.logger.warning(
-            "Request from IP %s not in CloudFlare IP ranges (oip: %s, pip: %s)",
-            request.remote_addr,
-            request.origin_remote_addr,
-            request.proxy_remote_addr
-        )
-        # return {"message": "You seem to be bypassing CloudFlare, or your IP is using IPv6.", "status": "error"}, 403
-        return None
-    app.logger.warning("CLOUDFLARE_IP_RANGES not set. We cannot access https://www.cloudflare.com/ips-v4.")
-    app.logger.warning("People may be able to bypass rate limits.")
-    return None
-
 @app.context_processor
-def inject_user():
+def inject_vars():
     """
-    Injects the user into the template context.
+    Injects variables into the template context.
     """
-    return {"user": auth_user()[0]}
-
-@app.context_processor
-def inject_devmode():
-    """
-    Injects the devmode variable into the template context.
-    """
-    return {"devmode": devmode, "site_status": get_status()}
+    return {"user": auth_user()[0], "devmode": devmode, "site_status": get_status()}
 
 # Analytics
 logs: list[dict[str, any]] = []
@@ -255,9 +221,11 @@ def log_response(response):
                 app.logger.debug("Anonymous user request")
                 script = script.replace("{username}", "anonymous")
             response.data = response.data.decode("utf-8").replace("</head>", f"{script}</head>").encode("utf-8")
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
+    if "text/html" in response.content_type or "application/json" in response.content_type:
+        # Disable caching for HTML and JSON responses
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
     # Log the request
     req_url = request.path
     if req_url.endswith("/calendar.ics"):
@@ -273,6 +241,12 @@ def log_response(response):
         })
     except Exception as e: # pylint: disable=broad-exception-caught
         app.logger.error("Failed to log request: %s", e)
+    # Add Server-Timing header
+    try:
+        duration = (datetime.now() - (request.start_time if hasattr(request, 'start_time') else datetime.now())).total_seconds() * 1000
+        response.headers["Server-Timing"] = f"app;dur={duration:.2f}"
+    except Exception as e: # pylint: disable=broad-exception-caught
+        app.logger.error("Failed to set Server-Timing header: %s", e)
     return response
 
 def import_routes(directory):
@@ -352,34 +326,6 @@ werkzeug_handler.setFormatter(CustomWerkzeugFormatter())
 werkzeug_handler.addFilter(lambda record: False)
 werkzeug_logger.addHandler(werkzeug_handler)
 logging.basicConfig(handlers=[werkzeug_handler], level=app.logger.level)
-
-# Request CloudFlare IP ranges
-if not devmode and not app.config.get("TESTING"):
-    cf_ip_ranges = []
-    # Get IPv4 ranges
-    cf_ip_ranges_req_v4 = requests.get("https://www.cloudflare.com/ips-v4", timeout=10)
-    if cf_ip_ranges_req_v4.status_code != 200:
-        app.logger.critical("Failed to get CloudFlare IPv4 IP ranges. Status code: %s", cf_ip_ranges_req_v4.status_code)
-        sys.exit(1)
-    else:
-        v4_ranges = [ip for ip in cf_ip_ranges_req_v4.text.splitlines() if not ip.startswith("#")]
-        cf_ip_ranges.extend(v4_ranges)
-        app.logger.debug("CloudFlare IPv4 IP ranges request successful")
-        app.logger.debug(f"CloudFlare IPv4 IP ranges: {v4_ranges}")
-    # Get IPv6 ranges
-    cf_ip_ranges_req_v6 = requests.get("https://www.cloudflare.com/ips-v6", timeout=10)
-    if cf_ip_ranges_req_v6.status_code != 200:
-        app.logger.critical("Failed to get CloudFlare IPv6 IP ranges. Status code: %s", cf_ip_ranges_req_v6.status_code)
-        sys.exit(1)
-    else:
-        v6_ranges = [ip for ip in cf_ip_ranges_req_v6.text.splitlines() if not ip.startswith("#")]
-        cf_ip_ranges.extend(v6_ranges)
-        app.logger.debug("CloudFlare IPv6 IP ranges request successful")
-        app.logger.debug(f"CloudFlare IPv6 IP ranges: {v6_ranges}")
-else:
-    app.logger.debug("Running in dev/test mode, not requesting CloudFlare IP ranges")
-    cf_ip_ranges = []
-app.config["CLOUDFLARE_IP_RANGES"] = cf_ip_ranges
 
 end_init_time = datetime.now()
 
