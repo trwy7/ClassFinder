@@ -133,6 +133,9 @@ def account_set_color():
     """
     color_hue = request.json.get("color_hue")
     if color_hue is not None:
-        set_color(request.user, int(color_hue))
-        return success_response("Color set successfully")
-    return {"error": "No color provided"}, 400
+        try:
+            set_color(request.user, int(color_hue))
+            return success_response("Color set successfully")
+        except ValueError:
+            return error_response("Invalid color hue"), 400
+    return error_response("No color provided"), 400
