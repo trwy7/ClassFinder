@@ -56,3 +56,6 @@ if (timerTextElement) {
         timerTextElement.style.display = "inline";
     }
 }
+
+// TODO: Service worker that caches /api/v2/schedule/today every 5 minutes for offline use.
+// It should show a blank page with "You are offline." when offline.
