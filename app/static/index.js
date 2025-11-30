@@ -1,8 +1,8 @@
 // check for <meta name="endtime" content="<timestamp>">
 const metaEndtime = document.querySelector('meta[name="endtime"]');
 if (metaEndtime) {
-    if (metaEndtime.content === "") {
-        console.log("Meta endtime content is empty.");
+    if (metaEndtime.content === "None" || metaEndtime.content === "") {
+        console.log("Meta endtime content is None.");
         localStorage.removeItem("currentperiod_endtime");
         localStorage.setItem("dayOver", "true");
     } else {
