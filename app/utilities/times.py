@@ -8,10 +8,6 @@ from reportlab.pdfgen import canvas
 from app import app
 from app.db import Schedule, db, User
 
-# classtime_dict = {daynumber: {
-#   "classtimes": [...],
-#   "lunchtimes": {}
-#}
 now = datetime.now()
 classtime_dict = {
     0: { # Monday
@@ -607,9 +603,6 @@ readable_days = {
 
 # TODO: Webhooks with custom data? Possibly for ntfy/discord notifications?
 
-# bell_delay = 4 if not app.config['TESTING'] else 0 # Seconds to add to each time to account for bell delay.
-# PASSING_BELL_DELAY = 4.006 if not app.config['TESTING'] else 0 # Not used, just for reference.
-
 loaded_bell_delay = 0.0
 bell_delay = 0.0
 
@@ -631,15 +624,7 @@ def change_bell_delay(delay_seconds: float, commit: bool=True):
     if os.environ.get("BELL_DELAY_PATH") and delay_seconds != 0.0 and commit:
         with open(os.environ.get("BELL_DELAY_PATH"), "w", encoding="utf-8") as f:
             f.write(str(bell_delay))
-            app.logger.info(f"Saved bell delay of {bell_delay} seconds to {os.environ.get('BELL_DELAY_PATH')}")    # for d, dtimes in classtime_dict.items():
-    #     app.logger.debug(f"Setting times for {readable_days[d]} with delay {bell_delay} seconds")
-    #     for time_entry in dtimes['classtimes']:
-    #         start_dt = datetime.combine(date.today(), time_entry['start'])
-    #         end_dt = datetime.combine(date.today(), time_entry['end'])
-    #         start_dt += timedelta(seconds=delay_seconds)
-    #         end_dt += timedelta(seconds=delay_seconds)
-    #         time_entry['start'] = start_dt.time()
-    #         time_entry['end'] = end_dt.time()
+            app.logger.info(f"Saved bell delay of {bell_delay} seconds to {os.environ.get('BELL_DELAY_PATH')}")
 
 change_bell_delay(loaded_bell_delay, commit=False)  # Apply the loaded bell delay
 
@@ -837,3 +822,69 @@ def create_schedule_pdf( # pylint: disable=too-many-arguments, too-many-position
     c.showPage()
     c.save()
     return file_path
+
+def get_full_schedule(day: date=None, user: User=None): # For simpler applications that cannot generate this themselves, or for caching purposes
+    """
+    Get the schedule for a user on a specific day.
+
+    Args:
+        day (date): The day to get the schedule for.
+        user (User): The user to get the schedule for.
+    Returns:
+        list: A list of class times for the user on the specified day, with lunch breaks included.
+    """
+    day_type = get_current_day(day)
+    classtimes = get_classtimes(day_type)
+    schedule = []
+    for ctime in classtimes:
+        class_info = {
+            "start": ctime['start'],
+            "end": ctime['end'],
+            "period": ctime['period'],
+            "passing": ctime['passing'],
+            "lunchactive": ctime['lunchactive'],
+            "class": None
+        }
+        if user:
+            for uclass in user.classes:
+                if uclass.period == ctime['period']:
+                    class_info['class'] = uclass
+                    break
+        schedule.append(class_info)
+    # Find lunch period
+    for entry in schedule:
+        if entry['lunchactive'] and entry['class'] and entry['class'].lunch:
+            lunchtime = get_lunchtimes(day_type)[entry['class'].lunch]
+            lunch_entry = {
+                "start": lunchtime['start'],
+                "end": lunchtime['end'],
+                "period": "Lunch",
+                "passing": False,
+                "lunchactive": True,
+                "class": None
+            }
+            schedule.insert(schedule.index(entry) + 1, lunch_entry)
+            # Break the original schedule to mark the period end/start around lunch
+            if entry['class'].lunch == 'A':
+                app.logger.debug(f"Processing A lunch for {entry['class'].name}: lunch first, then class")
+                entry['start'] = lunchtime['end']
+            elif entry['class'].lunch == 'B':
+                app.logger.debug(f"Processing B lunch for {entry['class'].name}: lunch in middle of class")
+                # Move end time to lunch start
+                original_end = entry['end']
+                entry['end'] = lunchtime['start']
+                # Create new entry for post-lunch class time
+                post_lunch_entry = {
+                    "start": lunchtime['end'],
+                    "end": original_end,
+                    "period": entry['period'],
+                    "passing": entry['passing'],
+                    "lunchactive": entry['lunchactive'],
+                    "class": entry['class']
+                }
+                schedule.insert(schedule.index(entry) + 2, post_lunch_entry)
+            elif entry['class'].lunch == 'C':
+                app.logger.debug(f"Processing C lunch for {entry['class'].name}: class first, then lunch")
+                entry['end'] = lunchtime['start']
+            break
+    return schedule
