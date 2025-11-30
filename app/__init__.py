@@ -226,6 +226,13 @@ def log_response(response):
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
+    if "text/css" in response.content_type or \
+        "application/javascript" in response.content_type or \
+        "text/javascript" in response.content_type or \
+        request.path == "/favicon.ico":
+        # CSS and JS can be cached for a day
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    
     # Log the request
     req_url = request.path
     if req_url.endswith("/calendar.ics"):
