@@ -1,4 +1,5 @@
 // mostly AI
+// TODO: Make this work for logged-out users.
 const CACHE_NAME = 'chronis';
 const SCHEDULE_API = '/api/v2/schedule/today';
 
@@ -7,7 +8,12 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(self.clients.claim());
+    event.waitUntil(
+        Promise.all([
+            self.clients.claim(),
+            self.registration.navigationPreload ? self.registration.navigationPreload.enable() : Promise.resolve()
+        ])
+    );
 });
 
 self.addEventListener('fetch', (event) => {
@@ -38,8 +44,16 @@ self.addEventListener('fetch', (event) => {
     // Handle navigation requests for offline page
     if (event.request.mode === 'navigate') {
         event.respondWith(
-            fetch(event.request)
-                .then((response) => {
+            (async () => {
+                try {
+                    // Use navigation preload if available to fix timing tab issues
+                    const preloadResponse = await event.preloadResponse;
+                    let response = preloadResponse;
+                    
+                    if (!response) {
+                        response = await fetch(event.request);
+                    }
+
                     if (response.status > 500) {
                         return new Response(getOfflinePageHTML("Chronis is offline."), {
                             headers: { 'Content-Type': 'text/html' }
@@ -47,20 +61,24 @@ self.addEventListener('fetch', (event) => {
                     }
                     if (response.status === 500) {
                         const clonedResponse = response.clone();
-                        const isCloudflare = clonedResponse.text().then(text => text.includes("https://www.cloudflare.com/5xx-error-landing"));
-                        if (isCloudflare) {
-                            return new Response(getOfflinePageHTML("Chronis is offline."), {
-                                headers: { 'Content-Type': 'text/html' }
-                            });
+                        try {
+                            const text = await clonedResponse.text();
+                            if (text.includes("https://www.cloudflare.com/5xx-error-landing")) {
+                                return new Response(getOfflinePageHTML("Chronis is offline."), {
+                                    headers: { 'Content-Type': 'text/html' }
+                                });
+                            }
+                        } catch (e) {
+                            // Ignore error reading body
                         }
                     }
                     return response;
-                })
-                .catch(() => {
+                } catch (e) {
                     return new Response(getOfflinePageHTML(), {
                         headers: { 'Content-Type': 'text/html' }
                     });
-                })
+                }
+            })()
         );
         return;
     }
@@ -195,6 +213,18 @@ function getOfflinePageHTML(r="You are offline.") {
 
     setInterval(updateTimer, 1000);
     updateTimer();
+    function checkOnlineStatus() {
+        fetch('/ping').then((resp) => {
+            if (resp && resp.status === 200) {
+                location.reload();
+            }
+        }).catch(() => {});
+    }
+    setInterval(checkOnlineStatus, 5000);
+    window.addEventListener('online', () => {
+        console.log("Back online, checking status...");
+        checkOnlineStatus();
+    });
 </script>
 </html>`;
 }
