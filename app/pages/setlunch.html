@@ -35,7 +35,6 @@
                 if (data.status == "success") {
                     document.getElementById('status').innerText = data.message;
                     window.location.href = '/account';
-                    // Redirect or perform other actions on successful login
                 } else {
                     document.getElementById('status').innerText = 'Failed: ' + data.message;
                 }
