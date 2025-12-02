@@ -47,7 +47,7 @@ self.addEventListener('fetch', (event) => {
                     }
                     if (response.status === 500) {
                         const clonedResponse = response.clone();
-                        const isCloudflare = clonedResponse.text().then(text => text.includes("https://www.cloudflare.com"));
+                        const isCloudflare = clonedResponse.text().then(text => text.includes("https://www.cloudflare.com/5xx-error-landing"));
                         if (isCloudflare) {
                             return new Response(getOfflinePageHTML("Chronis is offline."), {
                                 headers: { 'Content-Type': 'text/html' }
