@@ -122,10 +122,3 @@ def process_class(class_info, user, needed_periods):
     app.logger.debug(f"Added class {course} to user {user.username}")
     db.session.commit()
     return True
-
-@app.route("/addclasses/help.gif")
-def addclasses_help():
-    """
-    Renders the help gif for adding classes.
-    """
-    return send_from_directory("static", "addclasses.gif")

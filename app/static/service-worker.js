@@ -1,5 +1,4 @@
 // mostly AI
-// TODO: Make this work for logged-out users.
 const CACHE_NAME = 'chronis';
 const SCHEDULE_API = '/api/v2/schedule/today';
 
