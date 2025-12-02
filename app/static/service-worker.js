@@ -40,10 +40,19 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             fetch(event.request)
                 .then((response) => {
-                    if (response.status === 502) {
+                    if (response.status > 500) {
                         return new Response(getOfflinePageHTML("Chronis is offline."), {
                             headers: { 'Content-Type': 'text/html' }
                         });
+                    }
+                    if (response.status === 500) {
+                        const clonedResponse = response.clone();
+                        const isCloudflare = clonedResponse.text().then(text => text.includes("https://www.cloudflare.com"));
+                        if (isCloudflare) {
+                            return new Response(getOfflinePageHTML("Chronis is offline."), {
+                                headers: { 'Content-Type': 'text/html' }
+                            });
+                        }
                     }
                     return response;
                 })
@@ -82,10 +91,12 @@ function getOfflinePageHTML(r="You are offline.") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chronis - Offline</title>
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
         body {
             background-color: #000;
             color: rgba(178, 200, 178, 1);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', 'Roboto', Arial, sans-serif;
         }
         #maincontent {
             position: absolute;
@@ -93,6 +104,16 @@ function getOfflinePageHTML(r="You are offline.") {
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
+        }
+        #timeleft {
+            font-family: 'Space Mono', monospace;
+            font-size: 5em;
+            font-weight: 700;
+            margin: 0;
+        }
+        #periodtime {
+            font-size: 1.5em;
+            margin: 0;
         }
     </style>
 </head>
