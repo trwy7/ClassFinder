@@ -95,7 +95,7 @@ function getOfflinePageHTML(r="You are offline.") {
     @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
         body {
             background-color: #000;
-            color: rgba(178, 200, 178, 1);
+            color: #c2ffe6;
             font-family: 'Inter', 'Roboto', Arial, sans-serif;
         }
         #maincontent {
