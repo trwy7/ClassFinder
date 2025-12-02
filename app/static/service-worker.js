@@ -83,6 +83,7 @@ setInterval(fetchAndCacheSchedule, 10 * 60 * 1000);
 fetchAndCacheSchedule();
 
 function getOfflinePageHTML(r="You are offline.") {
+    // TODO: Cache the user's color scheme preference and apply it here.
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -154,6 +155,12 @@ function getOfflinePageHTML(r="You are offline.") {
 
             if (currentPeriod) {
                 const timeLeft = currentPeriod.end - now;
+                if (timeLeft < 0) {
+                    document.getElementById('timeleft').innerText = "00:00:00";
+                    document.getElementById('periodtime').innerText = "";
+                    location.reload();
+                    return;
+                }
                 const hours = Math.floor(timeLeft / 3600);
                 const minutes = Math.floor((timeLeft % 3600) / 60);
                 const seconds = Math.floor(timeLeft % 60);
