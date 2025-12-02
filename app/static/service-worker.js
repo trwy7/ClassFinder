@@ -53,7 +53,7 @@ self.addEventListener('fetch', (event) => {
                     }
 
                     if (response.status > 500) {
-                        return new Response(getOfflinePageHTML("Chronis is offline."), {
+                        return new Response(getOfflinePageHTML("Chronis is offline: " + response.status), {
                             headers: { 'Content-Type': 'text/html' }
                         });
                     }
@@ -62,7 +62,7 @@ self.addEventListener('fetch', (event) => {
                         try {
                             const text = await clonedResponse.text();
                             if (text.includes("https://www.cloudflare.com/5xx-error-landing")) {
-                                return new Response(getOfflinePageHTML("Chronis is offline."), {
+                                return new Response(getOfflinePageHTML("Chronis is offline: 500"), {
                                     headers: { 'Content-Type': 'text/html' }
                                 });
                             }
