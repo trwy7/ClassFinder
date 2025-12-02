@@ -46,7 +46,6 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             (async () => {
                 try {
-                    // Use navigation preload if available to fix timing tab issues
                     const preloadResponse = await event.preloadResponse;
                     let response = preloadResponse;
                     
@@ -100,7 +99,7 @@ function fetchAndCacheSchedule() {
 setInterval(fetchAndCacheSchedule, 10 * 60 * 1000);
 fetchAndCacheSchedule();
 
-function getOfflinePageHTML(r="You are offline.") {
+function getOfflinePageHTML(r="You are offline") {
     // TODO: Cache the user's color scheme preference and apply it here.
     return `
 <!DOCTYPE html>
