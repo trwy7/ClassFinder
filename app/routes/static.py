@@ -54,6 +54,13 @@ def index_cssf():
 
     return send_from_directory("/tmp/chroniscache", "optimized_index.css") if not devmode else Response(optimize_css(load_css()), mimetype="text/css")
 
+@app.route("/service-worker.js")
+def service_worker():
+    """
+    Serves the service worker.
+    """
+    return send_from_directory("static", "service-worker.js")
+
 @app.route("/favicon.ico")
 def favicon():
     """
