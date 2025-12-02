@@ -552,7 +552,7 @@ classtime_dict = {
         ],
         "lunchtimes": {}
     },
-    9: {
+    9: { # Development
         "classtimes": [
             {
                 "start": now.time(),
@@ -584,6 +584,408 @@ classtime_dict = {
             }
         ],
         "lunchtimes": {}
+    },
+    10: { # Delayed Monday
+        "classtimes": [
+            {
+                "start": time(9, 30),
+                "end": time(10, 0),
+                "period": "1",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(10, 0),
+                "end": time(11, 15),
+                "period": "1",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 15),
+                "end": time(11, 20),
+                "period": "3",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 20),
+                "end": time(12, 30),
+                "period": "3",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 30),
+                "end": time(12, 35),
+                "period": "5",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 35),
+                "end": time(14, 15),
+                "period": "5",
+                "passing": False,
+                "lunchactive": True,
+            },
+            {
+                "start": time(14, 15),
+                "end": time(14, 20),
+                "period": "7",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(14, 20),
+                "end": time(15, 30),
+                "period": "7",
+                "passing": False,
+                "lunchactive": False,
+            }
+        ],
+        "lunchtimes": {
+            "A": {"start": time(12, 35), "end": time(13, 5)},
+            "B": {"start": time(13, 10), "end": time(13, 40)},
+            "C": {"start": time(13, 45), "end": time(14, 15)},
+        }
+    },
+    11: { # Delayed Tuesday
+        "classtimes": [
+            {
+                "start": time(9, 30),
+                "end": time(10, 0),
+                "period": "2",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(10, 0),
+                "end": time(11, 15),
+                "period": "2",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 15),
+                "end": time(11, 20),
+                "period": "4",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 20),
+                "end": time(12, 30),
+                "period": "4",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 30),
+                "end": time(12, 35),
+                "period": "6",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 35),
+                "end": time(14, 15),
+                "period": "6",
+                "passing": False,
+                "lunchactive": True,
+            },
+            {
+                "start": time(14, 15),
+                "end": time(14, 20),
+                "period": "8",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(14, 20),
+                "end": time(15, 30),
+                "period": "8",
+                "passing": False,
+                "lunchactive": False,
+            }
+        ],
+        "lunchtimes": {
+            "A": {"start": time(12, 35), "end": time(13, 5)},
+            "B": {"start": time(13, 10), "end": time(13, 40)},
+            "C": {"start": time(13, 45), "end": time(14, 15)},
+        }
+    },
+    12: { # Delayed Wednesday
+        "classtimes": [
+            {
+                "start": time(9, 30),
+                "end": time(10, 0),
+                "period": "1",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(10, 0),
+                "end": time(11, 5),
+                "period": "1",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 5),
+                "end": time(11, 10),
+                "period": "3",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 10),
+                "end": time(12, 10),
+                "period": "3",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 10),
+                "end": time(12, 15),
+                "period": "Access",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 15),
+                "end": time(12, 45),
+                "period": "Access",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 45),
+                "end": time(12, 50),
+                "period": "5",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 50),
+                "end": time(13, 20),
+                "period": "5",
+                "passing": False,
+                "lunchactive": True,
+            },
+            {
+                "start": time(13, 20),
+                "end": time(14, 30),
+                "period": "7",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(14, 30),
+                "end": time(15, 30),
+                "period": "7",
+                "passing": False,
+                "lunchactive": False,
+            },
+        ],
+        "lunchtimes": {
+            "A": {"start": time(12, 50), "end": time(13, 20)},
+            "B": {"start": time(13, 25), "end": time(13, 55)},
+            "C": {"start": time(14, 00), "end": time(14, 30)},
+        }
+    },
+    13: { # Delayed Thursday
+        "classtimes": [
+            {
+                "start": time(9, 30),
+                "end": time(10, 0),
+                "period": "2",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(10, 0),
+                "end": time(11, 5),
+                "period": "2",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 5),
+                "end": time(11, 10),
+                "period": "4",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 10),
+                "end": time(12, 10),
+                "period": "4",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 10),
+                "end": time(12, 15),
+                "period": "Access",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 15),
+                "end": time(12, 45),
+                "period": "Access",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 45),
+                "end": time(12, 50),
+                "period": "6",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 50),
+                "end": time(13, 20),
+                "period": "6",
+                "passing": False,
+                "lunchactive": True,
+            },
+            {
+                "start": time(13, 20),
+                "end": time(14, 30),
+                "period": "8",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(14, 30),
+                "end": time(15, 30),
+                "period": "8",
+                "passing": False,
+                "lunchactive": False,
+            },
+        ],
+        "lunchtimes": {
+            "A": {"start": time(12, 50), "end": time(13, 20)},
+            "B": {"start": time(13, 25), "end": time(13, 55)},
+            "C": {"start": time(14, 00), "end": time(14, 30)},
+        }
+    },
+    14: { # Delayed Friday
+        "classtimes": [
+            {
+                "start": time(10, 0),
+                "end": time(10, 30),
+                "period": "1",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(10, 30),
+                "end": time(10, 35),
+                "period": "2",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(10, 35),
+                "end": time(11, 0),
+                "period": "2",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 0),
+                "end": time(11, 5),
+                "period": "3",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 5),
+                "end": time(11, 30),
+                "period": "3",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 30),
+                "end": time(11, 35),
+                "period": "4",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(11, 35),
+                "end": time(12, 0),
+                "period": "4",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 0),
+                "end": time(12, 5),
+                "period": "5",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(12, 5),
+                "end": time(13, 45),
+                "period": "5",
+                "passing": False,
+                "lunchactive": True,
+            },
+            {
+                "start": time(13, 45),
+                "end": time(13, 50),
+                "period": "6",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(13, 50),
+                "end": time(14, 20),
+                "period": "6",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(14, 20),
+                "end": time(14, 25),
+                "period": "7",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(14, 25),
+                "end": time(14, 55),
+                "period": "7",
+                "passing": False,
+                "lunchactive": False,
+            },
+            {
+                "start": time(14, 55),
+                "end": time(15, 0),
+                "period": "8",
+                "passing": True,
+                "lunchactive": False,
+            },
+            {
+                "start": time(15, 0),
+                "end": time(15, 30),
+                "period": "8",
+                "passing": False,
+                "lunchactive": False,
+            }
+        ],
+        "lunchtimes": {
+            "A": {"start": time(12, 5), "end": time(12, 35)},
+            "B": {"start": time(12, 40), "end": time(13, 10)},
+            "C": {"start": time(13, 15), "end": time(13, 45)},
+        }
     }
 }
 readable_days = {
@@ -596,7 +998,12 @@ readable_days = {
     6: "No school",
     7: "Early Release Blue",
     8: "Early Release Gold",
-    9: "Development"
+    9: "Development",
+    10: "Delayed Monday",
+    11: "Delayed Tuesday",
+    12: "Delayed Wednesday",
+    13: "Delayed Thursday",
+    14: "Delayed Friday"
 }
 
 # TODO: Webhooks?
@@ -607,6 +1014,7 @@ PASSING_BELL_DELAY = 4.006 if not app.config['TESTING'] else 0 # Not used, just 
 for d, dtimes in classtime_dict.items():
     app.logger.debug(f"Setting times for {readable_days[d]}")
     for time in dtimes['classtimes']:
+        app.logger.debug(f"Original time for period {time}")
         time['start'] = datetime.combine(date.today(), time['start'])
         time['end'] = datetime.combine(date.today(), time['end'])
         time['start'] += timedelta(seconds=BELL_DELAY)
