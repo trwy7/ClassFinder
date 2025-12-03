@@ -10,9 +10,9 @@ from app import app
 
 neededperiods = []
 lunchperiods = []
-for day, times in classtime_dict.items():
+for times in classtime_dict.values():
     for ctime in times['classtimes']:
-        if ctime["lunchactive"] and ctime["period"] not in lunchperiods:
+        if ctime["lunchactive"]:
             lunchperiods.append(ctime["period"])
         neededperiods.append(ctime["period"])
 lunchperiods = list(set(lunchperiods))
@@ -170,9 +170,7 @@ def get_user_current_period(user: User):
             "start": current_period["start"],
             "course": currentcourse,
         }
-    app.logger.debug(
-        f"User {user.username} is in period {current_period['period']} for course {currentcourse.name}, after lunch"
-    )
+    app.logger.debug(f"Period {current_period['period']} after lunch")
     return current_period | {"lunch": None, "course": currentcourse}
 
 def search_classes(name: str=None, room: str=None, period: int=None, teacher: str=None):
@@ -218,7 +216,7 @@ def get_today_courses(user: User, day: int = None):
     # Sort according to the user_periods dict
     newcourses.sort(key=lambda x: user_periods.index(x.period))
     app.logger.debug(
-        f"User {user.username} courses for today: {[course.name for course in newcourses]}"
+        f"Today {user.username}: {[course.name for course in newcourses]}"
     )
     return newcourses
 
