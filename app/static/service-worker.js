@@ -200,7 +200,7 @@ function getOfflinePageHTML(r="You are offline") {
                 document.getElementById('periodtime').innerText = 
                     \`\${startHours}:\${startMin} \${startAmpm} - \${endHours}:\${endMin} \${endAmpm}\`;
             } else {
-                document.getElementById('timeleft').innerText = "No active period found.";
+                document.getElementById('timeleft').innerText = "";
                 document.getElementById('periodtime').innerText = "";
             }
         } catch (e) {
