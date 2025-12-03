@@ -147,14 +147,14 @@ function getOfflinePageHTML(r="You are offline") {
             const cache = await caches.open('${CACHE_NAME}');
             const response = await cache.match('${SCHEDULE_API}');
             if (!response) {
-                document.getElementById('timeleft').innerText = "${r}";
+                document.getElementById('timeleft').innerText = "";
                 document.getElementById('periodtime').innerText = "";
                 return;
             }
             const data = await response.json();
             const schedule = data.schedule || (data.data && data.data.schedule);
             if (!schedule) {
-                document.getElementById('timeleft').innerText = "${r}";
+                document.getElementById('timeleft').innerText = "";
                 document.getElementById('periodtime').innerText = "";
                 return;
             }
