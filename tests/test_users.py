@@ -16,6 +16,24 @@ from app import app # pylint: disable=wrong-import-position, import-error, cycli
 app.config['TESTING'] = True
 app.config['END_OF_SEMESTER'] = datetime.strptime(os.environ["END_OF_SEMESTER"], '%Y-%m-%d').date()
 
+def check_html_response(client, path, headers={}, expected_status=200):
+    """
+    Helper function to check HTML response
+    """
+    response = client.get(path, headers=headers)
+    assert response.status_code == expected_status, f"Expected status {expected_status}, got {response.status_code} for path {path}"
+    assert response.content_type == 'text/html; charset=utf-8', f"Expected content type 'text/html; charset=utf-8', got {response.content_type} for path {path}"
+    return response
+
+def check_json_response(client, path, headers={}, expected_status=200, method='GET'):
+    """
+    Helper function to check JSON response
+    """
+    response = client.open(path, headers=headers, method=method)
+    assert response.status_code == expected_status, f"Expected status {expected_status}, got {response.status_code} for path {path}"
+    assert response.content_type == 'application/json', f"Expected content type 'application/json', got {response.content_type} for path {path}"
+    return response
+
 @pytest.fixture(scope="session")
 def client():
     """
@@ -99,9 +117,7 @@ def test_export_data_admin(client, admintoken):
     """
     Tests the export route for an admin
     """
-    response = client.get("/export", headers={"Authorization": f"Bearer {admintoken}"})
-    assert response.status_code == 200
-    assert response.content_type == "application/json"
+    response = check_json_response(client, "/api/v2/data", headers={"Authorization": f"Bearer {admintoken}"})
     assert response.json.get('status') == "success"
     assert response.json.get('username') == "pytrwy"
     assert response.json.get('email') == "admin.pytest@s.stemk12.org"
@@ -113,15 +129,23 @@ def test_export_data(client, token):
     """
     Tests the export route for a user
     """
-    response = client.get("/export", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == "application/json"
+    response = check_json_response(client, "/api/v2/data", headers={"Authorization": f"Bearer {token}"})
     assert response.json.get('status') == "success"
     assert response.json.get('username') == "pytest"
     assert response.json.get('email') == "a.a@s.stemk12.org"
     assert response.json.get('role') == "user"
     assert len(response.json.get('classes')) == 9
-    assert {"canvasid": None,"lunch": None,"name":"Class 5","period":"1","room":"352"} in response.json.get('classes')
+    for nclass in response.json.get('classes'):
+        assert 'name' in nclass
+        assert 'displayname' in nclass
+        assert 'room' in nclass
+        assert 'period' in nclass
+        assert 'lunch' in nclass
+        assert 'canvasid' in nclass
+        assert 'verified' in nclass
+        assert 'teacher' in nclass
+        assert nclass['name'].startswith("Class") or nclass['name'].endswith("Access")
+        assert nclass['displayname'].startswith("Class") or nclass['displayname'].endswith("Access")
     assert len(response.json.get('sessions')) == 1
 
 def test_basic_auth(client, token):

@@ -45,6 +45,7 @@ def addclasses():
 @app.route("/addclasses", methods=["POST"])
 @require_login
 def addclasses_post():
+    # TODO: Make sure every field matches existing db entries
     """
     Adds the classes to the user's account.
     """
