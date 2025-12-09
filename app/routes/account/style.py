@@ -21,6 +21,7 @@ def color_css(color: int = None):
     Serves the color CSS file.
     """
     # If the user has a color, we add it to the CSS
+    # TODO: High contrast mode for color 361
     if color is None:
         color = 234 if devmode else 155
     color = str(color)

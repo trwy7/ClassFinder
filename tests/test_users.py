@@ -231,9 +231,7 @@ def test_dashboard_friday(client, token):
     """
     Tests the dashboard route on a Friday
     """
-    response = client.get("/dashboard", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'text/html; charset=utf-8'
+    response = check_html_response(client, "/dashboard", headers={"Authorization": f"Bearer {token}"})
     assert b"Class 5" in response.data
     assert b"Class2" in response.data
     assert b"Access" not in response.data
@@ -243,9 +241,7 @@ def test_ptech_times(client, token):
     """
     Tests the weird PTECH times - Before class
     """
-    response = client.get("/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'application/json'
+    response = check_json_response(client, "/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
     assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
     assert response.json['endtime'] != 1756129800, "The PTECH start delay was not accounted for"
     assert response.json['endtime'] == 1756130100, f"The PTECH start delay messed up somewhere, got {response.json['endtime']}, expected 1756130100"
@@ -256,9 +252,7 @@ def test_ptech_times_duringbefore(client, token):
     """
     Tests the weird PTECH times - "During before" class
     """
-    response = client.get("/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'application/json'
+    response = check_json_response(client, "/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
     assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
     assert response.json['endtime'] != 1756135500, "It thinks it is durring class"
     assert response.json['endtime'] == 1756130100, f"The PTECH start delay messed up somewhere, got {response.json['endtime']}, expected 1756130100"
@@ -269,9 +263,7 @@ def test_ptech_times_during_class(client, token):
     """
     Tests the weird PTECH times - During class
     """
-    response = client.get("/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'application/json'
+    response = check_json_response(client, "/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
     assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
     app.logger.debug(f"Response JSON: {response.json}")
     assert response.json['endtime'] == 1756135500, f"The PTECH end delay messed up somewhere, got {response.json['endtime']}, expected 1756135500"
@@ -282,9 +274,7 @@ def test_ptech_times_afterduring_eos(client, token):
     """
     Tests the weird PTECH times - "After during" class, end of school
     """
-    response = client.get("/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'application/json'
+    response = check_json_response(client, "/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
     assert response.json['period'] is None, "It thinks it is class time, but school has ended"
     assert response.json['endtime'] is None, "It thinks it is class time, but school has ended"
 
@@ -293,9 +283,7 @@ def test_ptech_times_afterduring(client, token):
     """
     Tests the weird PTECH times - "After during" class, end of school
     """
-    response = client.get("/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'application/json'
+    response = check_json_response(client, "/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
     assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
     assert response.json['endtime'] == 1756121700, f"The PTECH end delay messed up somewhere, got {response.json['endtime']}, expected 1756135500"
 
