@@ -148,59 +148,49 @@ def test_export_data(client, token):
         assert nclass['displayname'].startswith("Class") or nclass['displayname'].endswith("Access")
     assert len(response.json.get('sessions')) == 1
 
-def test_basic_auth(client, token):
+def test_dashboard_basic_auth(client, token):
     """
     Tests the dashboard route with basic auth
     """
-    response = client.get("/dashboard", headers={"Authorization": f"Basic {base64.b64encode(b'pytest:password123').decode()}"})
-    assert response.status_code == 200
-    assert response.content_type == 'text/html; charset=utf-8'
+    check_html_response(client, "/dashboard", headers={"Authorization": "Basic " + base64.b64encode(b"pytest:password123").decode()})
 
 def test_dashboard_invalid_basic_auth(client):
     """
     Tests the dashboard route with invalid basic auth
     """
-    response = client.get("/dashboard", headers={"Authorization": "Basic invalidtoken"})
-    assert response.status_code in (302, 400)
+    check_html_response(client, "/dashboard", headers={"Authorization": "Basic " + base64.b64encode(b"invalid:credentials").decode()}, expected_status=302)
 
 def test_dashboard_incorrect_basic_auth(client):
     """
     Tests the dashboard route with incorrect basic auth
     """
-    response = client.get("/dashboard", headers={"Authorization": "Basic " + base64.b64encode(b"pytest:password823").decode()})
-    assert response.status_code in (302, 401)
+    check_html_response(client, "/dashboard", headers={"Authorization": "Basic " + base64.b64encode(b"pytest:password823").decode()}, expected_status=302)
 
 def test_dashboard_legacy_auth(client, token):
     """
     Tests the dashboard route with a legacy token
     """
-    response = client.get("/dashboard", headers={"Authorization": f"pytest {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'text/html; charset=utf-8'
+    check_html_response(client, "/dashboard", headers={"Authorization": f"pytest {token}"})
 
 def test_dashboard_invalid_legacy_auth(client):
     """
     Tests the dashboard route with an invalid legacy token
     """
-    response = client.get("/dashboard", headers={"Authorization": "pytest invalidtoken"})
-    assert response.status_code in (302, 400)
+    check_html_response(client, "/dashboard", headers={"Authorization": "pytest invalidtoken"}, expected_status=302)
 
 def test_dashboard_no_token(client):
     """
     Tests the dashboard route without a token, should fail
     """
-    response = client.get("/dashboard", follow_redirects=False, headers={"Authorization": ""})
-    assert response.status_code == 302
-    assert response.location == "/login"
+    check_html_response(client, "/dashboard", headers={"Authorization": ""}, expected_status=302)
+    check_html_response(client, "/dashboard", expected_status=302)
 
 @freezegun.freeze_time("2025-03-12 11:14:00")
 def test_dashboard_wensday(client, token):
     """
     Tests the dashboard route on a Wednesday
     """
-    response = client.get("/dashboard", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'text/html; charset=utf-8'
+    response = check_html_response(client, "/dashboard", headers={"Authorization": f"Bearer {token}"})
     assert b"Class 5" in response.data
     assert b"Class2" not in response.data
     assert b"Access" in response.data
@@ -210,9 +200,7 @@ def test_dashboard_tuesday(client, token):
     """
     Tests the dashboard route on a Tuesday
     """
-    response = client.get("/dashboard", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'text/html; charset=utf-8'
+    response = check_html_response(client, "/dashboard", headers={"Authorization": f"Bearer {token}"})
     assert b"Class 5" not in response.data
     assert b"Class2" in response.data
     assert b"Access" not in response.data
@@ -222,29 +210,21 @@ def test_timer(client, token):
     """
     Tests the timer route on a Tuesday
     """
-    response = client.get("/timer/", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'text/html; charset=utf-8'
+    check_html_response(client, "/timer", headers={"Authorization": f"Bearer {token}"})
 
 def test_timer_invalid(client, token):
-    response = client.get("/timer/9999999", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 404, "Timer with ID of 9999999 should not exist"
-    assert response.content_type == 'text/html; charset=utf-8'
+    response = check_html_response(client, "/timer/999999", headers={"Authorization": f"Bearer {token}"}, expected_status=404)
     assert b"That timer does not exist. You may use:" in response.data
 
 @freezegun.freeze_time("2025-08-27 11:14:00")
 def test_custom_timer(client, token):
-    response = client.get("/timers.json", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200, "Failed to get timers.json"
-    assert response.content_type == 'application/json'
+    response = check_json_response(client, "/timers.json", headers={"Authorization": f"Bearer {token}"})
     assert isinstance(response.json, list), "timers.json did not return a list"
     assert len(response.json) >= 1, "timers.json returned an empty list"
+    # Test each timer version
     for timer in response.json:
         assert isinstance(timer, int), f"Timer version {timer} is not an integer"
-        # Test each timer version
-        timer_response = client.get(f"/timer/{timer}", headers={"Authorization": f"Bearer {token}"})
-        assert timer_response.status_code == 200, f"Failed to get timer version {timer}"
-        assert timer_response.content_type == 'text/html; charset=utf-8'
+        check_html_response(client, f"/timer/{timer}", headers={"Authorization": f"Bearer {token}"})
 
 @freezegun.freeze_time("2025-03-14 11:14:00")
 def test_dashboard_friday(client, token):
