@@ -208,6 +208,8 @@ def log_response(response):
     status_color = status_colors.get(response.status_code, "\033[97m")  # white
     method_color = method_colors.get(request.method, "\033[97m") # white
     app.logger.debug(f"Response for {method_color}{request.method}{reset_color} {request.path} is {status_color}{response.status_code}{reset_color}")
+    if response.status_code == 302:
+        app.logger.debug(f"Redirecting to {response.headers.get('Location')}")
     # PostHog integration
     if "text/html" in response.content_type:
         if app.config.get("POSTHOG_API_KEY") and not (devmode or app.config.get("TESTING")):
