@@ -7,15 +7,15 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        Promise.all([
-            self.clients.claim(),
-            self.registration.navigationPreload ? self.registration.navigationPreload.enable() : Promise.resolve()
-        ])
-    );
+    // event.waitUntil(
+    //     Promise.all([
+    //         self.clients.claim(),
+    //         self.registration.navigationPreload ? self.registration.navigationPreload.enable() : Promise.resolve()
+    //     ])
+    // );
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', async (event) => {
     const url = new URL(event.request.url);
 
     // Cache the schedule API specifically
@@ -43,44 +43,66 @@ self.addEventListener('fetch', (event) => {
     // Handle navigation requests for offline page
     if (event.request.mode === 'navigate') {
         event.respondWith(
-            (async () => {
-                try {
-                    const preloadResponse = await event.preloadResponse;
-                    let response = preloadResponse;
-                    
-                    if (!response) {
-                        response = await fetch(event.request);
+            // I cannot figure out how to make this not break the timings tab in devtools
+            // Which is weird, because sometimes the timing tab works and sometimes it doesn't
+            fetch(event.request).then(async (response) => {
+                if (response.status > 500) {
+                    const nconfig = await caches.open(CACHE_NAME).then(cache => cache.match('/api/v2/chronisconfig')).then(resp => resp ? resp.json() : null);
+                    if (new URL(event.request.url).pathname.startsWith('/canvas') && nconfig && nconfig.canvas_url) {
+                        return Response.redirect(nconfig.canvas_url, 302);
                     }
-
-                    if (response.status > 500) {
-                        return new Response(getOfflinePageHTML("Chronis is offline: " + response.status), {
-                            headers: { 'Content-Type': 'text/html' }
-                        });
-                    }
-                    if (response.status === 500) {
-                        const clonedResponse = response.clone();
-                        try {
-                            const text = await clonedResponse.text();
-                            if (text.includes("https://www.cloudflare.com/5xx-error-landing")) {
-                                return new Response(getOfflinePageHTML("Chronis is offline: 500"), {
-                                    headers: { 'Content-Type': 'text/html' }
-                                });
-                            }
-                        } catch (e) {
-                            // Ignore error reading body
-                        }
-                    }
-                    return response;
-                } catch (e) {
-                    return new Response(getOfflinePageHTML(), {
+                    return new Response(getOfflinePageHTML("Chronis is offline: " + response.status), {
                         headers: { 'Content-Type': 'text/html' }
                     });
                 }
-            })()
+                if (response.status === 500) {
+                    const clonedResponse = response.clone();
+                    try {
+                        const text = await clonedResponse.text();
+                        if (text.includes("https://www.cloudflare.com/5xx-error-landing")) {
+                            const nconfig = await caches.open(CACHE_NAME).then(cache => cache.match('/api/v2/chronisconfig')).then(resp => resp ? resp.json() : null);
+                            if (new URL(event.request.url).pathname.startsWith('/canvas') && nconfig && nconfig.canvas_url) {
+                                return Response.redirect(nconfig.canvas_url, 302);
+                            }
+                            return new Response(getOfflinePageHTML("Chronis is offline: 500"), {
+                                headers: { 'Content-Type': 'text/html' }
+                            });
+                        }
+                    } catch (e) {
+                        // Ignore error reading body
+                    }
+                }
+                // Ensure we always return a Response object when the fetch succeeds
+                return response;
+            }).catch(async () => {
+                return new Response(getOfflinePageHTML(), {
+                    headers: { 'Content-Type': 'text/html' }
+                });
+            })
         );
         return;
     }
 });
+
+async function getCurrentPeriod() {
+    const cache = await caches.open(CACHE_NAME);
+    const response = await cache.match(SCHEDULE_API);
+    if (!response) {
+        return null;
+    }
+    const data = await response.json();
+    const schedule = data.schedule || (data.data && data.data.schedule);
+    if (!schedule) {
+        return null;
+    }
+    const now = Date.now() / 1000;
+    for (const entry of schedule) {
+        if (now >= entry.start && now < entry.end) {
+            return entry;
+        }
+    }
+    return null;
+}
 
 function fetchAndCacheSchedule() {
     if (navigator.onLine) {
@@ -93,6 +115,20 @@ function fetchAndCacheSchedule() {
         });
     }
 }
+
+function cacheConfig() {
+    if (navigator.onLine) {
+        fetch('/api/v2/chronisconfig').then(response => {
+            if (response.status === 200) {
+                caches.open(CACHE_NAME).then(cache => {
+                    cache.put('/api/v2/chronisconfig', response);
+                });
+            }
+        });
+    }
+}
+
+cacheConfig();
 
 // Poll for schedule updates every 10 minutes while online
 setInterval(fetchAndCacheSchedule, 10 * 60 * 1000);

@@ -89,6 +89,7 @@ def schedule_today(date=None):
         except ValueError:
             return error_response("Invalid date format. Use YYYY-MM-DD."), 400
     schedule = get_full_schedule(day=date, user=user)
+    # TODO: Move this to a utility function to avoid duplication across get_current_period, the calendar, and here
     return success_response(None, {
         "schedule": [
             {
