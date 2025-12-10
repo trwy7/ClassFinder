@@ -66,4 +66,5 @@ def test_service_worker_js(client):
     """
     response = client.get('/service-worker.js')
     assert response.status_code == 200
-    assert response.content_type == 'application/javascript'
+    assert 'text/javascript' in response.content_type
+    assert 'self.addEventListener' in response.get_data(as_text=True)
