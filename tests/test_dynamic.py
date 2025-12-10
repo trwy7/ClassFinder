@@ -3,6 +3,7 @@
 This file tests the user functions, like login and registration, and general user actions.
 """
 
+import pytest
 import os
 import base64
 from datetime import datetime, timedelta
@@ -11,7 +12,7 @@ import freezegun
 os.environ["END_OF_SEMESTER"] = (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d")
 from app import app # pylint: disable=wrong-import-position, import-error, cyclic-import
 
-# If anyone can help me split this into test_users and test_classes, that would be great. I'm not sure how to do that.
+# TODO: Sort into classes
 
 app.config['TESTING'] = True
 app.config['END_OF_SEMESTER'] = datetime.strptime(os.environ["END_OF_SEMESTER"], '%Y-%m-%d').date()
@@ -25,11 +26,11 @@ def check_html_response(client, path, headers={}, expected_status=200):
     assert response.content_type == 'text/html; charset=utf-8', f"Expected content type 'text/html; charset=utf-8', got {response.content_type} for path {path}"
     return response
 
-def check_json_response(client, path, headers={}, expected_status=200, method='GET'):
+def check_json_response(client, path, headers={}, expected_status=200, method='GET', body=None):
     """
     Helper function to check JSON response
     """
-    response = client.open(path, headers=headers, method=method)
+    response = client.open(path, headers=headers, method=method, json=body)
     assert response.status_code == expected_status, f"Expected status {expected_status}, got {response.status_code} for path {path}"
     assert response.content_type == 'application/json', f"Expected content type 'application/json', got {response.content_type} for path {path}"
     return response
@@ -101,18 +102,29 @@ def token(client, admintoken): # Simulates a normal user registration, with clas
     assert response.json.get('status') == "success"
     yield ntoken
 
+def test_invalid_emailid(client):
+    """
+    Tests registration with an invalid emailid
+    """
+    response = check_json_response(client, "/register/invalidemailid", method='POST', expected_status=400, body={"username": "test", "password": "password123"})
+    assert response.json.get('status') == "error"
+    assert response.json.get('message') == "Invalid email id"
+
+@pytest.mark.dependency()
 def test_create_admin(client, admintoken):
     """
     Checks if the admin user is able to be created
     """
     assert True
 
+@pytest.mark.dependency(depends=["test_create_admin"])
 def test_create_user(client, token):
     """
     Checks if the normal user is able to be created, forces the creation of the admin user to happen first
     """
     assert True
 
+@pytest.mark.dependency(depends=["test_create_admin"])
 def test_export_data_admin(client, admintoken):
     """
     Tests the export route for an admin
@@ -125,6 +137,7 @@ def test_export_data_admin(client, admintoken):
     assert response.json.get('classes') == []
     assert len(response.json.get('sessions')) == 1
 
+@pytest.mark.dependency(depends=["test_create_user"])
 def test_export_data(client, token):
     """
     Tests the export route for a user
@@ -148,6 +161,7 @@ def test_export_data(client, token):
         assert nclass['displayname'].startswith("Class") or nclass['displayname'].endswith("Access")
     assert len(response.json.get('sessions')) == 1
 
+@pytest.mark.dependency(depends=["test_create_user"])
 def test_dashboard_basic_auth(client, token):
     """
     Tests the dashboard route with basic auth
@@ -166,11 +180,19 @@ def test_dashboard_incorrect_basic_auth(client):
     """
     check_html_response(client, "/dashboard", headers={"Authorization": "Basic " + base64.b64encode(b"pytest:password823").decode()}, expected_status=302)
 
+@pytest.mark.dependency(depends=["test_create_user"])
 def test_dashboard_legacy_auth(client, token):
     """
     Tests the dashboard route with a legacy token
     """
     check_html_response(client, "/dashboard", headers={"Authorization": f"pytest {token}"})
+
+@pytest.mark.dependency(depends=["test_create_user"])
+def test_dashboard_param_auth(client, token):
+    """
+    Tests the dashboard route with a token in the URL parameter
+    """
+    check_html_response(client, f"/dashboard?authtoken={token}")
 
 def test_dashboard_invalid_legacy_auth(client):
     """
@@ -186,7 +208,8 @@ def test_dashboard_no_token(client):
     check_html_response(client, "/dashboard", expected_status=302)
 
 @freezegun.freeze_time("2025-03-12 11:14:00")
-def test_dashboard_wensday(client, token):
+@pytest.mark.dependency(depends=["test_export_data"])
+def test_dashboard_wednesday(client, token):
     """
     Tests the dashboard route on a Wednesday
     """
@@ -196,6 +219,7 @@ def test_dashboard_wensday(client, token):
     assert b"Access" in response.data
 
 @freezegun.freeze_time("2025-03-11 11:14:00")
+@pytest.mark.dependency(depends=["test_export_data"])
 def test_dashboard_tuesday(client, token):
     """
     Tests the dashboard route on a Tuesday
@@ -206,17 +230,28 @@ def test_dashboard_tuesday(client, token):
     assert b"Access" not in response.data
 
 @freezegun.freeze_time("2025-08-27 11:14:00")
+@pytest.mark.dependency(depends=["test_export_data"])
 def test_timer(client, token):
     """
     Tests the timer route on a Tuesday
     """
     check_html_response(client, "/timer", headers={"Authorization": f"Bearer {token}"})
 
-def test_timer_invalid(client, token):
+def test_server_time(client):
+    """
+    Tests the server time API route
+    """
+    response = check_json_response(client, "/api/v2/server-time")
+    server_time = response.json.get('time')
+    assert isinstance(server_time, int), "Server time is not an integer"
+    assert abs(server_time - int(datetime.now().timestamp()*1000)) < 5000, "Server time is not within 5 seconds of current time"
+
+def test_timer_invalid(client):
     response = check_html_response(client, "/timer/999999", headers={"Authorization": f"Bearer {token}"}, expected_status=404)
     assert b"That timer does not exist. You may use:" in response.data
 
 @freezegun.freeze_time("2025-08-27 11:14:00")
+@pytest.mark.dependency(depends=["test_export_data"])
 def test_custom_timer(client, token):
     response = check_json_response(client, "/timers.json", headers={"Authorization": f"Bearer {token}"})
     assert isinstance(response.json, list), "timers.json did not return a list"
@@ -227,6 +262,7 @@ def test_custom_timer(client, token):
         check_html_response(client, f"/timer/{timer}", headers={"Authorization": f"Bearer {token}"})
 
 @freezegun.freeze_time("2025-03-14 11:14:00")
+@pytest.mark.dependency(depends=["test_export_data"])
 def test_dashboard_friday(client, token):
     """
     Tests the dashboard route on a Friday
@@ -237,6 +273,7 @@ def test_dashboard_friday(client, token):
     assert b"Access" not in response.data
 
 @freezegun.freeze_time("2025-8-25 13:45:30")
+@pytest.mark.dependency(depends=["test_export_data"])
 def test_ptech_times(client, token):
     """
     Tests the weird PTECH times - Before class
@@ -248,6 +285,7 @@ def test_ptech_times(client, token):
     assert response.json['passing'] is True, "It does not think it is passing time"
 
 @freezegun.freeze_time("2025-8-25 13:50:30")
+@pytest.mark.dependency(depends=["test_export_data"])
 def test_ptech_times_duringbefore(client, token):
     """
     Tests the weird PTECH times - "During before" class
@@ -259,6 +297,7 @@ def test_ptech_times_duringbefore(client, token):
     assert response.json['passing'] is True, "It does not think it is passing time"
 
 @freezegun.freeze_time("2025-8-25 13:55:30")
+@pytest.mark.dependency(depends=["test_export_data"])
 def test_ptech_times_during_class(client, token):
     """
     Tests the weird PTECH times - During class
@@ -270,6 +309,7 @@ def test_ptech_times_during_class(client, token):
     assert response.json['passing'] is False, "It does not think it is class time"
 
 @freezegun.freeze_time("2025-8-25 15:25:30")
+@pytest.mark.dependency(depends=["test_export_data"])
 def test_ptech_times_afterduring_eos(client, token):
     """
     Tests the weird PTECH times - "After during" class, end of school
@@ -279,6 +319,7 @@ def test_ptech_times_afterduring_eos(client, token):
     assert response.json['endtime'] is None, "It thinks it is class time, but school has ended"
 
 @freezegun.freeze_time("2025-8-25 11:25:30")
+@pytest.mark.dependency(depends=["test_export_data"])
 def test_ptech_times_afterduring(client, token):
     """
     Tests the weird PTECH times - "After during" class, end of school
@@ -288,66 +329,59 @@ def test_ptech_times_afterduring(client, token):
     assert response.json['endtime'] == 1756121700, f"The PTECH end delay messed up somewhere, got {response.json['endtime']}, expected 1756135500"
 
 @freezegun.freeze_time("2025-8-27 11:05:00")
+@pytest.mark.dependency(depends=["test_export_data"])
 def test_legacy_api_todaycourses(client, token):
     """
     Tests the legacy API for today's courses
     """
-    response = client.get("/api/v1/currentcourses/", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'application/json'
+    response = check_json_response(client, "/api/v1/currentcourses/", headers={"Authorization": f"Bearer {token}"})
     assert 'courses' in response.json, "No courses found in response"
     assert len(response.json['courses']) == 5, f"Expected 5 courses, got {len(response.json['courses'])}"
     assert {"name": "Class 5", "room": "352", "lunch": None, "verified": False, "canvasid": None, "id": "352p1"} in response.json['courses'].values(), "Class 5 not found in courses"
 
 @freezegun.freeze_time("2025-8-27 11:05:00")
+@pytest.mark.dependency(depends=["test_export_data"])
 def test_legacy_api_currentperiod(client, token):
     """
     Tests the legacy API for current period
     """
-    response = client.get("/api/v1/currentperiod/", headers={"Authorization": f"Bearer {token}"})
+    response = check_json_response(client, "/api/v1/currentperiod/", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     assert response.content_type == 'application/json'
     assert response.json.get('currentperiod') == "Access", f"Expected current period to be 'Access', got {response.json.get('currentperiod')}"
     assert response.json.get('nextclass') == 1756296000, f"Expected nextclass to be 1756296000, got {response.json.get('nextclass')}"
 
-def test_api_login(client, token):
+@pytest.mark.dependency(depends=["test_export_data"])
+def test_api_login(client):
     """
     Tests the API login route
     """
-    response = client.post("/api/v2/login", json={"username": "pytest", "password": "password123", "type": "api"})
-    assert response.status_code == 200
-    assert response.content_type == 'application/json'
+    response = check_json_response(client, "/api/v2/login", method='POST', expected_status=200, body={"username": "pytest", "password": "password123", "type": "api"})
     assert response.json.get('token')
     dashresponse = client.get("/dashboard", headers={"Authorization": f"Bearer {response.json.get('token')}"})
     assert dashresponse.status_code == 200, f"Failed to access dashboard with new token: {dashresponse.status_code}"
     assert dashresponse.content_type == 'text/html; charset=utf-8'
 
+@pytest.mark.dependency(depends=["test_create_user"])
 def test_api_createtoken(client, token):
     """
     Tests the API token creation route
     """
-    response = client.post("/api/v2/createtoken", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'application/json'
-    dashresponse = client.get("/dashboard", headers={"Authorization": f"Bearer {response.json}"})
-    assert dashresponse.status_code == 200, f"Failed to access dashboard with new token: {dashresponse.status_code}"
-    assert dashresponse.content_type == 'text/html; charset=utf-8'
+    response = check_json_response(client, "/api/v2/createtoken", method='POST', expected_status=200, headers={"Authorization": f"Bearer {token}"})
+    check_html_response(client, "/dashboard", headers={"Authorization": f"Bearer {response.json}"})
 
 def test_dashboard_invalid_token(client):
     """
     Tests the dashboard route with an invalid token
     """
-    response = client.get("/dashboard", headers={"Authorization": "Bearer invalidtoken"}, follow_redirects=False)
-    assert response.status_code == 302
-    assert response.location == "/login"
+    check_html_response(client, "/dashboard", headers={"Authorization": "Bearer invalidtoken"}, expected_status=302)
 
-def test_account(client, token):
+@pytest.mark.dependency(depends=["test_create_user"])
+def test_account_page(client, token):
     """
     Tests the account route
     """
-    response = client.get("/account", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 200
-    assert response.content_type == 'text/html; charset=utf-8'
+    check_html_response(client, "/account", headers={"Authorization": f"Bearer {token}"})
 
 def test_schedule_pdf(client, token):
     """
@@ -402,6 +436,23 @@ def test_calendar(client, token):
     assert b"BEGIN:VCALENDAR" in response.data, f"Failed to get calendar with scoped token: {response.data}"
     assert b"END:VCALENDAR" in response.data, f"Failed to get calendar with scoped token: {response.data}"
 
+@pytest.mark.dependency(depends=["test_create_user", "test_api_login", "test_dashboard_param_auth"])
+def test_reset_password(client):
+    """
+    Tests the reset password route
+    """
+    check_html_response(client, "/resetpassword")
+    response = check_json_response(client, "/resetpassword", method='POST', expected_status=200, body={"email": "a.a@s.stemk12.org"})
+    assert response.json.get('status') == "success"
+    emailid = response.json.get('emailid')
+    check_html_response(client, f"/resetpassword/{emailid}")
+    check_json_response(client, f"/resetpassword/{emailid}", method='POST', expected_status=200, body={"password": "newpassword123"})
+    response = check_json_response(client, "/api/v2/login", method='POST', expected_status=200, body={"username": "pytest", "password": "newpassword123", "type": "api"})
+    assert response.json.get('token')
+    token = response.json.get('token')
+    check_html_response(client, "/dashboard?authtoken=" + token)
+
+@pytest.mark.dependency(depends=["test_create_user"])
 def test_delete_user(client, token):
     """
     Tests the delete user route
@@ -414,6 +465,7 @@ def test_delete_user(client, token):
     assert response.status_code == 302
     assert response.location == "/login"  # Should redirect to login after deletion
 
+@pytest.mark.dependency(depends=["test_create_admin"])
 def test_admin_logs(client, admintoken):
     """
     Tests the admin logs route

@@ -29,6 +29,7 @@ def reset_password_post():
     user = get_user_by_email(email)
     if user is None:
         return error_response("User not found"), 400
+    remailid = create_reset_email_id(email)
     send_email(
         email=email,
         subject="Reset your password",
@@ -36,10 +37,10 @@ def reset_password_post():
         + url_for(
             "reset_password_confirm",
             _external=True,
-            emailid=create_reset_email_id(email),
+            emailid=remailid,
         ),
     )
-    return success_response("Email sent"), 200
+    return success_response("Email sent", {"emailid": remailid} if app.config['TESTING'] else {}), 200
 
 
 @app.route("/resetpassword/<emailid>")
