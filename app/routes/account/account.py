@@ -2,7 +2,6 @@
 Account routes
 """
 
-import re
 from flask import render_template, request
 from app import app
 from app.utilities.users import require_login, delete_user, change_username, revoke_external_token, create_temp_passcode, set_color, readable_scopes

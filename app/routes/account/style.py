@@ -2,7 +2,7 @@ import datetime
 from flask import Response, request, render_template
 from app import app
 from app.utilities.users import require_login
-from app.db import User, db
+from app.db import db
 from app.utilities.config import devmode
 from app.utilities.responses import error_response, success_response
 

@@ -2,6 +2,7 @@
 {% block title %}Account{% endblock %}
 {% block mainid %}accountmain{% endblock %}
 {% block content %}
+<!-- TODO: Clean up -->
 <main class="twosections" role="main">
     <aside class="sidebar" aria-label="Account navigation">
         <nav role="tablist" aria-orientation="vertical">
@@ -9,9 +10,6 @@
             <button role="tab" id="tab-tools" aria-controls="panel-tools" aria-selected="false" tabindex="-1" onclick="activateTab('tools')">Tools</button>
             {% if user.classes|length > 0 %}
             <button role="tab" id="tab-classes" aria-controls="panel-classes" aria-selected="false" tabindex="-1" onclick="activateTab('classes')">Classes</button>
-            {% endif %}
-            {% if has_external_tokens %}
-            <button role="tab" id="tab-external" aria-controls="panel-external" aria-selected="false" tabindex="-1" onclick="activateTab('external')">External apps</button>
             {% endif %}
             <button role="tab" id="tab-custom" aria-controls="panel-custom" aria-selected="false" tabindex="-1" onclick="activateTab('custom')">Customization</button>
             <button role="tab" id="tab-manage" aria-controls="panel-manage" aria-selected="false" tabindex="-1" onclick="activateTab('manage')">Manage account</button>
@@ -67,28 +65,6 @@
             </ul>
             {% endif %}
         </section>
-
-        {% if has_external_tokens %}
-        <section id="panel-external" role="tabpanel" aria-labelledby="tab-external" hidden>
-            <h2>Authorized apps</h2>
-            <ul id="tokens">
-            {% for site, scopes in authorized_sites %}
-                <li class="token">
-                    <span class="token-granted-to">{{ site }}</span>
-                    {% for scope in scopes %}
-                        {% if scope != "" %}
-                        <div style="height: 0;"></div>
-                            <span class="token-scope" style="font-size: 0.6em;">{{ scope }}</span>
-                        {% endif %}
-                    {% endfor %}
-                    <ul class="actions">
-                        <li class="action" onclick="revokeToken('{{ site }}')">Revoke</li>
-                    </ul>
-                </li>
-            {% endfor %}
-            </ul>
-        </section>
-        {% endif %}
 
         <section id="panel-custom" role="tabpanel" aria-labelledby="tab-custom" hidden>
             <h2>Customization</h2>
