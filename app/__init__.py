@@ -35,6 +35,8 @@ if app.config['END_OF_SEMESTER'] is not None:
     app.config['END_OF_SEMESTER'] = datetime.strptime(app.config['END_OF_SEMESTER'], '%Y-%m-%d').date()
 
 from app.utilities.users import auth_user
+from app.utilities.responses import error_response
+from flask import redirect
 @app.before_request
 def before_request2():
     """
@@ -48,8 +50,23 @@ def before_request2():
     # app.logger.debug("Remote address: %s", request.remote_addr)
     # request.user = None
     # request.token = None
+    request.error_code = None
     request.user, request.token = None, None
     request.user, request.token = auth_user()
+
+@app.before_request
+def check_verify_required():
+    """
+    Checks if the user needs to reverify their email.
+    """
+    if request.user and request.user.requires_reverification:
+        if request.path.startswith("/api/"):
+            if request.path.startswith("/api/plain"):
+                return
+            return error_response("Email re-verification required"), 403
+        if request.path.startswith("/account/verify") or request.path.startswith("/logout") or request.path.startswith("/account/delete") or request.path.startswith("/static/") or request.path.endswith(".ico") or request.path.endswith(".css") or request.path.endswith(".js"):
+            return
+        return redirect("/account/verify")
 
 @app.context_processor
 def inject_vars():
@@ -146,7 +163,6 @@ def log_request():
     """
     Logs the request method and path with the parameters.
     """
-    request.error_code = None
     reset_color = "\033[0m"
     method_colors = {
         "GET": "\033[92m",  # green

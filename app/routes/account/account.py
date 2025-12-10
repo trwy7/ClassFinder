@@ -2,8 +2,9 @@
 Account routes
 """
 
-from flask import render_template, request
+from flask import render_template, request, url_for
 from app import app
+from app.db import db
 from app.utilities.users import require_login, delete_user, change_username, revoke_external_token, create_temp_passcode, set_color, readable_scopes
 from app.utilities.responses import success_response, error_response
 from app.utilities.classes import (
@@ -12,6 +13,7 @@ from app.utilities.classes import (
     get_periods_of_user_classes,
 )
 from app.utilities.config import canvas_url, allow_leave
+from app.utilities.email import send_email, create_verify_email_id, check_verify_email_id
 
 
 @app.route("/account")
@@ -138,3 +140,49 @@ def account_set_color():
         except ValueError:
             return error_response("Invalid color hue"), 400
     return error_response("No color provided"), 400
+
+@app.route("/account/verify")
+@require_login
+def account_verify():
+    """
+    This route displays the email verification required page.
+    """
+    if request.user.requires_reverification:
+        return render_template("verificationrequired.html")
+    return render_template("templates/error.html", status_code=403, error_message="You do not currently need to reverify your email"), 403
+
+@app.route("/account/verify/sendemail", methods=["POST"])
+@require_login
+def account_verify_sendemail():
+    """
+    This route sends a verification email to the user.
+    """
+    if not request.user.requires_reverification:
+        return error_response("Email re-verification not required"), 400
+    emailid = create_verify_email_id(request.user.email)
+    send_email(
+        email=request.user.email,
+        subject="Verify your email address",
+        message="Verify your email address at "
+        + url_for(
+            "verify_email_confirm",
+            _external=True,
+            emailid=emailid,
+        ),
+    )
+    return success_response("Verification email sent"), 200
+
+@app.route("/account/verify/<emailid>")
+def verify_email_confirm(emailid):
+    """
+    This route confirms the email verification.
+    """
+    email = check_verify_email_id(emailid)
+    if email is None:
+        return render_template("templates/error.html", status_code=400, error_message="Invalid email verification link"), 400
+    user = request.user
+    if user is None or user.email != email:
+        return render_template("templates/error.html", status_code=400, error_message="User not found or email does not match"), 400
+    user.requires_reverification = False
+    db.session.commit()
+    return render_template("account/reverify_success.html")

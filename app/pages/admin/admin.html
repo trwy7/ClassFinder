@@ -58,7 +58,7 @@
                 <h2>Classes</h2>
                 <div>
                     <button onclick="document.querySelectorAll('.classusers').forEach(el => el.style.display = 'grid'); this.remove();" id="showusers">Show users</button>
-                    <button onclick="deleteAllClasses()" id="deleteallclasses">Delete all classes</button>
+                    <button onclick="startNewSemester()">Start new semester</button>
                 </div>
             </div>
             <ul id="classes">
@@ -191,17 +191,17 @@
             document.getElementById('classes').style.display = 'grid';
             document.getElementById('tab-classes').click();
         }
-        function deleteAllClasses() {
+        function startNewSemester() {
             securitycode = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
-            if (prompt("Are you sure you want to delete all classes? If so, enter the following code: " + securitycode) == securitycode) {
-                fetch('/admin/class/all', {
-                    method: 'DELETE'
+            if (prompt("Are you sure you want to start a new semester? Make sure to update the environment variables. If so, enter the following code: " + securitycode) == securitycode) {
+                fetch('/admin/newsemester', {
+                    method: 'POST'
                 }).then(response => {
                     if (response.ok) {
                         location.reload();
                     } else {
                         response.json().then(data => {
-                            alert('Failed to delete classes: ' + data.message);
+                            alert('Failed to start new semester: ' + data.message);
                         });
                     }
                 });

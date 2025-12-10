@@ -11,6 +11,7 @@ from app import app
 
 emailids = {}
 resetemailids = {}
+verifyemailids = {}
 emailconfig = {
     "server": os.environ.get("EMAIL_HOST", "smtp.gmail.com"),
     "port": os.environ.get("EMAIL_PORT", 587),
@@ -75,4 +76,20 @@ def check_reset_email_id(emailid: str):
     """
     if emailid in resetemailids:
         return resetemailids[emailid]
+    return None
+
+def create_verify_email_id(email: str):
+    """
+    Create a verify email id for an email
+    """
+    emailid = os.urandom(30).hex()
+    verifyemailids[emailid] = email
+    return emailid
+
+def check_verify_email_id(emailid: str):
+    """
+    Check if a verify email id is valid and returns the email
+    """
+    if emailid in verifyemailids:
+        return verifyemailids[emailid]
     return None

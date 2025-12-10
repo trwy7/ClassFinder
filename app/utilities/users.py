@@ -226,6 +226,15 @@ def get_user(username: str):
     """
     return User.query.filter_by(username=username).first()
 
+def get_all_users():
+    """
+    Get all users
+
+    Returns:
+        list[User]: A list of all users.
+    """
+    return User.query.all()
+
 def change_user_role(user: User, role: str):
     """
     Change a user's role
