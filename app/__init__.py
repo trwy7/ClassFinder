@@ -173,8 +173,8 @@ def log_request():
     if isinstance(params, dict):
         if params.get("password"):
             params["password"] = ("*" * len(params["password"])) if len(params["password"]) < 25 else "*****"
-        if params.get("token"):
-            params["token"] = params["token"][:3] + "*" * (len(params["token"]) - 2)
+        if params.get("authtoken"):
+            params["authtoken"] = params["authtoken"][:3] + "*" * (len(params["authtoken"]) - 2)
     params = str(params)
     if len(params) > 50:
         params = params[:50] + "..."
