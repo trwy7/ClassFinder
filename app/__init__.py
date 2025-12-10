@@ -121,14 +121,19 @@ app.logger.addHandler(handler)
 app.logger.debug("Logger initialized")
 app.logger.debug("Log level set to %s and devmode is %s", app.logger.level, devmode)
 if not app.config.get("TESTING", False):
-    for log in os.listdir(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')):
-        if log.endswith(".log"):
-            try:
-                os.remove(os.path.join(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs'), log))
-                app.logger.debug("Removed old log file: %s", log)
-            except Exception as e: # pylint: disable=broad-exception-caught
-                app.logger.error("Failed to remove old log file %s: %s", log, e)
-                continue
+    if os.path.isdir(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')):
+        for log in os.listdir(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')):
+            if log.endswith(".log"):
+                try:
+                    os.remove(os.path.join(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs'), log))
+                    app.logger.debug("Removed old log file: %s", log)
+                except Exception as e: # pylint: disable=broad-exception-caught
+                    app.logger.error("Failed to remove old log file %s: %s", log, e)
+                    continue
+    else:
+        if os.path.exists(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')):
+            raise Exception(f"{os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')} exists and is not a directory!")
+        os.mkdir(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs'))
 app.logger.debug("Old log files removed")
 
 # Configure waitress logger to use the same handler
