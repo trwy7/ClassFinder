@@ -6,15 +6,6 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-    // event.waitUntil(
-    //     Promise.all([
-    //         self.clients.claim(),
-    //         self.registration.navigationPreload ? self.registration.navigationPreload.enable() : Promise.resolve()
-    //     ])
-    // );
-});
-
 self.addEventListener('fetch', async (event) => {
     const url = new URL(event.request.url);
 
@@ -40,11 +31,8 @@ self.addEventListener('fetch', async (event) => {
         return;
     }
 
-    // Handle navigation requests for offline page
     if (event.request.mode === 'navigate') {
         event.respondWith(
-            // I cannot figure out how to make this not break the timings tab in devtools
-            // Which is weird, because sometimes the timing tab works and sometimes it doesn't
             fetch(event.request).then(async (response) => {
                 if (response.status > 500) {
                     const nconfig = await caches.open(CACHE_NAME).then(cache => cache.match('/api/v2/chronisconfig')).then(resp => resp ? resp.json() : null);
@@ -68,11 +56,8 @@ self.addEventListener('fetch', async (event) => {
                                 headers: { 'Content-Type': 'text/html' }
                             });
                         }
-                    } catch (e) {
-                        // Ignore error reading body
-                    }
+                    } catch (e) {}
                 }
-                // Ensure we always return a Response object when the fetch succeeds
                 return response;
             }).catch(async () => {
                 return new Response(getOfflinePageHTML(), {

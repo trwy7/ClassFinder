@@ -7,7 +7,7 @@
     --tertiary-color: hsl(var(--user-prefered-color, 155), 43%, 27%);
     --background-color: hsl(var(--user-prefered-color, 155), 8%, 5%);
     /* --background-color: black; */
-    --navbar-color: hsl(var(--user-prefered-color, 155), 33%, 15%);
+    --navbar-color: hsl(var(--user-prefered-color, 155), 36%, 20%);
     --navbar-bottom-color: hsla(var(--user-prefered-color, 155), 33%, 14%, 0);
     --text-color: hsl(var(--user-prefered-color, 155), 100%, 88%);
     --secondary-text-color: hsl(var(--user-prefered-color, 155), 54%, 81%);

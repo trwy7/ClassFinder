@@ -130,7 +130,6 @@
             return span;
         }
         const timeLeftDiv = document.getElementById('timeleftdiv');
-        timeLeftDiv.appendChild(createColumn('hourstens'));
         timeLeftDiv.appendChild(createColumn('hoursones'));
         timeLeftDiv.appendChild(createDivider('divider1'));
         timeLeftDiv.appendChild(createColumn('minutestens'));
@@ -145,22 +144,18 @@
         innerDiv.style.transform = `translateY(-${digit}em)`;
     }
     function updateDigits(hours, minutes, seconds) {
-        const hTens = Math.floor(hours / 10);
         const hOnes = hours % 10;
         const mTens = Math.floor(minutes / 10);
         const mOnes = minutes % 10;
         const sTens = Math.floor(seconds / 10);
         const sOnes = seconds % 10;
 
-        setDigit('hourstens', hTens);
         setDigit('hoursones', hOnes);
         if (hours === 0) {
             // Hide hours if zero
-            document.getElementById('hourstens').style.display = 'none';
             document.getElementById('hoursones').style.display = 'none';
             document.getElementById('divider1').style.display = 'none';
         } else {
-            document.getElementById('hourstens').style.display = 'inline-block';
             document.getElementById('hoursones').style.display = 'inline-block';
             document.getElementById('divider1').style.display = 'inline-block';
         }
