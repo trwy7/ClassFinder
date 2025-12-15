@@ -39,7 +39,7 @@ self.addEventListener('fetch', async (event) => {
                     if (new URL(event.request.url).pathname.startsWith('/canvas') && nconfig && nconfig.canvas_url) {
                         return Response.redirect(nconfig.canvas_url, 302);
                     }
-                    return new Response(getOfflinePageHTML("Chronis is offline: " + response.status), {
+                    return new Response(await getOfflinePageHTML("Chronis is offline: " + response.status), {
                         headers: { 'Content-Type': 'text/html' }
                     });
                 }
@@ -52,7 +52,7 @@ self.addEventListener('fetch', async (event) => {
                             if (new URL(event.request.url).pathname.startsWith('/canvas') && nconfig && nconfig.canvas_url) {
                                 return Response.redirect(nconfig.canvas_url, 302);
                             }
-                            return new Response(getOfflinePageHTML("Chronis is offline: 500"), {
+                            return new Response(await getOfflinePageHTML("Chronis is offline: 500"), {
                                 headers: { 'Content-Type': 'text/html' }
                             });
                         }
@@ -60,7 +60,7 @@ self.addEventListener('fetch', async (event) => {
                 }
                 return response;
             }).catch(async () => {
-                return new Response(getOfflinePageHTML(), {
+                return new Response(await getOfflinePageHTML(), {
                     headers: { 'Content-Type': 'text/html' }
                 });
             })
@@ -119,8 +119,11 @@ cacheConfig();
 setInterval(fetchAndCacheSchedule, 10 * 60 * 1000);
 fetchAndCacheSchedule();
 
-function getOfflinePageHTML(r="You are offline") {
-    // TODO: Cache the user's color scheme preference and apply it here.
+async function getOfflinePageHTML(r="You are offline") {
+    const config = await caches.open(CACHE_NAME)
+        .then(cache => cache.match('/api/v2/chronisconfig'))
+        .then(resp => resp ? resp.json() : null);
+    const colorHue = (config && config.color_hue) ? config.color_hue : 155;
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -132,8 +135,8 @@ function getOfflinePageHTML(r="You are offline") {
     @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
         body {
-            background-color: #000;
-            color: #c2ffe6;
+            background-color: hsl(${colorHue}, 8%, 5%);
+            color: hsl(${colorHue}, 100%, 88%);
             font-family: 'Inter', 'Roboto', Arial, sans-serif;
         }
         #maincontent {

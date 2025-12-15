@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from flask import jsonify
+from flask import jsonify, request
 from app import app
 from app.utilities.users import require_login
 from app.utilities.config import canvas_url
@@ -17,8 +17,8 @@ def chronis_config():
     """
     Returns configuration data for the service worker.
     More fields may be added in the future, when requested/needed.
-    In the future, this should be able to quickly set up a dev environment for chronis.
     """
     return jsonify({
         "canvas_url": canvas_url,
+        "color_hue": request.user.color_hue
     })
