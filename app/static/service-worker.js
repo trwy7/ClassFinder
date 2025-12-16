@@ -4,6 +4,14 @@ const SCHEDULE_API = '/api/v2/schedule/today';
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
+    cacheConfig();
+});
+
+self.addEventListener('activate', (event) => {
+    self.skipWaiting();
+    // Poll for schedule updates every 10 minutes while online
+    setInterval(fetchAndCacheSchedule, 10 * 60 * 1000);
+    fetchAndCacheSchedule();
 });
 
 self.addEventListener('fetch', async (event) => {
@@ -112,12 +120,6 @@ function cacheConfig() {
         });
     }
 }
-
-cacheConfig();
-
-// Poll for schedule updates every 10 minutes while online
-setInterval(fetchAndCacheSchedule, 10 * 60 * 1000);
-fetchAndCacheSchedule();
 
 async function getOfflinePageHTML(r="You are offline") {
     const config = await caches.open(CACHE_NAME)
