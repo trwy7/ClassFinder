@@ -58,6 +58,8 @@ class User(db.Model):
     requires_username_change = db.Column(db.Boolean, nullable=False, default=False)
     color_hue = db.Column(db.String(3), nullable=True, default=None) # Format "0-360", everything else is handled by the frontend
     requires_reverification = db.Column(db.Boolean, nullable=False, default=False)
+    custom_css = db.Column(db.Text, nullable=True, default=None)
+    custom_css_last_updated = db.Column(db.Integer, nullable=True, default=None)
 
     def __str__(self):
         return self.username

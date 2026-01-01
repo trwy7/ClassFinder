@@ -17,6 +17,7 @@ from app.utilities.users import (
 from app.db import db
 from app.utilities.validation import validate_username
 from app.utilities.responses import error_response, success_response
+from app.utilities.config import devmode
 
 
 @app.route("/admin/account/<username>", methods=["DELETE"])
@@ -60,7 +61,7 @@ def login_as(username):
             token.token,
             httponly=True,
             samesite="Lax",
-            secure=True,
+            secure=not devmode,
             max_age=600,
         )
         response.set_cookie(
@@ -68,7 +69,7 @@ def login_as(username):
             request.cookies.get("token"),
             httponly=True,
             samesite="Lax",
-            secure=True,
+            secure=not devmode,
             max_age=604800,
         )
         return response

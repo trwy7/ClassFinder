@@ -6,69 +6,132 @@
         li>ul.classusers {
             display: none;
         }
-        #users, #classes, #showusers {
-            display:none;
+        :root {
+            --navbar-color: hsl(0, 33%, 15%);
         }
     </style>
 {% endblock %}
 {% block content %}
-        <h1 style="display: inline;">Hello, {{user.username}}!</h1><br>
-        <button onclick="window.location.href = '/admin/create/account'">Create user</button>
-        <button onclick="window.location.href = '/admin/times/schedule'">Schedule times</button>
-        <button onclick="window.location.href = '/admin/analytics'">Analytics</button>
-        <div style="height: 20px;"></div>
-        <h2 onclick="document.getElementById('users').style.display = 'grid'; this.style.cursor = 'auto'" style="cursor: pointer;">Users</h2>
-        <ul id="users">
-            {% for nuser in users %}
-                <li class="user" id="{{nuser.username}}">{{nuser.username}}<p style="font-size: 75%;">{{nuser.role}}<br>{{nuser.id}}</p>
-                    <ul class="actions">
-                        {% if devmode and nuser != user %}
-                        <li class="action" onclick="window.location.href = '/admin/account/{{nuser.username}}/login'">Login</li>
+<main class="twosections" role="main">
+    <aside class="sidebar" aria-label="Admin navigation">
+        <nav role="tablist" aria-orientation="vertical">
+            <button role="tab" id="tab-tools" aria-controls="panel-tools" aria-selected="true" tabindex="0" onclick="activateTab('tools')">Tools</button>
+            <button role="tab" id="tab-users" aria-controls="panel-users" aria-selected="false" tabindex="-1" onclick="activateTab('users')">Users</button>
+            <button role="tab" id="tab-classes" aria-controls="panel-classes" aria-selected="false" tabindex="-1" onclick="activateTab('classes')">Classes</button>
+        </nav>
+    </aside>
+
+    <section class="content" aria-live="polite">
+        <section id="panel-tools" role="tabpanel" aria-labelledby="tab-tools">
+            <h1 style="display: inline;">Hello, {{user.username}}!</h1><br>
+            <div style="margin-top:8px;">
+                <button onclick="window.location.href = '/admin/create/account'">Create user</button>
+                <button onclick="window.location.href = '/admin/times/schedule'">Schedule times</button>
+                <button onclick="window.location.href = '/admin/analytics'">Analytics</button>
+                {% if can_migrate %}
+                <button onclick="copyProdToDev()">Copy prod</button>
+                {% endif %}
+                <button onclick="resetBellDelay()">Reset bell delay</button>
+            </div>
+        </section>
+
+        <section id="panel-users" role="tabpanel" aria-labelledby="tab-users" hidden>
+            <h2>Users</h2>
+            <ul id="users">
+                {% for nuser in users %}
+                    <li class="user" id="{{nuser.username}}">{{nuser.username}}<p style="font-size: 75%;">{{nuser.role}}<br>{{nuser.id}}</p>
+                        <ul class="actions">
+                            {% if nuser.role == 'testing' %}
+                            <li class="action" onclick="window.location.href = '/admin/account/{{nuser.username}}/login'">Login</li>
+                            {% endif %}
+                            <li class="action" onclick="window.location.href = '/admin/account/{{nuser.username}}/edit'">Edit</li>
+                            {% if not nuser == user %}<li class="action" onclick="deleteUser('{{nuser.username}}')">Delete</li>{%endif%}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section id="panel-classes" role="tabpanel" aria-labelledby="tab-classes" hidden>
+            {% if classes|length > 0 %}
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h2>Classes</h2>
+                <div>
+                    <button onclick="document.querySelectorAll('.classusers').forEach(el => el.style.display = 'grid'); this.remove();" id="showusers">Show users</button>
+                    <button onclick="startNewSemester()">Start new semester</button>
+                </div>
+            </div>
+            <ul id="classes">
+                {% for class in classes|sort(attribute='verified') %}
+                    <li class="class {% if not class.verified %}unverified{%endif%}{% if period.period == class.period %} currentperiod{%endif%}" id="{{class.id}}">
+                        {{class.name}}
+                        {% if class.canvasid == None %}
+                        <br><span style="font-size: 0.8em;">No canvas ID</span><br>
+                        {% else %}
+                        <br><span style="font-size: 0.8em;">{{class.canvasid}}</span><br>
                         {% endif %}
-                        <li class="action" onclick="window.location.href = '/admin/account/{{nuser.username}}/edit'">Edit</li>
-                        {% if not nuser == user %}<li class="action" onclick="deleteUser('{{nuser.username}}')">Delete</li>{%endif%}
-                    </ul>
-                </li>
-            {% endfor %}
-        </ul>
-        <div style="height: 20px;"></div>
-        {% if classes|length > 0%}
-        <h2 onclick="document.getElementById('classes').style.display = 'grid'; document.getElementById('showusers').style.display = 'block'; this.style.cursor = 'auto'" style="cursor: pointer;">Classes</h2>
-        <button onclick="document.querySelectorAll('.classusers').forEach(el => el.style.display = 'grid'); this.remove();" id="showusers">Show users</button>
-        <button onclick="deleteAllClasses()" id="deleteallclasses">Delete all classes</button>
-        <ul id="classes">
-            {% for class in classes|sort(attribute='verified') %}
-                <li class="class {% if not class.verified %}unverified{%endif%}{% if period.period == class.period %} currentperiod{%endif%}" id="{{class.id}}">
-                    {{class.name}}
-                    {% if class.canvasid == None %}
-                    <br>
-                    <span style="font-size: 0.8em;">No canvas ID</span><br>
-                    {% else %}
-                    <br>
-                    <span style="font-size: 0.8em;">{{class.canvasid}}</span><br>
-                    {% endif %}
-                    <span style="font-size: 0.8em;">{{class.room}}</span><br>
-                    <span style="font-size: 0.8em;">{{class.period}}</span><br>
-                    <span style="font-size: 0.8em;">{{class.created_by}}</span><br>
-                    <ul class="actions">
-                        <li class="action" onclick="window.location.href = '/admin/class/{{class.id}}/edit'">Edit</li>
-                        <li class="action" onclick="deleteClass('{{class.id}}')">Delete</li>
-                        {% if not class.verified %}<li class="action" id="verify{{class.id}}" onclick="verifyClass('{{class.id}}')">Verify</li>{%endif%}
-                    </ul>
-                    <ul class="classusers">
-                        {%for user in class.users%}
-                            {% if not user.role == "testing" %}
-                            <li class="classuser{% if class.created_by == user.id %} classcreator{%endif%}">{{user.username}}</li>
-                            {%endif%}
-                        {%endfor%}
-                    </ul>
-                </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+                        <span style="font-size: 0.8em;">{{class.room}}</span><br>
+                        <span style="font-size: 0.8em;">{{class.period}}</span><br>
+                        <span style="font-size: 0.8em;">{{ class.created_by }}</span><br>
+                        <ul class="actions">
+                            <li class="action" onclick="window.location.href = '/admin/class/{{class.id}}/edit'">Edit</li>
+                            <li class="action" onclick="deleteClass('{{class.id}}')">Delete</li>
+                            {% if not class.verified %}<li class="action" id="verify{{class.id}}" onclick="verifyClass('{{class.id}}')">Verify</li>{%endif%}
+                        </ul>
+                        <ul class="classusers">
+                            {%for user in class.users%}
+                                {% if not user.role == "testing" %}
+                                <li class="classuser{% if class.created_by == user.id %} classcreator{%endif%}">{{user.username}}</li>
+                                {%endif%}
+                            {%endfor%}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </section>
+    </section>
+</main>
 {% endblock %}
+
 {% block script %}
     <script>
+        // Tab controller: click and keyboard navigation
+        function activateTab(tabKey) {
+            const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+            const panels = Array.from(document.querySelectorAll('[role="tabpanel"]'));
+
+            tabs.forEach(t => {
+                const selected = t.id === `tab-${tabKey}`;
+                t.setAttribute('aria-selected', selected ? 'true' : 'false');
+                t.tabIndex = selected ? 0 : -1;
+            });
+
+            panels.forEach(p => {
+                p.hidden = p.id !== `panel-${tabKey}`;
+            });
+
+            const activeTab = document.getElementById(`tab-${tabKey}`);
+            if (activeTab) activeTab.focus();
+        }
+
+        document.addEventListener('keydown', function(e) {
+            const isTab = document.activeElement && document.activeElement.getAttribute && document.activeElement.getAttribute('role') === 'tab';
+            if (!isTab) return;
+            const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+            const currentIdx = tabs.indexOf(document.activeElement);
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                const next = tabs[(currentIdx + 1) % tabs.length];
+                next.click();
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                const prev = tabs[(currentIdx - 1 + tabs.length) % tabs.length];
+                prev.click();
+            }
+        });
+
+        // ...existing admin functions...
         classDelWarning = false;
         function deleteUser(username) {
             if (confirm("Are you sure you want to delete " + username + "?")) {
@@ -126,18 +189,50 @@
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('showClasses') === 'true') {
             document.getElementById('classes').style.display = 'grid';
+            document.getElementById('tab-classes').click();
         }
-        function deleteAllClasses() {
+        function startNewSemester() {
             securitycode = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
-            if (prompt("Are you sure you want to delete all classes? If so, enter the following code: " + securitycode) == securitycode) {
-                fetch('/admin/class/all', {
-                    method: 'DELETE'
+            if (prompt("Are you sure you want to start a new semester? Make sure to update the environment variables. If so, enter the following code: " + securitycode) == securitycode) {
+                fetch('/admin/newsemester', {
+                    method: 'POST'
                 }).then(response => {
                     if (response.ok) {
                         location.reload();
                     } else {
                         response.json().then(data => {
-                            alert('Failed to delete classes: ' + data.message);
+                            alert('Failed to start new semester: ' + data.message);
+                        });
+                    }
+                });
+            }
+        }
+        function copyProdToDev() {
+            if (confirm("Are you sure you want to copy the production database to the development database? This will overwrite all data in the development database.")) {
+                fetch('/admin/copyprod', {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) {
+                        alert('Migration successful!');
+                        location.reload();
+                    } else {
+                        response.json().then(data => {
+                            alert('Failed to migrate database: ' + data.message);
+                        });
+                    }
+                });
+            }
+        }
+        function resetBellDelay() {
+            if (confirm("Are you sure you want to reset the bell delay to zero?")) {
+                fetch('/admin/reset-bell-delay', {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) {
+                        alert('Bell delay has been reset to zero.');
+                    } else {
+                        response.json().then(data => {
+                            alert('Failed to reset bell delay: ' + data.message);
                         });
                     }
                 });

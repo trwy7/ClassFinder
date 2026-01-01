@@ -1,10 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 :root {
+    --ex-contrast-color: black;
     --primary-color: hsl(var(--user-prefered-color, 155), 100%, 64%);
     --secondary-color: hsl(var(--user-prefered-color, 155), 40%, 44%);
     --tertiary-color: hsl(var(--user-prefered-color, 155), 43%, 27%);
-    --background-color: hsl(var(--user-prefered-color, 155), 28%, 10%);
-    --navbar-color: hsl(var(--user-prefered-color, 155), 33%, 19%);
+    --background-color: hsl(var(--user-prefered-color, 155), 8%, 5%);
+    /* --background-color: black; */
+    --navbar-color: hsl(var(--user-prefered-color, 155), 36%, 20%);
+    --navbar-bottom-color: hsla(var(--user-prefered-color, 155), 33%, 14%, 0);
     --text-color: hsl(var(--user-prefered-color, 155), 100%, 88%);
     --secondary-text-color: hsl(var(--user-prefered-color, 155), 54%, 81%);
     --current-period-color: hsl(var(--user-prefered-color, 155), 100%, 80%);
@@ -13,48 +17,198 @@
     --user-color: hsl(214, 77%, 46%);
     --user-primary-color: hsl(214, 77%, 46%);
     --highlighted-inner-user-color: hsl(var(--user-prefered-color, 155), 60%, 27%);
+    --listbox-color: hsl(var(--user-prefered-color, 155), 35%, 35%);
 }
 @media (prefers-color-scheme: light) {
+    /* TODO: Fix light mode text contrast issues (check the account page) */
     :root {
-        --primary-color: hsl(155, 100%, 64%);
-        --secondary-color: hsl(155, 100%, 58%);
-        --tertiary-color: hsl(155, 100%, 67%);
-        --background-color: hsl(158, 24%, 91%);
-        --navbar-color: hsl(161, 100%, 83%);
-        --text-color: hsl(0, 0%, 34%);
-        --secondary-text-color: hsl(0, 0%, 34%);
-        --current-period-color: hsl(0, 0%, 34%);
-        --action-color: hsl(214, 100%, 69%);
-        --action-hover-color: hsl(214, 73%, 25%);
-        --user-color: hsl(214, 100%, 69%);
-        --user-primary-color: hsl(214, 100%, 80%);
-        --highlighted-inner-user-color: hsl(157, 79%, 49%);
+        --ex-contrast-color: white;
+        --primary-color: hsl(var(--user-prefered-color, 155), 100%, 64%);
+        --secondary-color: hsl(var(--user-prefered-color, 155), 40%, 60%);
+        --tertiary-color: hsl(var(--user-prefered-color, 155), 100%, 67%);
+        --background-color: hsl(var(--user-prefered-color, 155), 24%, 91%);
+        --navbar-color: hsl(var(--user-prefered-color, 155), 100%, 83%);
+        --navbar-bottom-color: hsla(var(--user-prefered-color, 155), 100%, 83%, 0);
+        --text-color: hsl(var(--user-prefered-color, 155), 30%, 10%);
+        --secondary-text-color: white;
+        --current-period-color: hsl(var(--user-prefered-color, 155), 100%, 40%);
+        --action-color: hsl(214, 77%, 56%);
+        --action-hover-color: hsl(214, 73%, 35%);
+        --user-color: hsl(214, 77%, 56%);
+        --user-primary-color: hsl(214, 77%, 56%);
+        --highlighted-inner-user-color: hsl(var(--user-prefered-color, 155), 60%, 47%);
+        --listbox-color: hsl(var(--user-prefered-color, 155), 35%, 85%);
+    }
+    .sidebar [role="tab"][aria-selected="true"] {
+        color: var(--secondary-text-color) !important;
     }
 }
-/* TODO: Cut down on color, this could really be black and white with accent colors for important details */
-/* If anyone wants to help me with UI/UX feel free to contact me */
+/* TODO: Better buttons */
+/* Main pages */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+html, body {
+    height: 100%;
+    width: 100%;
 }
 body {
     font-family: 'Inter', 'Roboto', sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
 }
+body:has(main.twosections) {
+    overflow: hidden;
+}
 header {
-    background-color: var(--navbar-color);
+    background: linear-gradient(to bottom, var(--navbar-color) 0%, var(--navbar-color) 10%, var(--navbar-bottom-color) 100%);
     padding: 1rem;
     position: sticky;
     top: 0;
     z-index: 1000;
 }
-nav ul {
-    list-style: none;
-    display: flex;
-    justify-content: center;
+#timertext, #timeleft, #timeleftdiv {
+    font-family: "Space Mono", monospace;
+    font-weight: 700;
+    font-style: normal;
 }
+main {
+    padding: 1rem;
+}
+main#aboutpage > picture > img {
+    display: block;
+    margin: 5px auto;
+    width: min(520px, 90%);
+    height: auto;
+    border-radius: 10px;
+    border: 2px solid var(--tertiary-color);
+}
+main#aboutpage #cards {
+    position: relative;
+    width: min(520px, 90%);
+    min-height: 220px;
+    margin: 10px auto;
+}
+main#aboutpage #cards img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-origin: center center;
+    transform: translate(-50%, -50%) rotate(0deg);
+    transition: transform 180ms ease, box-shadow 180ms ease;
+    max-width: 92%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    border: 2px solid var(--tertiary-color);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.32);
+}
+
+main#aboutpage #cards img:nth-child(1) { transform: translate(-50%, -115%) rotate(calc(0 * 10deg)); z-index: 1; }
+main#aboutpage #cards img:nth-child(2) { transform: translate(-50%, -73%) rotate(calc(0 * 10deg)); z-index: 2; }
+main#aboutpage #cards img:nth-child(3) { transform: translate(-50%, -50%) rotate(calc(0 * 10deg)); z-index: 3; }
+
+/* main#aboutpage #cards:hover img {
+    box-shadow: 0 10px 28px rgba(0,0,0,0.38);
+} */
+main#aboutpage #cards img:nth-child(1):hover {
+    transform: translate(-50%, -125%) rotate(0deg) scale(1.02);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.38);
+}
+main#aboutpage #cards img:nth-child(2):hover {
+    transform: translate(-50%, -83%) rotate(0deg) scale(1.02);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.38);
+}
+main#aboutpage #cards img:nth-child(3):hover {
+    transform: translate(-50%, -60%) rotate(0deg) scale(1.02);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.38);
+}
+/* main#aboutpage #cards:hover img:nth-last-child(1) {
+    transform: translate(-50%, -54%) rotate(0deg) scale(1.02);
+} */
+
+main.twosections {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
+    flex-direction: row !important;
+    position: relative;
+    -moz-top: -150px;
+    -webkit-top: 500px;
+    top: -150px;
+    padding-top: 150px;
+    height: calc(100vh + 150px);
+    overflow: hidden;
+}
+main.twosections > section {
+    flex: 1 !important;
+    overflow: auto;
+    max-height: 100%;
+    padding-bottom: 150px;
+}
+section.leftsection {
+    margin-right: 10px;
+}
+section.rightsection {
+    margin-left: 10px;
+}
+@media (max-width: 450px) {
+    main {
+        text-align: center;
+    }
+    main.twosections {
+        flex-direction: column !important;
+        height: auto;
+        top: 0;
+        padding-top: 0;
+        overflow: visible;
+    }
+    main.twosections > section {
+        max-height: none;
+        margin: 0 !important;
+        padding-bottom: 50px;
+    }
+    body:has(main.twosections) {
+        overflow: auto;
+    }
+    main#aboutpage > section.rightsection {
+        display:none;
+    }
+}
+/* Account page */
+input#colorRange::-moz-range-track {
+    background: linear-gradient(
+        90deg,
+        hsl(0, 100%, 50%),
+        hsl(60, 100%, 50%),
+        hsl(120, 100%, 50%),
+        hsl(180, 100%, 50%),
+        hsl(240, 100%, 50%),
+        hsl(300, 100%, 50%),
+        hsl(360, 100%, 50%)
+    );
+    border-radius: 99px;
+    height: 12px;
+    border: var(--secondary-color) 2px solid;
+}
+input#colorRange::-webkit-slider-runnable-track {
+    background: linear-gradient(
+        90deg,
+        hsl(0, 100%, 50%),
+        hsl(60, 100%, 50%),
+        hsl(120, 100%, 50%),
+        hsl(180, 100%, 50%),
+        hsl(240, 100%, 50%),
+        hsl(300, 100%, 50%),
+        hsl(360, 100%, 50%)
+    );
+    border-radius: 99px;
+    height: 12px;
+    border: var(--secondary-color) 2px solid;
+}
+/* Header */
 header ul li {
     font-weight: bold;
     margin-right: 1rem;
@@ -78,15 +232,19 @@ header ul li a:after {
 header ul li a:hover:after {
     width: calc(100% + 10px);
 }
-main {
-    padding: 1rem;
+header nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
 }
-@media (max-width: 450px) {
-    main {
-        text-align: center;
-    }
+.vcenter {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
 }
-main#landingpage, main:has(form), main#error {
+/* Forms */
+.centered, .hcenter, main:has(form), main#error {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -96,7 +254,7 @@ main#landingpage, main:has(form), main#error {
 input[type='text'], input[type='email'], input[type='password'], input[type='number'] {
     padding: 0.5rem;
     margin: 0.5rem;
-    border: 1px solid var(--secondary-color);
+    border: 2px solid var(--secondary-color);
     border-radius: 5px;
     background-color: var(--tertiary-color);
     color: var(--text-color);
@@ -110,20 +268,29 @@ textarea {
     color: var(--text-color);
 }
 button, input[type="submit"] {
-    margin: 3px;
+    margin: 0.5rem 0.25rem;
     margin-top: 10px;
     margin-bottom: 10px;
     padding: 7px;
     border-radius: 5px;
-    border: none;
     background-color: var(--tertiary-color);
-    color: var(--text-color);
+    color: var(--secondary-text-color);
     cursor: pointer;
     transition: background-color 0.3s;
+    border: 2px solid var(--secondary-color);
+    min-width: 100px;
+}
+button.danger, input[type="submit"].danger {
+    --secondary-color: hsl(0, 70%, 50%);
+    --tertiary-color: hsl(0, 60%, 40%);
+    --navbar-color: hsl(0, 50%, 30%);
 }
 button:disabled, input[type="submit"]:disabled {
     background-color: var(--secondary-color);
     cursor: not-allowed;
+}
+button:hover, input[type="submit"]:hover {
+    background-color: var(--navbar-color);
 }
 input[type="date"] {
     padding: 0.5rem;
@@ -132,9 +299,6 @@ input[type="date"] {
     border-radius: 5px;
     background-color: var(--tertiary-color);
     color: var(--text-color);
-}
-button:hover, input[type="submit"]:hover {
-    background-color: var(--navbar-color);
 }
 input[type="checkbox"] {
     margin: 10px;
@@ -157,6 +321,7 @@ a {
 ul {
     list-style: none;
 }
+/* List grid (e.g. classes and user page) */
 #classes, #users, ul.actions, #schedules, #tokens {
     /* margin-top: 20px; */
     display: grid;
@@ -169,7 +334,7 @@ ul {
 }
 .class, .user, .classuser, .schedule, li.action, .token {
     padding: 7px;
-    background-color: var(--secondary-color);
+    background-color: var(--listbox-color);
     border-radius: 5px;
     text-align: center;
     transition: background-color 0.3s;
@@ -180,6 +345,7 @@ ul {
 .class.currentperiod {
     outline: 3px solid var(--current-period-color);
     outline-offset: 2px;
+    background-color: var(--secondary-color);
 }
 main.passing .class.currentperiod {
     outline: none;
@@ -243,7 +409,7 @@ li.action[onclick]:hover {
 }
 .room {
     font-size: 1rem;
-    color: var(--secondary-text-color);
+    color: var(--text-color);
     font-weight: normal;
 }
 .class[onclick]:hover:not(:has(li[onclick]:hover)), .user[onclick]:hover:not(:has(li[onclick]:hover)) {
@@ -282,124 +448,6 @@ li.action[onclick]:hover {
 @keyframes l13{ 
     100%{transform: rotate(1turn)}
 }
-
-/* Analytics Dashboard Styles */
-.analytics-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr));
-    gap: 20px;
-    margin: 20px;
-}
-
-.analytics-card {
-    background-color: var(--tertiary-color);
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    flex: 1;
-    min-width: 300px;
-    margin-bottom: 20px;
-}
-
-.analytics-card h2 {
-    margin-top: 0;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--secondary-color);
-    color: var(--text-color);
-}
-
-.analytics-summary {
-    background-color: var(--secondary-color);
-    padding: 15px;
-    border-radius: 8px;
-    margin: 20px;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.analytics-count {
-    flex: 1;
-    text-align: center;
-}
-
-.analytics-count h1 {
-    margin: 0;
-    font-size: 2.5rem;
-}
-
-/* Table styles for analytics */
-#logspage table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-#logspage table th, #logspage table td {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-#logspage tr:nth-child(even) {
-    background-color: hsl(var(--user-prefered-color, 155), 43%, 27%);
-}
-
-.status-2xx { color: #2ecc71; }
-.status-3xx { color: #3498db; }
-.status-4xx { color: #e67e22; }
-.status-5xx { color: #e74c3c; }
-
-.refresh-button {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.refresh-button:hover {
-    background-color: #2980b9;
-}
-
-.timestamp {
-    text-align: center;
-    margin: 10px;
-    color: #777;
-    font-style: italic;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 20px;
-    color: #777;
-    font-style: italic;
-}
-
-/* Log table styles */
-#logsTable {
-    font-family: monospace;
-    font-size: 0.9em;
-}
-
-.filters {
-    margin-bottom: 15px;
-    display: flex;
-    gap: 10px;
-}
-
-.filters select, .filters input {
-    padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.filters input {
-    flex: 1;
-}
-
 /* Timer Progress Bar Styles */
 .progress-container {
     background-color: rgba(255, 255, 255, 0.2);
@@ -423,18 +471,6 @@ li.action[onclick]:hover {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    #timel {
-        transition: opacity 0.5s ease-in-out;
-        animation: fadeIn 0.8s forwards;
-    }
-
-    #time {
-        transition: opacity 0.5s ease-in-out;
-        opacity: 0;
-        animation: fadeIn 0.8s forwards;
-        animation-delay: 0.4s;
-    }
-
     #nextclassalert {
         transition: opacity 0.5s ease-in-out;
         opacity: 0;
@@ -445,6 +481,9 @@ li.action[onclick]:hover {
     .progress-bar {
         transition: width 0.8s ease;
     }
+    @view-transition {
+        navigation: auto;
+    }
 }
 
 @keyframes fadeIn {
@@ -454,5 +493,66 @@ li.action[onclick]:hover {
     }
     to {
         opacity: 1;
+    }
+}
+#loadOverlay {
+    display: none;
+}
+
+/* Sidebar styles */
+.sidebar {
+    width: 220px;
+    min-width: 180px;
+    padding: 1rem;
+    background: linear-gradient(180deg, var(--navbar-color), var(--navbar-bottom-color));
+    border-radius: 8px;
+    align-self: start;
+    height: fit-content;
+}
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.sidebar [role="tab"] {
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 10px;
+    border-radius: 6px;
+    color: var(--text-color);
+    cursor: pointer;
+    font-weight: 700;
+    transition: background-color 0.15s;
+}
+.sidebar [role="tab"]:hover {
+    background-color: rgba(255,255,255,0.03);
+}
+.sidebar [role="tab"][aria-selected="true"] {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+.sidebar [role="tab"]:focus {
+    outline: 3px solid color-mix(in srgb, var(--primary-color) 40%, transparent);
+    outline-offset: 2px;
+}
+@media (max-width: 650px) {
+    .sidebar {
+        width: 100%;
+        display: flex;
+        overflow-x: auto;
+        gap: 0.5rem;
+        border: 2px solid var(--tertiary-color);
+    }
+    .sidebar nav {
+        /* flex-direction: row; */
+        align-items: center;
+        width: 100%;
+    }
+    .sidebar [role="tab"] {
+        text-align: center;
+        white-space: nowrap;
+        padding: 8px 12px;
     }
 }

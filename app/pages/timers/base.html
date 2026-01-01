@@ -1,0 +1,286 @@
+{% set noheader = true %}
+{% extends 'templates/base.html' %}
+{% block title %}Timer{% endblock %}
+{% block mainid %}timerpage{% endblock %}
+{% block mainclasses %}vcenter hcenter{% endblock %}
+{% block head %}
+    {% if user.role == 'admin' %}
+        <style>
+            @media (min-width: 650px) {
+                #syncbutton { display: none !important; }
+            }
+        </style>
+    {% endif %}
+    <style>
+        body {
+            background: radial-gradient(closest-side, var(--background-color), var(--ex-contrast-color));
+        }
+        @media (max-width: 600px) {
+            body {
+                background: var(--ex-contrast-color);
+            }
+        }
+    </style>
+    {% block style %}{% endblock %}
+{% endblock %}
+{% block content %}
+{% if period_end %}
+<meta name="endtime" content="{{ period_end/1000 }}"/>
+<meta name="starttime" content="{{ period_start/1000 }}"/>
+<meta name="currentepoch" content="{{ current_epoch/1000 }}"/>
+{% else %}
+<meta name="endtime" content=""/>
+{% endif %}
+{% if user.role == 'admin' %}
+<div style="position: absolute; bottom:20px;left:20px;">
+    <p id="syncstatus"></p>
+    <button id="syncbutton" onclick="sync();" hidden>Sync Time</button>
+    <button id="commitbutton" onclick="commitBChanges();" hidden>Commit</button>
+</div>
+{% endif %}
+{% if period is not none %}
+    <noscript>You need javascript to use this page. Class ends at {{ period.end.strftime("%I:%M %p") }}.</noscript>
+{% endif %}
+<p id="sitestatus" style="position: absolute; bottom:20px;right:20px;">{% if site_status %}{{site_status}}{% endif %}</p>
+{% if period.passing %}
+{% endif %}
+{% block tcontent required %}{% endblock %}
+<p id="jsstatus" style="text-align:center;"></p>
+{% endblock %}
+{% block script %}
+<script>
+    // Initial variables
+    var hasSynced = false;
+    var doReload = true;
+    const startTime = parseFloat(document.querySelector('meta[name="starttime"]').getAttribute('content')) * 1000;
+    const endTime = parseFloat(document.querySelector('meta[name="endtime"]').getAttribute('content')) * 1000;
+    const allowAnim = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const jsStatusElem = document.getElementById('jsstatus');
+    // template settings
+    var autoreload = true;
+    var fineUpdates = true;
+    // calculate time offset from server
+    const serverTime = parseFloat(document.querySelector('meta[name="currentepoch"]').getAttribute('content')) * 1000;
+    const clientTime = Date.now();
+    var timeOffset = serverTime - clientTime;
+    console.debug('Initial time offset', { serverTime, clientTime, timeOffset });
+    let lastUpdate;
+    var runTimer = true;
+    // -----AI-----
+    // More accurate server time sync using round-trip measurement and multiple samples.
+    // Estimates offset = serverTime - (clientSend + rtt/2) and returns the best/median result.
+    async function getOffset(samples = 6, delayMs = 60) {
+        console.debug('getOffset: start', { samples, delayMs });
+        const results = [];
+        for (let i = 0; i < samples; i++) {
+            const t0 = Date.now();
+            try {
+                // Avoid caching and include a small random query to reduce proxy caching
+                console.debug(`getOffset: sample ${i + 1}/${samples} - send`, { t0 });
+                const resp = await fetch('/api/v2/server-time?_=' + Date.now(), { cache: 'no-store' });
+                const t1 = Date.now();
+                const rtt = t1 - t0;
+                console.debug(`getOffset: sample ${i + 1}/${samples} - recv`, { t1, rtt, status: resp.status });
+
+                if (!resp.ok) {
+                    console.warn('getOffset: non-ok response, skipping sample', { status: resp.status });
+                    await new Promise(r => setTimeout(r, delayMs));
+                    continue;
+                }
+
+                const data = await resp.json();
+                if (!data || typeof data.time !== 'number') {
+                    console.warn('getOffset: invalid response payload, skipping sample', { data });
+                    await new Promise(r => setTimeout(r, delayMs));
+                    continue;
+                }
+
+                const serverTime = data.time;
+                // client clock estimate at server response midpoint
+                const midpoint = t0 + rtt / 2;
+                const offset = serverTime - midpoint;
+                results.push({ offset, rtt, serverTime, midpoint });
+                console.debug('getOffset: recorded sample', { offset, rtt, serverTime, midpoint });
+
+                // small pause between samples to avoid burst effects
+                await new Promise(r => setTimeout(r, delayMs));
+            } catch (err) {
+                console.error('getOffset: fetch/error on sample, skipping', { sample: i + 1, error: err });
+                await new Promise(r => setTimeout(r, delayMs));
+                continue;
+            }
+        }
+
+        if (results.length === 0) {
+            console.warn('getOffset: no valid samples collected, attempting fallback to meta or zero');
+            const meta = document.querySelector('meta[name="currentepoch"]');
+            if (meta) {
+                const offsetTime = parseFloat(meta.getAttribute('content')) * 1000;
+                const fallbackOffset = offsetTime - Date.now();
+                console.info('getOffset: using meta fallback offset', { fallbackOffset });
+                return fallbackOffset;
+            }
+            console.info('getOffset: no meta available, returning 0 offset');
+            return 0;
+        }
+
+        console.debug('getOffset: valid samples', results.map(r => ({ offset: r.offset, rtt: r.rtt })));
+
+        // Prefer the sample with smallest RTT (most reliable)
+        results.sort((a, b) => a.rtt - b.rtt);
+        const best = results[0];
+
+        // Also compute a robust median offset as a second opinion
+        const offsets = results.map(r => r.offset).sort((a, b) => a - b);
+        const mid = Math.floor(offsets.length / 2);
+        const median = offsets.length % 2 === 1 ? offsets[mid] : (offsets[mid - 1] + offsets[mid]) / 2;
+
+        // If best RTT sample is consistent with median, use it; otherwise use median
+        const chosen = Math.abs(best.offset - median) < Math.max(50, best.rtt) ? best.offset : median;
+        console.info('getOffset: chosen offset', { chosen, bestOffset: best.offset, median, bestRtt: best.rtt });
+
+        return chosen;
+    }
+    // ----NOAI----
+    function alignToSecond() {
+        // Calculate milliseconds until the next full second (use adjusted server time)
+        const now = new Date(Date.now() + timeOffset);
+        return 1000 - now.getMilliseconds();
+    }
+</script>
+{% block tscript required %}{% endblock %}
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const alSync = urlParams.get('genericMode') === 'true';
+    if (alSync) {
+        jsStatusElem.textContent = 'Viewing the generic timer.';
+    }
+    function uUpdateTimer(){
+        if (!runTimer) return;
+        const now = Date.now() + timeOffset;
+        let timeLeft = endTime - now;
+
+        if (timeLeft < 0) {
+            timeLeft = 0;
+        }
+        if (lastUpdate !== undefined && !fineUpdates && Math.abs(timeLeft - lastUpdate) < 1000) {
+            return; // TODO: Make this align to the next second based on timeLeft
+        }
+        updateTimer(timeLeft);
+        lastUpdate = timeLeft;
+        if (timeLeft === 0) {
+            // Time's up - clear intervals
+            console.info('Timer ended, reloading page');
+            runTimer = false;
+            if (autoreload) location.reload();
+        }
+    }
+    uUpdateTimer();
+    let udi = [];
+    setTimeout(function() {
+        uUpdateTimer();
+        udi[0] = setInterval(uUpdateTimer, 1000);
+    }, alignToSecond());
+    // Initial sync
+    getOffset().then(offset => {
+        timeOffset = offset;
+        hasSynced = true;
+        setTimeout(function() {
+            uUpdateTimer();
+            udi[1] = setInterval(uUpdateTimer, 500);
+        }, alignToSecond());
+        uUpdateTimer();
+    });
+    // Full screen on space bar
+    document.addEventListener('keydown', function(event) {
+        if (event.code === 'Space') {
+            event.preventDefault();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen()
+                .then(() => {
+                    document.body.style.cursor = 'none';
+                });
+            } else {
+                document.exitFullscreen();
+                document.body.style.cursor = 'default';
+            }
+        } else if (event.code === 'KeyS') {
+            const sitestatus = document.getElementById('sitestatus');
+            if (sitestatus.style.display === 'none') {
+                sitestatus.style.display = 'block';
+            } else {
+                sitestatus.style.display = 'none';
+            }
+        } else if (event.code === 'KeyG') {
+            if (alSync) {
+                const curl = new URL(window.location.href);
+                curl.searchParams.delete('genericMode');
+                window.location.href = curl.toString();
+            } else {
+                const curl = new URL(window.location.href);
+                curl.searchParams.set('genericMode', 'true');
+                window.location.href = curl.toString();
+            }
+        }
+    });
+</script>
+{% if user.role == 'admin' %}
+    <script>
+        let syncReady = false;
+        const syncStatusElem = document.getElementById('syncstatus');
+        const commitButton = document.getElementById('commitbutton');
+        const syncButton = document.getElementById('syncbutton');
+        if (alSync) {
+            syncReady = true;
+            doReload = false;
+            syncStatusElem.textContent = 'Ready!'
+            syncButton.hidden = false;
+        }
+        var delayChange = 0;
+        /// setup function
+        function sync() {
+            if (syncReady) {
+                const now = Date.now() + timeOffset;
+                const timeLeft = endTime - now;
+                syncStatusElem.textContent = `${timeLeft}ms (${-timeLeft / 1000}s)`;
+                delayChange = -timeLeft / 1000;
+                commitButton.hidden = false;
+            } else {
+                const curl = new URL(window.location.href);
+                curl.searchParams.set('genericMode', 'true');
+                syncStatusElem.textContent = 'Loading...';
+                window.location.href = curl.toString();
+            }
+        }
+        /// Check if C is pressed
+        document.addEventListener('keydown', function(event) {
+            if (event.key.toLowerCase() === 'c') {
+                sync();
+            }
+        });
+        function commitBChanges() {
+            if (delayChange > 10 || delayChange < -10) {
+                if (!confirm('The delay change is quite large (' + delayChange + ' seconds). Are you sure you want to proceed?')) {
+                    return;
+                }
+            }
+            fetch('/admin/bell-delay', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ delay: delayChange })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error updating bell delay: ' + data.message);
+                }
+            })
+        }
+    </script>
+{% endif %}
+{% endblock %}

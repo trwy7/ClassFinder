@@ -340,3 +340,6 @@ button, input, select, textarea {
     -webkit-appearance: none;
     appearance: none;
 }
+#loadOverlay {
+    display: none;
+}

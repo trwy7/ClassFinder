@@ -7,14 +7,14 @@ from app.utilities.config import devmode
 from app.utilities.users import check_password, create_token
 from app.addons.limiter import limiter
 from app.utilities.responses import error_response, success_response
-from app.utilities.config import status
 
 @app.route("/login")
 def login():
     """
     Display the login page.
     """
-    return render_template("login.html", status=status, devmode=devmode)
+    return render_template("login.html", devmode=devmode)
+    # return redirect("/")
 
 @app.route("/login", methods=["POST"])
 @limiter.limit("20/minute")
@@ -35,7 +35,9 @@ def login_post():
             )
             app.logger.debug(f"User {request.form.get('username')} logged in via legacy client")
             return response, 200
-        return render_template("login.html", status=status, devmode=devmode, status_message="Invalid Credentials"), 400
+        return render_template("login.html", devmode=devmode, status_message="Invalid Credentials"), 400
+    if request.is_json is False:
+        return error_response("Invalid Content Type: Expected application/json"), 400
     username = request.json.get("username")
     password = request.json.get("password")
     if check_password(username, password):

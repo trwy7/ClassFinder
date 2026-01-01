@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer</title>
+    <style>
+        /* Simple, no-animation styles for old devices */
+        html,body{height:100%;margin:0;padding:0;font-family:Helvetica,Arial,sans-serif;background:#000;color:#fff;}
+        #timercontainer{margin:0;padding:0;}
+        #periodtime{font-size:1rem;margin:0 0 10px 0;color:#ddd;}
+        #timeleft{font-size:4rem;margin:0;padding:0;}
+        #passingstatus{margin-top:10px;color:#ccc}
+        /* remove all transitions/animations for old devices */
+    </style>
+</head>
+<body>
+    <div id="timercontainer">
+        {% if period is not none %}
+        <div id="periodtime">{{ period.start.strftime("%I:%M %p") }} - {{ period.end.strftime("%I:%M %p") }}</div>
+        <div id="timeleft">00:00:00</div>
+        {% else %}
+        <div id="timeleft">No period</div>
+        {% endif %}
+    </div>
+
+    <div id="passingstatus">{% if period is not none and period.passing and period.course %}Go to {{period.course.name}} in room {{period.course.room}}{% endif %}</div>
+
+<script>
+/* Old-device compatible ES5 JS. No fetch, no promises, no modern features. */
+(function () {
+    // Read meta tags safely
+    function metaContent(name) {
+        var metas = document.getElementsByName(name);
+        if (!metas || metas.length === 0) return '';
+        return metas[0].getAttribute('content') || '';
+    }
+
+    var endTimeMeta = '{{ period_end/1000 }}';
+    var currentEpochMeta = '{{ current_epoch/1000 }}';
+
+    var endTime = (endTimeMeta !== '') ? parseFloat(endTimeMeta) * 1000 : NaN;
+
+    // Compute timeOffset using server-rendered currentepoch if available; otherwise 0
+    var timeOffset = 0;
+    if (currentEpochMeta !== '') {
+        var serverMs = parseFloat(currentEpochMeta) * 1000;
+        if (!isNaN(serverMs)) {
+            timeOffset = serverMs - (new Date()).getTime();
+        }
+    }
+
+    var timeleftElem = document.getElementById('timeleft');
+
+    var timerIntervalId = null;
+
+    // Align to next second then start 1s interval
+    function alignToSecond() {
+        var now = new Date((new Date()).getTime() + timeOffset);
+        return 1000 - now.getMilliseconds();
+    }
+
+    function pad2(n) {
+        n = n + '';
+        return n.length === 1 ? '0' + n : n;
+    }
+
+    function formatTime(ms) {
+        var totalSec = Math.floor(ms / 1000);
+        if (totalSec < 0) totalSec = 0;
+        var hours = Math.floor(totalSec / 3600);
+        var minutes = Math.floor((totalSec % 3600) / 60);
+        var seconds = totalSec % 60;
+        if (hours > 0) {
+            return pad2(hours) + ':' + pad2(minutes) + ':' + pad2(seconds);
+        } else {
+            return pad2(minutes) + ':' + pad2(seconds);
+        }
+    }
+
+    function updateOnce() {
+        var now = (new Date()).getTime() + timeOffset;
+        if (isNaN(endTime)) {
+            timeleftElem.innerHTML = 'No period';
+            return;
+        }
+        var timeLeftMs = endTime - now;
+        if (timeLeftMs < 0) timeLeftMs = 0;
+
+        // Update text
+        // If more than an hour, show H:MM:SS, else MM:SS
+        var totalSec = Math.floor(timeLeftMs / 1000);
+        if (totalSec >= 3600) {
+            var h = Math.floor(totalSec / 3600);
+            var m = Math.floor((totalSec % 3600) / 60);
+            var s = totalSec % 60;
+            timeleftElem.innerHTML = pad2(h) + ':' + pad2(m) + ':' + pad2(s);
+        } else {
+            var mm = Math.floor(totalSec / 60);
+            var ss = totalSec % 60;
+            timeleftElem.innerHTML = pad2(mm) + ':' + pad2(ss);
+        }
+
+        // Stop when finished (no reload)
+        if (timeLeftMs === 0 && timerIntervalId !== null) {
+            clearInterval(timerIntervalId);
+            timerIntervalId = null;
+        }
+    }
+
+    // Start aligned
+    setTimeout(function () {
+        updateOnce();
+        // older devices: use setInterval with 1000ms
+        timerIntervalId = setInterval(updateOnce, 1000);
+    }, alignToSecond());
+})();
+</script>
+</body>
+</html>

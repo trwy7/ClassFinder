@@ -1,0 +1,186 @@
+{% set noheader = true %}
+{% extends 'timers/base.html' %}
+{% block style %}
+<style>
+    #timercontainer {
+        transition: all 0.7s ease-in-out;
+    }
+    #progressbarcontainer {
+        transition: opacity 0.7s ease-in-out;
+    }
+    #passingstatus {
+        transform: translateY(-10px);
+        opacity: 0;
+        transition: all 0.6s ease-in-out;
+    }
+    #progressbar {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-radius: 10px;
+        transition: width 1s ease-in-out;
+    }
+    #progressbarcontainer {
+        width: min(90%, 400px);
+        height: 20px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 20px;
+        opacity: 0;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        #timercontainer {
+            transition: none;
+        }
+        #progressbarcontainer {
+            transition: none;
+        }
+        #passingstatus {
+            animation: none;
+            transform: none;
+            opacity: 1;
+        }
+        #progressbar {
+            transition: none;
+        }
+    }
+</style>
+{% endblock %}
+{% block tcontent %}
+<div id="timercontainer" style="transform: translateY(-20px); opacity:0;">
+    {% if period is not none %}
+    <h3 id="periodtime">{{ period.start.strftime("%I:%M %p") }} - {{ period.end.strftime("%I:%M %p") }}</h3>
+    <h1 id="timeleft" style="font-size:5rem;" {% if user.role == 'admin' %} onclick="sync();" {% endif %}>00:00:00</h1>
+    {% endif %}
+</div>
+<div id="progressbarcontainer">
+    <div id="progressbar"></div>
+</div>
+<p id="passingstatus" style="margin-top:10px">{% if period is not none and period.passing and period.course %}Go to {{period.course.name}} in room {{period.course.room}}{% endif %}</p>
+{% endblock %}
+{% block tscript %}
+<script>
+    // Template settings
+    autoreload = false;
+
+    // Actual script
+    var runningAnim = false;
+    var startPG = false;
+    var animFinished = false;
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!runningAnim) {
+            runningAnim = true;
+            setTimeout(() => {
+                const container = document.getElementById('timercontainer');
+                const passingStatus = document.getElementById('passingstatus');
+                setTimeout(() => {
+                    passingStatus.style.transform = 'translateY(0px)';
+                    passingStatus.style.opacity = '1';
+                }, allowAnim ? 800 : 0);
+                container.style.transform = 'translateY(0px)';
+                container.style.opacity = '1';
+                const progressBarContainer = document.getElementById('progressbarcontainer');
+                progressBarContainer.style.opacity = '1';
+                setTimeout(() => {
+                    animFinished = true;
+                }, 850);
+            }, allowAnim ? 100 : 0);
+        }
+    });
+    function updateTimer(timeLeft) {
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        if (hours > 0) {
+            document.getElementById('timeleft').textContent =
+                String(hours).padStart(2, '0') + ':' +
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0');
+        } else if (minutes > 0) {
+            document.getElementById('timeleft').textContent =
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0');
+        } else {
+            if (seconds < 10) {
+                if (!allowAnim || !doReload) {
+                    document.getElementById('timeleft').textContent = seconds;
+                } else {
+                    if (Math.floor(lastUpdate / 1000) !== Math.floor(timeLeft / 1000)) {
+                        const tl = document.getElementById('timeleft');
+                        const container = document.getElementById('timercontainer');
+                        // ---- AI -----
+                        // Improve 3D flip perception
+                        container.style.perspective = '800px';
+                        tl.style.transformStyle = 'preserve-3d';
+                        tl.style.backfaceVisibility = 'hidden';
+
+                        const duration = 500;
+                        // Cancel any running animation so flips don't stack
+                        if (tl._anim) {
+                            tl._anim.cancel();
+                        }
+
+                        // Use Web Animations API for a smooth, physics-like curve
+                        tl._anim = tl.animate([
+                            { transform: 'rotateY(0deg) scale(1)', opacity: 1 },
+                            { transform: 'rotateY(90deg) scale(0.97)', opacity: 0.6, offset: 0.5 },
+                            { transform: 'rotateY(0deg) scale(1)', opacity: 1 }
+                        ], {
+                            duration: duration,
+                            //easing: 'cubic-bezier(.22,.9,.35,1)',
+                            fill: 'forwards'
+                        });
+
+                        // Swap the text at the halfway point of the flip for a seamless effect
+                        setTimeout(() => {
+                            tl.textContent = seconds;
+                            lastUpdate = timeLeft;
+                        }, duration / 2);
+
+                        // Ensure final state when animation finishes
+                        tl._anim.onfinish = () => {
+                            tl.style.transform = 'rotateY(0deg)';
+                            tl.style.opacity = '1';
+                            delete tl._anim;
+                        };
+                        // --- NOAI ----
+                    }
+                }
+            } else {
+                document.getElementById('timeleft').textContent = seconds;
+            }
+        }
+        if (startPG && !animFinished) {
+            return;
+        } else {
+            startPG = true;
+        }
+        const now = (typeof timeOffset !== 'undefined') ? Date.now() + timeOffset : Date.now();
+        let donePercent = 0;
+        if (typeof startTime !== 'undefined' && typeof endTime !== 'undefined' && endTime !== startTime) {
+            donePercent = ((now - startTime) / (endTime - startTime)) * 100;
+            if (donePercent < 0) donePercent = 0;
+            if (donePercent > 100) donePercent = 100;
+        }
+        document.getElementById('progressbar').style.width = donePercent + '%';
+        if (timeLeft === 0) {
+            const container = document.getElementById('timercontainer');
+            const passingstatus = document.getElementById('passingstatus');
+            const progressBarContainer = document.getElementById('progressbarcontainer');
+            if (animFinished && doReload) {
+                container.style.transform = 'translateY(20px)';
+                container.style.opacity = '0';
+                passingstatus.style.transform = 'translateY(10px)';
+                passingstatus.style.opacity = '0';
+                progressBarContainer.style.opacity = '0';
+                document.getElementById('progressbar').style.width = '0%';
+            }
+            setTimeout(() => {
+                if (doReload) location.reload();
+            }, 800);
+        }
+    }
+</script>
+{% endblock %}

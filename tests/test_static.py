@@ -38,3 +38,33 @@ def test_index(client):
     response = client.get('/')
     assert response.status_code == 200
     assert response.content_type == 'text/html; charset=utf-8'
+
+def test_about(client):
+    """
+    Tests the about file
+    """
+    response = client.get('/about')
+    assert response.status_code == 200
+    assert response.content_type == 'text/html; charset=utf-8'
+
+def test_color_css(client):
+    """
+    Tests the color.css file
+    """
+    response = client.get('/color.css')
+    assert response.status_code == 200
+    assert response.content_type == 'text/css; charset=utf-8'
+    for color in range(0, 361): # 361 is reserved for high contrast mode
+        response = client.get(f'/color{color}.css')
+        assert response.status_code == 200
+        assert response.content_type == 'text/css; charset=utf-8'
+        assert f'{color}' in response.get_data(as_text=True), f'Color CSS for {color} does not contain correct hue variable'
+
+def test_service_worker_js(client):
+    """
+    Tests the service worker JavaScript file
+    """
+    response = client.get('/service-worker.js')
+    assert response.status_code == 200
+    assert 'text/javascript' in response.content_type
+    assert 'self.addEventListener' in response.get_data(as_text=True)

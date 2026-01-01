@@ -1,12 +1,31 @@
 {% extends "templates/base.html" %}
 {% block title %}Verification required{% endblock %}
 {% block mainid %}reverification{% endblock %}
+{% block mainclasses %}centered{% endblock %}
 {% block content %}
 <h1>Verification Required</h1>
-<p>Please verify your email address to continue.</p>
-<!-- TODO: Finish -->
+<p>Please reverify your email address to continue.</p>
+<button onclick="sendVerifyEmail(event)">Send Verification Email</button>
+<a href="/account/delete">Delete Account</a><br><div style="height: 10px;"></div>
+<a href="/logout">Logout</a>
 {% endblock %}
 {% block script %}
 <script>
+    function sendVerifyEmail(event) {
+        event.target.disabled = true;
+        fetch('/account/verify/sendemail', {
+            method: 'POST'
+        }).then(response => {
+            if (response.ok) {
+                alert('Verification email sent. Please check your inbox.');
+            } else {
+                alert('Error sending verification email. Please try again later.');
+                event.target.disabled = false;
+            }
+        }).catch(error => {
+            alert('Error sending verification email. Please try again later.');
+            event.target.disabled = false;
+        });
+    }
 </script>
 {% endblock %}

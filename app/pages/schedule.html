@@ -77,7 +77,7 @@
             .then(data => {
                 if (data.status == "success") {
                     document.getElementById('status').innerText = data.message;
-                    window.getElementById(day).remove();
+                    document.getElementById(day).remove();
                 } else {
                     document.getElementById('status').innerText = 'Failed: ' + data.message;
                 }

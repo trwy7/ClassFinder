@@ -1,9 +1,12 @@
-<header{% if devmode %} style="background: linear-gradient(to bottom, #ff4d4d 0%, #7d2828 100%);"{% endif %}>
-    <nav>
-        <ul>
-            <li><a href="/dashboard">Dashboard</a></li>
-            {% if currentperiod is not none %}<li><a href="/timer" id="timertext">Timer</a></li>{% endif %}
-            <li><a href="/account">{% if user is none %}Account{% else %}{{ user.username }}{% endif %}</a></li>
-        </ul>
-    </nav>
+<header>
+<nav>
+<ul>
+    {% if user is none %}<li><a href="/about">About</a></li>{% endif %}
+    <li><a href="/dashboard">{% if user is none %}Login{% else %}Dashboard{% endif %}</a></li>
+    {% if user is none %}<li><a href="/register">Sign Up</a></li>{% endif %}
+    <li><a href="/timer" id="timertext"></a></li>
+    {% if currentperiod is not none %}<noscript><li><a href="/timer" id="noscripttimertext">Timer</a></li></noscript>{% endif %}
+    {% if user is not none %}<li><a href="/account">{{ user.username }}</a></li>{% endif %}
+</ul>
+</nav>
 </header>

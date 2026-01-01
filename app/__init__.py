@@ -1,9 +1,12 @@
+# pylint: disable=wrong-import-position
 """
 Sets up the flask app and imports all routes.
 This file should not be modified unless you know what you are doing, routes are automatically imported from the routes directory.
 Any pull requests that modify this file will be examined carefully, and may be subject to additional tests.
 """
 
+from datetime import datetime
+start_init_time = datetime.now()
 import os
 import sys
 import importlib
@@ -11,12 +14,10 @@ import logging
 import ipaddress
 import re
 import signal
-from datetime import datetime
 from flask import Flask, request
 from flask_apscheduler import APScheduler
 import requests
-from app.utilities.config import devmode
-start_init_time = datetime.now()
+from app.utilities.config import devmode, get_status
 
 app = Flask(__name__, template_folder="pages", static_folder="static")
 
@@ -33,7 +34,9 @@ app.config['END_OF_SEMESTER'] = os.environ.get('END_OF_SEMESTER', None)
 if app.config['END_OF_SEMESTER'] is not None:
     app.config['END_OF_SEMESTER'] = datetime.strptime(app.config['END_OF_SEMESTER'], '%Y-%m-%d').date()
 
-from app.utilities.users import auth_user # pylint: disable=wrong-import-position # This import wont work if it is at the top of the file as it causes a circular import
+from app.utilities.users import auth_user
+from app.utilities.responses import error_response
+from flask import redirect
 @app.before_request
 def before_request2():
     """
@@ -45,44 +48,32 @@ def before_request2():
     # app.logger.debug("Origin address: %s", request.origin_remote_addr)
     request.remote_addr = request.headers.get("Cf-Connecting-Ip", request.origin_remote_addr)
     # app.logger.debug("Remote address: %s", request.remote_addr)
-    # The below is not used for cloudflare, but is here for other code, feel free to move it to a new function
     # request.user = None
     # request.token = None
+    request.error_code = None
     request.user, request.token = None, None
     request.user, request.token = auth_user()
 
 @app.before_request
-def before_request3():
+def check_verify_required():
     """
-    Checks if the incoming request is from a Cloudflare IP address.
+    Checks if the user needs to reverify their email.
     """
-    request.is_cloudflare = False
-    if devmode or app.config.get("TESTING"):
-        return None
-    if app.config.get("CLOUDFLARE_IP_RANGES"):
-        request_ip = ipaddress.ip_address(request.origin_remote_addr)
-        for ip_range in app.config["CLOUDFLARE_IP_RANGES"]:
-            if request_ip in ipaddress.ip_network(ip_range, strict=False):
-                request.is_cloudflare = True
-                return None
-        app.logger.warning(
-            "Request from IP %s not in CloudFlare IP ranges (oip: %s, pip: %s)",
-            request.remote_addr,
-            request.origin_remote_addr,
-            request.proxy_remote_addr
-        )
-        # return {"message": "You seem to be bypassing CloudFlare, or your IP is using IPv6.", "status": "error"}, 403
-        return None
-    app.logger.warning("CLOUDFLARE_IP_RANGES not set. We cannot access https://www.cloudflare.com/ips-v4.")
-    app.logger.warning("People may be able to bypass rate limits.")
-    return None
+    if request.user and request.user.requires_reverification:
+        if request.path.startswith("/api/"):
+            if request.path.startswith("/api/plain"):
+                return
+            return error_response("Email re-verification required"), 403
+        if request.path.startswith("/account/verify") or request.path.startswith("/logout") or request.path.startswith("/account/delete") or request.path.startswith("/static/") or request.path.endswith(".ico") or request.path.endswith(".css") or request.path.endswith(".js"):
+            return
+        return redirect("/account/verify")
 
 @app.context_processor
-def inject_user():
+def inject_vars():
     """
-    Injects the user into the template context.
+    Injects variables into the template context.
     """
-    return dict(user=auth_user()[0], devmode=devmode)
+    return {"user": auth_user()[0], "devmode": devmode, "site_status": get_status()}
 
 # Analytics
 logs: list[dict[str, any]] = []
@@ -147,14 +138,19 @@ app.logger.addHandler(handler)
 app.logger.debug("Logger initialized")
 app.logger.debug("Log level set to %s and devmode is %s", app.logger.level, devmode)
 if not app.config.get("TESTING", False):
-    for log in os.listdir(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')):
-        if log.endswith(".log"):
-            try:
-                os.remove(os.path.join(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs'), log))
-                app.logger.debug("Removed old log file: %s", log)
-            except Exception as e: # pylint: disable=broad-exception-caught
-                app.logger.error("Failed to remove old log file %s: %s", log, e)
-                continue
+    if os.path.isdir(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')):
+        for log in os.listdir(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')):
+            if log.endswith(".log"):
+                try:
+                    os.remove(os.path.join(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs'), log))
+                    app.logger.debug("Removed old log file: %s", log)
+                except Exception as e: # pylint: disable=broad-exception-caught
+                    app.logger.error("Failed to remove old log file %s: %s", log, e)
+                    continue
+    else:
+        if os.path.exists(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')):
+            raise Exception(f"{os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')} exists and is not a directory!")
+        os.mkdir(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs'))
 app.logger.debug("Old log files removed")
 
 # Configure waitress logger to use the same handler
@@ -167,7 +163,6 @@ def log_request():
     """
     Logs the request method and path with the parameters.
     """
-    request.error_code = None
     reset_color = "\033[0m"
     method_colors = {
         "GET": "\033[92m",  # green
@@ -175,6 +170,7 @@ def log_request():
         "PUT": "\033[95m",  # purple
         "DELETE": "\033[91m", # red
         "PATCH": "\033[94m", # blue
+        "OPTIONS": "\033[93m", # yellow
     }
     method_color = method_colors.get(request.method, "\033[97m")  # white
     if request.content_type == "application/json":
@@ -193,9 +189,12 @@ def log_request():
     if isinstance(params, dict):
         if params.get("password"):
             params["password"] = ("*" * len(params["password"])) if len(params["password"]) < 25 else "*****"
-        if params.get("token"):
-            params["token"] = params["token"][:3] + "*" * (len(params["token"]) - 2)
-    app.logger.debug(f"Processing {method_color}{request.method}{reset_color} {request.path} with {str(params)}")
+        if params.get("authtoken"):
+            params["authtoken"] = params["authtoken"][:3] + "*" * (len(params["authtoken"]) - 2)
+    params = str(params)
+    if len(params) > 50:
+        params = params[:50] + "..."
+    app.logger.debug(f"Processing {method_color}{request.method}{reset_color} {request.path} with {params}")
     request.start_time = datetime.now()
 
 @app.after_request
@@ -213,9 +212,10 @@ def log_response(response):
         301: "\033[96m",  # cyan
         302: "\033[96m",  # cyan
         400: "\033[93m",  # yellow
-        401: "\033[91m",  # red
-        403: "\033[91m",  # red
-        404: "\033[91m",  # red
+        401: "\033[93m",  # yellow
+        403: "\033[93m",  # yellow
+        404: "\033[93m",  # yellow
+        405: "\033[93m",  # yellow
         429: "\033[93m",  # yellow
         500: "\033[91m",  # red
     }
@@ -229,22 +229,20 @@ def log_response(response):
     status_color = status_colors.get(response.status_code, "\033[97m")  # white
     method_color = method_colors.get(request.method, "\033[97m") # white
     app.logger.debug(f"Response for {method_color}{request.method}{reset_color} {request.path} is {status_color}{response.status_code}{reset_color}")
-    # PostHog integration
-    if "text/html" in response.content_type:
-        if app.config.get("POSTHOG_API_KEY") and not (devmode or app.config.get("TESTING")):
-            api_key = app.config["POSTHOG_API_KEY"]
-            script = """
-            <script>   !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug getPageViewId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);    posthog.init('{api_key}', {        api_host: 'https://us.i.posthog.com',        person_profiles: 'identified_only', }); posthog.identify('{username}') </script>
-            """.replace("{api_key}", api_key)
-            if request.user:
-                script = script.replace("{username}", request.user.email)
-            else:
-                app.logger.debug("Anonymous user request")
-                script = script.replace("{username}", "anonymous")
-            response.data = response.data.decode("utf-8").replace("</head>", f"{script}</head>").encode("utf-8")
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
+    if response.status_code == 302:
+        app.logger.debug(f"Redirecting to {response.headers.get('Location')}")
+    if "text/html" in response.content_type or "application/json" in response.content_type:
+        # Disable caching for HTML and JSON responses
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    if "text/css" in response.content_type or \
+        "application/javascript" in response.content_type or \
+        "text/javascript" in response.content_type or \
+        request.path == "/favicon.ico":
+        # CSS and JS can be cached for a day
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    
     # Log the request
     req_url = request.path
     if req_url.endswith("/calendar.ics"):
@@ -260,6 +258,12 @@ def log_response(response):
         })
     except Exception as e: # pylint: disable=broad-exception-caught
         app.logger.error("Failed to log request: %s", e)
+    # Add Server-Timing header
+    try:
+        duration = (datetime.now() - (request.start_time if hasattr(request, 'start_time') else datetime.now())).total_seconds() * 1000
+        response.headers["Server-Timing"] = f"app;dur={duration:.2f}"
+    except Exception as e: # pylint: disable=broad-exception-caught
+        app.logger.error("Failed to set Server-Timing header: %s", e)
     return response
 
 def import_routes(directory):
@@ -275,10 +279,10 @@ def import_routes(directory):
                     .replace(os.sep, ".")
                     .replace(".py", "")
                 )
-                imbtime = datetime.now()
+                # imbtime = datetime.now()
                 importlib.import_module(module_name)
-                imatime = datetime.now()
-                app.logger.debug(f"Imported {module_name.removeprefix("app.routes.")} in {(imatime - imbtime).total_seconds()}s")
+                # imatime = datetime.now()
+                # app.logger.debug(f"Imported {module_name.removeprefix("app.routes.")} in {(imatime - imbtime).total_seconds()}s")
 
 def get_logs():
     """
@@ -339,34 +343,6 @@ werkzeug_handler.setFormatter(CustomWerkzeugFormatter())
 werkzeug_handler.addFilter(lambda record: False)
 werkzeug_logger.addHandler(werkzeug_handler)
 logging.basicConfig(handlers=[werkzeug_handler], level=app.logger.level)
-
-# Request CloudFlare IP ranges
-if not devmode and not app.config.get("TESTING"):
-    cf_ip_ranges = []
-    # Get IPv4 ranges
-    cf_ip_ranges_req_v4 = requests.get("https://www.cloudflare.com/ips-v4", timeout=10)
-    if cf_ip_ranges_req_v4.status_code != 200:
-        app.logger.critical("Failed to get CloudFlare IPv4 IP ranges. Status code: %s", cf_ip_ranges_req_v4.status_code)
-        sys.exit(1)
-    else:
-        v4_ranges = [ip for ip in cf_ip_ranges_req_v4.text.splitlines() if not ip.startswith("#")]
-        cf_ip_ranges.extend(v4_ranges)
-        app.logger.debug("CloudFlare IPv4 IP ranges request successful")
-        app.logger.debug(f"CloudFlare IPv4 IP ranges: {v4_ranges}")
-    # Get IPv6 ranges
-    cf_ip_ranges_req_v6 = requests.get("https://www.cloudflare.com/ips-v6", timeout=10)
-    if cf_ip_ranges_req_v6.status_code != 200:
-        app.logger.critical("Failed to get CloudFlare IPv6 IP ranges. Status code: %s", cf_ip_ranges_req_v6.status_code)
-        sys.exit(1)
-    else:
-        v6_ranges = [ip for ip in cf_ip_ranges_req_v6.text.splitlines() if not ip.startswith("#")]
-        cf_ip_ranges.extend(v6_ranges)
-        app.logger.debug("CloudFlare IPv6 IP ranges request successful")
-        app.logger.debug(f"CloudFlare IPv6 IP ranges: {v6_ranges}")
-else:
-    app.logger.debug("Running in dev/test mode, not requesting CloudFlare IP ranges")
-    cf_ip_ranges = []
-app.config["CLOUDFLARE_IP_RANGES"] = cf_ip_ranges
 
 end_init_time = datetime.now()
 

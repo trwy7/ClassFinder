@@ -3,3 +3,4 @@ freezegun
 pylint
 pytest-env
 pytest-dependency
+pytest-cov

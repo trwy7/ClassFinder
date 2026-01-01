@@ -7,6 +7,7 @@ from flask import request
 from app import app
 from app.utilities.users import require_login, require_scopes
 from app.utilities.classes import get_user_current_period, get_today_courses, get_current_period
+from app.utilities.times import get_full_schedule
 from app.utilities.responses import success_response, error_response
 
 @app.route("/api/v2/classes/current")
@@ -73,4 +74,41 @@ def time_until_end():
         "passing": currentperiod['passing'] if currentperiod is not None and 'passing' in currentperiod else None,
         "period": currentperiod['period'] if currentperiod is not None else None,
         "leavingptech": currentperiod.get('leavingptech', False) if currentperiod is not None else None
+    })
+
+@app.route("/api/v2/schedule/today")
+@app.route("/api/v2/schedule/<string:date>")
+def schedule_today(date=None):
+    """
+    Returns the user's schedule for today.
+    """
+    user = request.user
+    if date is not None:
+        try:
+            date = datetime.strptime(date, "%Y-%m-%d").date()
+        except ValueError:
+            return error_response("Invalid date format. Use YYYY-MM-DD."), 400
+    schedule = get_full_schedule(day=date, user=user)
+    # TODO: Move this to a utility function to avoid duplication across get_current_period, the calendar, and here
+    return success_response(None, {
+        "schedule": [
+            {
+                "start": datetime.combine(date if date is not None else datetime.today().date(), entry['start']).timestamp(),
+                "end": datetime.combine(date if date is not None else datetime.today().date(), entry['end']).timestamp(),
+                "period": entry['period'],
+                "passing": entry['passing'],
+                "lunchactive": entry['lunchactive'],
+                "class": {
+                    "id": entry['class'].id,
+                    "displayname": entry['class'].name,
+                    "name": entry['class'].campus_name,
+                    "room": entry['class'].room,
+                    "period": entry['class'].period,
+                    "lunch": entry['class'].lunch,
+                    "verified": entry['class'].verified,
+                    "canvasid": entry['class'].canvasid,
+                    "teacher": entry['class'].teacher
+                } if entry['class'] is not None else None
+            } for entry in schedule
+        ]
     })

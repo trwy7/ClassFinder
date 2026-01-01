@@ -1,0 +1,241 @@
+{% set noheader = true %}
+{% extends 'timers/base.html' %}
+{% block style %}
+<style>
+    :root {
+        --timer-font-size: 5rem;
+    }
+    #timercontainer {
+        transition: all 0.7s ease-in-out;
+    }
+    #progressbarcontainer {
+        transition: opacity 0.7s ease-in-out;
+    }
+    #passingstatus {
+        transform: translateY(-10px);
+        opacity: 0;
+        transition: all 0.6s ease-in-out;
+    }
+    #progressbar {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-radius: 10px;
+        transition: width 1s ease-in-out;
+    }
+    #progressbarcontainer {
+        width: min(90%, 400px);
+        height: 20px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 20px;
+        opacity: 0;
+    }
+    .timernumberdiv {
+        transition: transform 0.4s cubic-bezier(0.455, 0.03, 0.515, 0.955)
+    }
+    .timernumber {
+        /* Each digit occupies exactly 1em so the container can show only one */
+        display: block;
+        height: 1em;
+        line-height: 1em;
+    }
+    .timercolumn {
+        display: inline-block;
+        font-size: var(--timer-font-size);
+        height: 1em;
+        overflow: hidden;
+        vertical-align: bottom;
+    }
+    .timerdivider {
+        display: inline-block;
+        font-size: var(--timer-font-size);
+        height: 1em;
+        line-height: 0.8em;
+        vertical-align: bottom;
+        margin: 0;
+        overflow: hidden;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        #timercontainer {
+            transition: none;
+        }
+        #progressbarcontainer {
+            transition: none;
+        }
+        #passingstatus {
+            animation: none;
+            transform: none;
+            opacity: 1;
+        }
+        #progressbar {
+            transition: none;
+        }
+        .timernumberdiv {
+            transition: none;
+        }
+    }
+</style>
+{% endblock %}
+{% block tcontent %}
+<div id="timercontainer" style="transform: translateY(-20px); opacity:0;">
+    {% if period is not none %}
+    <h3 id="periodtime">{{ period.start.strftime("%I:%M %p") }} - {{ period.end.strftime("%I:%M %p") }}</h3>
+    <div id="timeleftdiv"{% if user.role == 'admin' %} onclick="sync();"{% endif %}>
+        <!-- Setup by javascript -->
+    </div>
+    {% endif %}
+</div>
+<div id="progressbarcontainer">
+    <div id="progressbar"></div>
+</div>
+<p id="passingstatus" style="margin-top:10px">{% if period is not none and period.passing and period.course %}Go to {{period.course.name}} in room {{period.course.room}}{% endif %}</p>
+{% endblock %}
+{% block tscript %}
+<script>
+    // Template settings
+    autoreload = false;
+
+    // Actual script
+    var runningAnim = false;
+    var startPG = false;
+    var animFinished = false;
+
+    function initTimer() {
+        function createInnerNumberDiv() {
+            const div = document.createElement('div');
+            div.classList.add('timernumberdiv');
+            // Create numbers 0-9
+            for (let i = 0; i <= 9; i++) {
+                const span = document.createElement('span');
+                span.textContent = i;
+                span.classList.add('timernumber');
+                div.appendChild(span);
+            }
+            return div;
+        }
+        function createColumn(id) {
+            const div = document.createElement('div');
+            div.id = id;
+            div.classList.add('timercolumn');
+            div.appendChild(createInnerNumberDiv());
+            return div;
+        }
+        function createDivider(id) {
+            const span = document.createElement('span');
+            span.textContent = ':';
+            span.id = id;
+            span.classList.add('timerdivider');
+            return span;
+        }
+        const timeLeftDiv = document.getElementById('timeleftdiv');
+        timeLeftDiv.appendChild(createColumn('hoursones'));
+        timeLeftDiv.appendChild(createDivider('divider1'));
+        timeLeftDiv.appendChild(createColumn('minutestens'));
+        timeLeftDiv.appendChild(createColumn('minutesones'));
+        timeLeftDiv.appendChild(createDivider('divider2'));
+        timeLeftDiv.appendChild(createColumn('secondstens'));
+        timeLeftDiv.appendChild(createColumn('secondsones'));
+    }
+    function setDigit(columnId, digit) {
+        const column = document.getElementById(columnId);
+        const innerDiv = column.firstChild;
+        innerDiv.style.transform = `translateY(-${digit}em)`;
+    }
+    function updateDigits(hours, minutes, seconds) {
+        const hOnes = hours % 10;
+        const mTens = Math.floor(minutes / 10);
+        const mOnes = minutes % 10;
+        const sTens = Math.floor(seconds / 10);
+        const sOnes = seconds % 10;
+
+        setDigit('hoursones', hOnes);
+        if (hours === 0) {
+            // Hide hours if zero
+            document.getElementById('hoursones').style.display = 'none';
+            document.getElementById('divider1').style.display = 'none';
+        } else {
+            document.getElementById('hoursones').style.display = 'inline-block';
+            document.getElementById('divider1').style.display = 'inline-block';
+        }
+        setDigit('minutestens', mTens);
+        setDigit('minutesones', mOnes);
+        if (minutes === 0 && hours === 0) {
+            // Hide minutes if zero
+            document.getElementById('minutestens').style.display = 'none';
+            document.getElementById('minutesones').style.display = 'none';
+            document.getElementById('divider2').style.display = 'none';
+        } else {
+            document.getElementById('minutestens').style.display = 'inline-block';
+            document.getElementById('minutesones').style.display = 'inline-block';
+            document.getElementById('divider2').style.display = 'inline-block';
+        }
+        setDigit('secondstens', sTens);
+        setDigit('secondsones', sOnes);
+        if (seconds <= 9 && minutes === 0 && hours === 0) {
+            // Hide first digit of seconds if less than 10 seconds left
+            document.getElementById('secondstens').style.display = 'none';
+        } else {
+            document.getElementById('secondstens').style.display = 'inline-block';
+        }
+    }
+    initTimer();
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!runningAnim) {
+            runningAnim = true;
+            setTimeout(() => {
+                const container = document.getElementById('timercontainer');
+                const passingStatus = document.getElementById('passingstatus');
+                setTimeout(() => {
+                    passingStatus.style.transform = 'translateY(0px)';
+                    passingStatus.style.opacity = '1';
+                }, allowAnim ? 800 : 0);
+                container.style.transform = 'translateY(0px)';
+                container.style.opacity = '1';
+                const progressBarContainer = document.getElementById('progressbarcontainer');
+                progressBarContainer.style.opacity = '1';
+                setTimeout(() => {
+                    animFinished = true;
+                }, 850);
+            }, allowAnim ? 100 : 0);
+        }
+    });
+    function updateTimer(timeLeft) {
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        updateDigits(hours, minutes, seconds);
+        if (startPG && !animFinished) {
+            return;
+        } else {
+            startPG = true;
+        }
+        const now = (typeof timeOffset !== 'undefined') ? Date.now() + timeOffset : Date.now();
+        let donePercent = 0;
+        if (typeof startTime !== 'undefined' && typeof endTime !== 'undefined' && endTime !== startTime) {
+            donePercent = ((now - startTime) / (endTime - startTime)) * 100;
+            if (donePercent < 0) donePercent = 0;
+            if (donePercent > 100) donePercent = 100;
+        }
+        document.getElementById('progressbar').style.width = donePercent + '%';
+        if (timeLeft === 0) {
+            const container = document.getElementById('timercontainer');
+            const passingstatus = document.getElementById('passingstatus');
+            const progressBarContainer = document.getElementById('progressbarcontainer');
+            if (animFinished && doReload) {
+                container.style.transform = 'translateY(20px)';
+                container.style.opacity = '0';
+                passingstatus.style.transform = 'translateY(10px)';
+                passingstatus.style.opacity = '0';
+                progressBarContainer.style.opacity = '0';
+                document.getElementById('progressbar').style.width = '0%';
+            }
+            setTimeout(() => {
+                if (doReload) location.reload();
+            }, 800);
+        }
+    }
+</script>
+{% endblock %}

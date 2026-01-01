@@ -6,8 +6,9 @@ import datetime
 from flask import render_template, abort, request
 from app import app
 from app.utilities.users import require_login, require_role
-from app.utilities.classes import get_course_by_id, remove_class, get_all_courses, search_classes
+from app.utilities.classes import get_course_by_id, remove_class, search_classes
 from app.utilities.responses import success_response, error_response
+from app.utilities.times import change_bell_delay, reset_bell_delay
 from app.db import db
 
 @app.route("/admin/class/<courseid>", methods=["DELETE"])
@@ -78,26 +79,6 @@ def verify_course(courseid):
     app.logger.debug(f"Course not found: {courseid}")
     return error_response("Course not found."), 404
 
-@app.route("/admin/class/all", methods=["DELETE"])
-@require_login
-@require_role(["admin"])
-def delete_all_courses():
-    """
-    Deletes all courses.
-    """
-    app.logger.warning("Deleting all courses, requested by " + request.user.username)
-    dbfile = app.config["SQLALCHEMY_DATABASE_URI"].replace("sqlite:///","")
-    newfile = dbfile.replace(".",f"_backup_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.")
-    app.logger.info(f"Copying database to {newfile}")
-    try:
-        shutil.copy(dbfile, newfile)
-    except FileNotFoundError:
-        shutil.copy(f"instance/{dbfile}", f"instance/{newfile}")
-    for course in get_all_courses():
-        app.logger.info(f"Deleting course: {course.name}")
-        remove_class(course)
-    return success_response("All courses deleted."), 200
-
 @app.route("/admin/class/search")
 @require_login
 @require_role(["admin"])
@@ -114,3 +95,32 @@ def search_courses():
         serialized.pop("teacher", None)
         results.append(serialized)
     return {"results": results}, 200
+
+@app.route("/admin/bell-delay", methods=["POST"])
+@require_login
+@require_role(["admin"])
+def modify_bell_delay():
+    """
+    Modifies the bell delay.
+    """
+    if not request.is_json:
+        return error_response("Invalid request."), 400
+    data = request.json
+    if "delay" not in data:
+        return error_response("Missing delay."), 400
+    try:
+        delay = float(data["delay"])
+    except ValueError:
+        return error_response("Invalid delay."), 400
+    change_bell_delay(delay)
+    return success_response(f"Bell delay changed by {delay} seconds."), 200
+
+@app.route("/admin/reset-bell-delay", methods=["POST"])
+@require_login
+@require_role(["admin"])
+def reset_bell_delay_route():
+    """
+    Resets the bell delay to zero.
+    """
+    reset_bell_delay()
+    return success_response("Bell delay reset to zero."), 200

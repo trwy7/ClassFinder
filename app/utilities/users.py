@@ -124,7 +124,7 @@ def create_token( # pylint: disable=too-many-arguments, too-many-positional-argu
             if tokentype in ("api", "app"):
                 nexpiry += timedelta(days=60)
             elif tokentype == "refresh":
-                nexpiry += timedelta(days=30)
+                nexpiry += timedelta(days=31)
             elif tokentype == "system":
                 nexpiry += timedelta(days=14)
             elif tokentype == "admin":
@@ -225,6 +225,15 @@ def get_user(username: str):
         User: The user.
     """
     return User.query.filter_by(username=username).first()
+
+def get_all_users():
+    """
+    Get all users
+
+    Returns:
+        list[User]: A list of all users.
+    """
+    return User.query.all()
 
 def change_user_role(user: User, role: str):
     """
@@ -490,14 +499,6 @@ def require_logged_out(f):
 def require_login(_func=None):
     """
     Decorator to require a user to be logged in.
-    Supports both usage forms:
-      @require_login
-      @require_login()
-
-    If the user is not logged in, they will be redirected to the login page or receive a 401 error for API requests.
-
-    This version no longer takes allow_scoped; instead it allows scoped tokens only when the endpoint is
-    also decorated with @require_scopes (detected by a marker attribute on the wrapped function).
     """
     def _has_required_scopes_marker(func):
         cur = func
@@ -516,6 +517,8 @@ def require_login(_func=None):
                 if request.path.startswith("/api/") or request.method != "GET":
                     if request.path.startswith("/api/plain/"):
                         return "Unauthorized", 401
+                    if request.path.endswith(".css") or request.path.endswith(".js"):
+                        return "", 401
                     return error_response("Unauthorized"), 401
                 resp = redirect("/login")
                 resp.set_cookie("redirect_to", request.path + ("?" + request.query_string.decode("utf-8") if request.query_string else ""))

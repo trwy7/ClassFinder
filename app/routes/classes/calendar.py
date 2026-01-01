@@ -109,7 +109,7 @@ def add_class_event(calendar, course, current_date, current_day, ignore_lunch=Fa
     if not classtime:
         app.logger.warning(f"No class time found for {course.name} on {current_date}")
         return
-    app.logger.info(f"Adding class event for {classtime}")
+    app.logger.debug(f"Adding class event for {classtime}")
     if classtime['lunchactive'] and not ignore_lunch:
         add_class_with_lunch_event(calendar, course, classtime, current_date, current_day)
         return
@@ -134,7 +134,7 @@ def add_class_with_lunch_event(calendar, course, classtime, current_date, curren
     Add a class event with lunch to the calendar.
     Splits the event into two or three parts, depending on if it is A, B, or C lunch.
     """
-    app.logger.info(f"Adding class with lunch event for {course.name} (lunch {course.lunch})")
+    app.logger.debug(f"Adding class with lunch event for {course.name} (lunch {course.lunch})")
 
     denver_tz = pytz.timezone('America/Denver')
     start_time = denver_tz.localize(datetime.combine(current_date, classtime['start']))
