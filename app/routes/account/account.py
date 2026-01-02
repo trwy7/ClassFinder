@@ -177,7 +177,7 @@ def verify_email_confirm(emailid):
     """
     This route confirms the email verification.
     """
-    email = check_verify_email_id(emailid)
+    email = check_verify_email_id(emailid, delete=True)
     if email is None:
         return render_template("templates/error.html", status_code=400, error_message="Invalid email verification link"), 400
     user = request.user

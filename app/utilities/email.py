@@ -52,13 +52,14 @@ def create_email_id(email: str):
     return emailid
 
 
-def check_email_id(emailid: str):
+def check_email_id(emailid: str, delete: bool = False):
     """
     Check if an email id is valid and returns the email
     """
     if emailid in emailids:
         email = emailids[emailid]
-        del emailids[emailid]
+        if delete:
+            del emailids[emailid]
         return email
     return None
 
@@ -72,13 +73,14 @@ def create_reset_email_id(email: str):
     return emailid
 
 
-def check_reset_email_id(emailid: str):
+def check_reset_email_id(emailid: str, delete: bool = False):
     """
     Check if a reset password email id is valid and returns the email
     """
     if emailid in resetemailids:
         email = resetemailids[emailid]
-        del resetemailids[emailid]
+        if delete:
+            del resetemailids[emailid]
         return email
     return None
 
@@ -90,12 +92,13 @@ def create_verify_email_id(email: str):
     verifyemailids[emailid] = email
     return emailid
 
-def check_verify_email_id(emailid: str):
+def check_verify_email_id(emailid: str, delete: bool = False):
     """
     Check if a verify email id is valid and returns the email
     """
     if emailid in verifyemailids:
         email = verifyemailids[emailid]
-        del verifyemailids[emailid]
+        if delete:
+            del verifyemailids[emailid]
         return email
     return None
