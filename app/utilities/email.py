@@ -57,6 +57,7 @@ def check_email_id(emailid: str):
     Check if an email id is valid and returns the email
     """
     if emailid in emailids:
+        del emailids[emailid]
         return emailids[emailid]
     return None
 
@@ -75,6 +76,7 @@ def check_reset_email_id(emailid: str):
     Check if a reset password email id is valid and returns the email
     """
     if emailid in resetemailids:
+        del resetemailids[emailid]
         return resetemailids[emailid]
     return None
 
@@ -91,5 +93,6 @@ def check_verify_email_id(emailid: str):
     Check if a verify email id is valid and returns the email
     """
     if emailid in verifyemailids:
+        del verifyemailids[emailid]
         return verifyemailids[emailid]
     return None
