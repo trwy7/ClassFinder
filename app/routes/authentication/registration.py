@@ -57,7 +57,7 @@ def register_confirm_post(emailid):
     """
     Handle the final registration step.
     """
-    email = check_email_id(emailid, delete=True)
+    email = check_email_id(emailid)
     if email is None:
         return error_response("Invalid email id"), 400
     username = request.json.get("username")
@@ -81,5 +81,6 @@ def register_confirm_post(emailid):
             secure=not devmode,
             max_age=604800,
         )
+        check_email_id(emailid, delete=True)
         return response, 200
     return error_response("User creation failed."), 400

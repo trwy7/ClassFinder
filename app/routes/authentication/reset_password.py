@@ -62,7 +62,7 @@ def reset_password_confirm_post(emailid):
     """
     Handle the final reset password step.
     """
-    email = check_reset_email_id(emailid, delete=True)
+    email = check_reset_email_id(emailid)
     if email is None:
         return error_response("Invalid email id"), 400
     password = request.json.get("password")
@@ -79,4 +79,5 @@ def reset_password_confirm_post(emailid):
             secure=not devmode,
             max_age=604800,
         )
+    check_reset_email_id(emailid, delete=True)
     return response, 200
