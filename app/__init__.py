@@ -59,6 +59,8 @@ def check_verify_required():
     """
     Checks if the user needs to reverify their email.
     """
+    if request.path.startswith("/timer"):
+        return
     if request.user and request.user.requires_reverification:
         if request.path.startswith("/api/"):
             if request.path.startswith("/api/plain"):
