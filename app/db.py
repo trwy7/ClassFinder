@@ -56,7 +56,7 @@ class User(db.Model):
     role = db.Column(db.String(30), nullable=False)
     tokens = db.relationship("Token", backref="user", lazy=True)
     requires_username_change = db.Column(db.Boolean, nullable=False, default=False)
-    color_hue = db.Column(db.String(3), nullable=True, default=None) # Format "0-360", everything else is handled by the frontend
+    color_hue = db.Column(db.String(3), nullable=True, default=None) # Format "0-361" # TODO: change to int
     requires_reverification = db.Column(db.Boolean, nullable=False, default=False)
     custom_css = db.Column(db.Text, nullable=True, default=None)
     custom_css_last_updated = db.Column(db.Integer, nullable=True, default=None)

@@ -59,14 +59,20 @@ def check_verify_required():
     """
     Checks if the user needs to reverify their email.
     """
-    if request.path.startswith("/timer"):
-        return
     if request.user and request.user.requires_reverification:
         if request.path.startswith("/api/"):
             if request.path.startswith("/api/plain"):
                 return
             return error_response("Email re-verification required"), 403
-        if request.path.startswith("/account/verify") or request.path.startswith("/logout") or request.path.startswith("/account/delete") or request.path.startswith("/static/") or request.path.endswith(".ico") or request.path.endswith(".css") or request.path.endswith(".js"):
+        if request.path.startswith("/timer") or \
+            request.path.startswith("/account/verify") or \
+            request.path.startswith("/logout") or \
+            request.path.startswith("/account/delete") or \
+            request.path.startswith("/static/") or \
+            request.path.endswith("/calendar.ics") or \
+            request.path == "/favicon.ico" or \
+            request.path.endswith(".css") or \
+            request.path.endswith(".js"):
             return
         return redirect("/account/verify")
 
