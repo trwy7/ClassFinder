@@ -64,9 +64,9 @@
         }
         function generateUsername(event) {
             event.preventDefault();
-            // For now, just generates "Anon" + random number
+            // For now, just generates "Person" + random number
             const randomNumber = Math.floor(Math.random() * 100000);
-            document.getElementById('username').value = 'anon' + randomNumber;
+            document.getElementById('username').value = 'person' + randomNumber;
         }
     </script>
 {% endblock %}
