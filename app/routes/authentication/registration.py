@@ -28,7 +28,9 @@ def register_post():
     if check_email(email):
         return error_response("Already taken"), 400
     if not validate_email(email):
+        app.logger.debug(f"Invalid email attempted during registration: {email}")
         return error_response("Invalid email, use your school provided email."), 400
+    app.logger.info(f"Registering new user with email: {email}")
     emailid = create_email_id(email)
     send_email(
         email=email,
@@ -37,6 +39,7 @@ def register_post():
         + url_for("register_confirm", _external=True, emailid=emailid, _scheme="https"),
     )
     if app.config.get("TESTING"):
+        app.logger.info(f"Test mode: returning emailid {emailid}")
         return success_response("Email sent", {"emailid": emailid}), 200
     return success_response("Email sent"), 200
 
