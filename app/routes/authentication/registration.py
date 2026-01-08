@@ -31,12 +31,19 @@ def register_post():
         app.logger.debug(f"Invalid email attempted during registration: {email}")
         return error_response("Invalid email, use your school provided email."), 400
     app.logger.info(f"Registering new user with email: {email}")
+    pname = email.split(".")[0].capitalize()
     emailid = create_email_id(email)
     send_email(
         email=email,
         subject="Confirm your email",
-        message="Confirm your email at "
-        + url_for("register_confirm", _external=True, emailid=emailid, _scheme="https"),
+        message=f"""
+        Hello {pname},
+
+        Please confirm your email address by clicking the link below:
+        {url_for("register_confirm", _external=True, emailid=emailid, _scheme="https")}
+
+        If you did not request this, please ignore this email.
+        """
     )
     if app.config.get("TESTING"):
         app.logger.info(f"Test mode: returning emailid {emailid}")

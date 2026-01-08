@@ -32,10 +32,10 @@ def send_email(email: str, subject: str, message: str):
         return True
     app.logger.info(f"Sending email to {email} with subject {subject}")
     msg = MIMEMultipart() # This part cannot be tested without an email server, so we skip it when testing
-    msg["From"] = emailconfig["from"]
+    msg['From'] = f"Chronis <{emailconfig['from']}>"
     msg["To"] = email
     msg["Subject"] = subject
-    msg.attach(MIMEText(message, "plain"))
+    msg.attach(MIMEText(message, 'plain'))
     server = smtplib.SMTP(emailconfig["server"], emailconfig["port"])
     server.starttls()
     server.login(emailconfig["username"], emailconfig["password"])

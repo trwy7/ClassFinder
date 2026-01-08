@@ -9,14 +9,14 @@ from app import app
 profanity = better_profanity.Profanity()
 try:
     with open("profanity.txt", "r", encoding="UTF-8") as f:
-        words = f.read().splitlines()
+        bwords = f.read().splitlines()
 except FileNotFoundError:
     try:
         with open("/profanity.txt", "r", encoding="UTF-8") as f:
-            words = f.read().splitlines()
+            bwords = f.read().splitlines()
     except FileNotFoundError:
         app.logger.warning("profanity.txt not found, using basic matching.")
-        words = []
+        bwords = []
 
 def validate_email(email: str):
     """
@@ -25,7 +25,14 @@ def validate_email(email: str):
     Args:
         email (str): The email to check.
     """
-    return len(email) <= 50 and len(email) >= 15 and re.fullmatch(r"[a-z]*\.[a-z]*[0-9]{0,1}(@s.stemk12.org|@stemk12.org)", email)
+    if len(email) <= 50 and len(email) >= 15 and re.fullmatch(r"[a-z]*\.[a-z]*[0-9]{0,1}(@s.stemk12.org|@stemk12.org)", email):
+        smail = email.split("@")[0]
+        for word in bwords:
+            if word.lower() in smail.lower():
+                app.logger.warning(f"Email '{email}' contains a profane word: {word}")
+                return False
+        return True
+    return False
 
 
 def validate_username(username: str):
@@ -54,7 +61,7 @@ def validate_username(username: str):
         .replace("8", "b") \
         .replace("9", "g") \
         .replace("6", "b")
-    for word in words:
+    for word in bwords:
         if word.lower() in pusername.lower():
             app.logger.warning(f"Username '{username}' ({pusername}) contains a profane word: {word}")
             return False
