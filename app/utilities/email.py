@@ -30,6 +30,7 @@ def send_email(email: str, subject: str, message: str):
             f"An email was sent to {email} with subject {subject} and message {message}"
         )
         return True
+    app.logger.info(f"Sending email to {email} with subject {subject}")
     msg = MIMEMultipart() # This part cannot be tested without an email server, so we skip it when testing
     msg["From"] = emailconfig["from"]
     msg["To"] = email
