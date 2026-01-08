@@ -35,15 +35,14 @@ def register_post():
     emailid = create_email_id(email)
     send_email(
         email=email,
-        subject="Confirm your email",
-        message=f"""
-        Hello {pname},
+        subject="Confirm your Chronis account",
+        message=f"""Hello {pname}!
 
-        Please confirm your email address by clicking the link below:
+        Please confirm your Chronis account by visiting the link below:
         {url_for("register_confirm", _external=True, emailid=emailid, _scheme="https")}
 
-        If you did not request this, please ignore this email.
-        """
+        If you did not request this, no action is needed.
+        """ # TODO: Make this look better, while trying to not make it go to spam
     )
     if app.config.get("TESTING"):
         app.logger.info(f"Test mode: returning emailid {emailid}")
