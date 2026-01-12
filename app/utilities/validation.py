@@ -26,12 +26,16 @@ def validate_email(email: str):
         email (str): The email to check.
     """
     if len(email) <= 50 and len(email) >= 15 and re.fullmatch(r"[a-z]*\.[a-z]*[0-9]{0,1}(@s.stemk12.org|@stemk12.org)", email):
-        smail = email.split("@")[0]
-        for word in bwords:
-            if word.lower() in smail.lower():
-                app.logger.warning(f"Email '{email}' contains a profane word: {word}")
-                return False
+        app.logger.debug(f"Email '{email}' passed regex validation.")
+        # smail = email.split("@")[0]
+        
+        # for word in bwords: # Too many false positives
+        #     if word.lower() in smail.lower():
+        #         app.logger.warning(f"Email '{email}' contains a profane word: {word}")
+        #         return False
+        app.logger.debug(f"Email '{email}' passed validation.")
         return True
+    app.logger.debug(f"Email '{email}' failed validation.")
     return False
 
 
