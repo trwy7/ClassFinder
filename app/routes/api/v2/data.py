@@ -5,7 +5,7 @@ Allows getting data of a user. Used differently from /export as this is to be us
 from flask import request
 from app import app
 from app.utilities.users import require_login, require_scopes
-from app.utilities.responses import error_response, success_response
+from app.utilities.responses import success_response
 
 @app.route("/api/v2/data", methods=["GET"])
 @require_login

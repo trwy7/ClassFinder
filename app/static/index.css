@@ -65,9 +65,11 @@ body:has(main.twosections) {
 header {
     background: linear-gradient(to bottom, var(--navbar-color) 0%, var(--navbar-color) 10%, var(--navbar-bottom-color) 100%);
     padding: 1rem;
-    position: sticky;
+    position: fixed;
+    width: 100%;
     top: 0;
     z-index: 1000;
+    text-shadow: 0px 0px 10px var(--navbar-color);
 }
 #timertext, #timeleft, #timeleftdiv {
     font-family: "Space Mono", monospace;

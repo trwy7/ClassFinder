@@ -1005,13 +1005,7 @@ readable_days = {
 
 # TODO: Webhooks with custom data? Possibly for ntfy/discord notifications?
 
-loaded_bell_delay = 0.0
-bell_delay = 0.0
-
-if os.environ.get("BELL_DELAY_PATH") and os.path.isfile(os.environ.get("BELL_DELAY_PATH")):
-    with open(os.environ.get("BELL_DELAY_PATH"), "r", encoding="utf-8") as bf:
-        loaded_bell_delay = float(bf.read().strip())
-        app.logger.info(f"Loaded bell delay of {loaded_bell_delay} seconds from {os.environ.get('BELL_DELAY_PATH')}")
+bell_delay = 0.0 # pylint: disable=invalid-name # This is not a constant, but it gets flagged as one.
 
 def change_bell_delay(delay_seconds: float, commit: bool=True):
     """
@@ -1020,7 +1014,7 @@ def change_bell_delay(delay_seconds: float, commit: bool=True):
     Args:
         delay_seconds (float): The delay in seconds to add to each class time.
     """
-    global bell_delay
+    global bell_delay # pylint: disable=global-statement
     # last_bell_delay = bell_delay
     bell_delay += delay_seconds
     if os.environ.get("BELL_DELAY_PATH") and delay_seconds != 0.0 and commit:
@@ -1028,13 +1022,15 @@ def change_bell_delay(delay_seconds: float, commit: bool=True):
             f.write(str(bell_delay))
             app.logger.info(f"Saved bell delay of {bell_delay} seconds to {os.environ.get('BELL_DELAY_PATH')}")
 
-change_bell_delay(loaded_bell_delay, commit=False)  # Apply the loaded bell delay
+if os.environ.get("BELL_DELAY_PATH") and os.path.isfile(os.environ.get("BELL_DELAY_PATH")):
+    with open(os.environ.get("BELL_DELAY_PATH"), "r", encoding="utf-8") as bf:
+        change_bell_delay(float(bf.read().strip()), commit=False)
+        app.logger.info(f"Loaded bell delay of {bell_delay} seconds from {os.environ.get('BELL_DELAY_PATH')}")
 
 def reset_bell_delay():
     """
     Reset the bell delay to 0 seconds.
     """
-    global bell_delay
     change_bell_delay(-bell_delay)
 
 def get_bell_delay() -> float:

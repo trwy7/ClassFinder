@@ -1,9 +1,8 @@
-# pylint: disable=redefined-outer-name, import-error, cyclic-import, unused-argument
+# pylint: disable=line-too-long
 """
 This file tests the user functions, like login and registration, and general user actions.
 """
 
-import pytest
 import os
 import base64
 from datetime import datetime, timedelta
@@ -17,7 +16,7 @@ from app import app # pylint: disable=wrong-import-position, import-error, cycli
 app.config['TESTING'] = True
 app.config['END_OF_SEMESTER'] = datetime.strptime(os.environ["END_OF_SEMESTER"], '%Y-%m-%d').date()
 
-def check_html_response(client, path, headers={}, expected_status=200):
+def check_html_response(client, path, headers={}, expected_status=200): # pylint: disable=dangerous-default-value # I am using it safely
     """
     Helper function to check HTML response
     """
@@ -26,7 +25,7 @@ def check_html_response(client, path, headers={}, expected_status=200):
     assert response.content_type == 'text/html; charset=utf-8', f"Expected content type 'text/html; charset=utf-8', got {response.content_type} for path {path}"
     return response
 
-def check_json_response(client, path, headers={}, expected_status=200, method='GET', body=None):
+def check_json_response(client, path, headers={}, expected_status=200, method='GET', body=None): # pylint: disable=dangerous-default-value,too-many-arguments,too-many-positional-arguments # I am using it safely
     """
     Helper function to check JSON response
     """
@@ -35,16 +34,16 @@ def check_json_response(client, path, headers={}, expected_status=200, method='G
     assert response.content_type == 'application/json', f"Expected content type 'application/json', got {response.content_type} for path {path}"
     return response
 
-@pytest.fixture(scope="session")
-def client():
+@pytest.fixture(scope="session", name="client")
+def fixture_client():
     """
     Creates a test client
     """
     with app.test_client(False) as cclient:
         yield cclient
 
-@pytest.fixture(scope="session")
-def admintoken(client): # Simulates the first registration, with no classes # TODO: Split into multiple tests
+@pytest.fixture(scope="session", name="admintoken")
+def fixture_admintoken(client): # Simulates the first registration, with no classes # TODO: Split into multiple tests
     """
     Creates an admin user
     """
@@ -62,11 +61,12 @@ def admintoken(client): # Simulates the first registration, with no classes # TO
     assert ntoken
     yield ntoken
 
-@pytest.fixture(scope="session")
-def token(client, admintoken): # Simulates a normal user registration, with classes # TODO: Split into multiple tests
+@pytest.fixture(scope="session", name="token")
+def fixture_token(client, admintoken): #pylint: disable=unused-argument
     """
     Creates a normal user, and simulates adding classes to them
     """
+    # TODO: Split into multiple tests
     print("Creating user")
     response = client.post("/register", json={"email": "a.a@s.stemk12.org"})
     if response.status_code != 200:
@@ -111,14 +111,14 @@ def test_invalid_emailid(client):
     assert response.json.get('message') == "Invalid email id"
 
 @pytest.mark.dependency()
-def test_create_admin(client, admintoken):
+def test_create_admin(client, admintoken): # pylint: disable=unused-argument
     """
     Checks if the admin user is able to be created
     """
     assert True
 
 @pytest.mark.dependency(depends=["test_create_admin"])
-def test_create_user(client, token):
+def test_create_user(client, token):  # pylint: disable=unused-argument
     """
     Checks if the normal user is able to be created, forces the creation of the admin user to happen first
     """
@@ -162,7 +162,7 @@ def test_export_data(client, token):
     assert len(response.json.get('sessions')) == 1
 
 @pytest.mark.dependency(depends=["test_create_user"])
-def test_dashboard_basic_auth(client, token):
+def test_dashboard_basic_auth(client):
     """
     Tests the dashboard route with basic auth
     """
@@ -246,13 +246,15 @@ def test_server_time(client):
     assert isinstance(server_time, int), "Server time is not an integer"
     assert abs(server_time - int(datetime.now().timestamp()*1000)) < 5000, "Server time is not within 5 seconds of current time"
 
-def test_timer_invalid(client):
+def test_timer_invalid(client, token):
+    """Tests the timer route with an invalid timer version"""
     response = check_html_response(client, "/timer/999999", headers={"Authorization": f"Bearer {token}"}, expected_status=404)
     assert b"That timer does not exist. You may use:" in response.data
 
 @freezegun.freeze_time("2025-08-27 11:14:00")
 @pytest.mark.dependency(depends=["test_export_data"])
 def test_custom_timer(client, token):
+    """Tests the custom timer route"""
     response = check_json_response(client, "/timers.json", headers={"Authorization": f"Bearer {token}"})
     assert isinstance(response.json, list), "timers.json did not return a list"
     assert len(response.json) >= 1, "timers.json returned an empty list"

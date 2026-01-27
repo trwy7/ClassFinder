@@ -1,4 +1,4 @@
-# pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-position, wrong-import-order, ungrouped-imports
 """
 Sets up the flask app and imports all routes.
 This file should not be modified unless you know what you are doing, routes are automatically imported from the routes directory.
@@ -11,12 +11,10 @@ import os
 import sys
 import importlib
 import logging
-import ipaddress
 import re
 import signal
 from flask import Flask, request
 from flask_apscheduler import APScheduler
-import requests
 from app.utilities.config import devmode, get_status
 
 app = Flask(__name__, template_folder="pages", static_folder="static")
@@ -34,9 +32,9 @@ app.config['END_OF_SEMESTER'] = os.environ.get('END_OF_SEMESTER', None)
 if app.config['END_OF_SEMESTER'] is not None:
     app.config['END_OF_SEMESTER'] = datetime.strptime(app.config['END_OF_SEMESTER'], '%Y-%m-%d').date()
 
+from flask import redirect
 from app.utilities.users import auth_user
 from app.utilities.responses import error_response
-from flask import redirect
 @app.before_request
 def before_request2():
     """
@@ -55,7 +53,7 @@ def before_request2():
     request.user, request.token = auth_user()
 
 @app.before_request
-def check_verify_required():
+def check_verify_required(): # pylint: disable=inconsistent-return-statements
     """
     Checks if the user needs to reverify their email.
     """
@@ -157,7 +155,7 @@ if not app.config.get("TESTING", False):
                     continue
     else:
         if os.path.exists(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')):
-            raise Exception(f"{os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')} exists and is not a directory!")
+            raise NotADirectoryError(f"{os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')} exists and is not a directory!")
         os.mkdir(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs'))
 app.logger.debug("Old log files removed")
 
@@ -250,7 +248,7 @@ def log_response(response):
         request.path == "/favicon.ico":
         # CSS and JS can be cached for a day
         response.headers["Cache-Control"] = "public, max-age=86400"
-    
+
     # Log the request
     req_url = request.path
     if req_url.endswith("/calendar.ics"):

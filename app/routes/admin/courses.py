@@ -1,8 +1,6 @@
 """
 Admin routes for managing courses.
 """
-import shutil
-import datetime
 from flask import render_template, abort, request
 from app import app
 from app.utilities.users import require_login, require_role

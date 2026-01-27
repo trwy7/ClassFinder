@@ -2,7 +2,7 @@
 This file contains the routes for adding classes to a user's account.
 """
 import re
-from flask import render_template, redirect, request, send_from_directory
+from flask import render_template, redirect, request
 from better_profanity import profanity
 from app import app
 from app.utilities.users import require_login
@@ -49,7 +49,7 @@ def addclasses_post():
     """
     Adds the classes to the user's account.
     """
-    # TODO: Redo this whole function to be less messy  
+    # TODO: Redo this whole function to be less messy
     user = request.user
     if len(get_periods_of_user_classes(user)) == len(neededperiods):
         return error_response("You already have all of your classes."), 400
@@ -67,8 +67,8 @@ def addclasses_post():
         and not course.strip().lower().startswith("end: ") # I have not confirmed this is a real value, but just in case
     ]
     app.logger.debug(f"Classes: {classes}")
-    desktop_regex = r"(?P<period>(?:[0-9]|Access))\n *(?P<course>.*)\n *(?:[0-9]{1,2}:[0-9]{1,2} (?:A|P)M(?: - )?){2}\n *Teacher: (?P<teacher>.*), .*\n *Room: (?P<room>(?:E?[0-9]{3}B?)|MS Cafe|PTECH|PTECH-[0-9]{3}|HS Commons)"
-    mobile_regex = r"(?P<period>(?:[0-9]|Access))\n *(?P<course>.*)\n *Teacher: (?P<teacher>.*?), .*?\n *Room: (?P<room>(?:E?[0-9]{3}B?)|MS Cafe|PTECH|PTECH-[0-9]{3}|HS Commons)\n *(?:[0-9]{1,2}:[0-9]{2} (?:A|P)M(?: - [0-9]{1,2}:[0-9]{2} (?:A|P)M)?)?"
+    desktop_regex = r"(?P<period>(?:[0-9]|Access))\n *(?P<course>.*)\n *(?:[0-9]{1,2}:[0-9]{1,2} (?:A|P)M(?: - )?){2}\n *Teacher: (?P<teacher>.*), .*\n *Room: (?P<room>(?:E?[0-9]{3}B?)|MS Cafe|PTECH|PTECH-[0-9]{3}|HS Commons)" # pylint: disable=line-too-long
+    mobile_regex = r"(?P<period>(?:[0-9]|Access))\n *(?P<course>.*)\n *Teacher: (?P<teacher>.*?), .*?\n *Room: (?P<room>(?:E?[0-9]{3}B?)|MS Cafe|PTECH|PTECH-[0-9]{3}|HS Commons)\n *(?:[0-9]{1,2}:[0-9]{2} (?:A|P)M(?: - [0-9]{1,2}:[0-9]{2} (?:A|P)M)?)?" # pylint: disable=line-too-long
     joined = "\n".join(classes)
     classes = re.findall(desktop_regex, joined, re.IGNORECASE)
     app.logger.debug(f"Filtered Classes (desktop): {len(classes)}")

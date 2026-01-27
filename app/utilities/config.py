@@ -18,5 +18,5 @@ def get_status():
 
 def set_status(new_status):
     """Sets the current status message."""
-    global nstatus
+    global nstatus # pylint: disable=global-statement
     nstatus = new_status

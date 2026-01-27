@@ -61,6 +61,7 @@
                     <button onclick="startNewSemester()">Start new semester</button>
                 </div>
             </div>
+            <!--  TODO: Make this section more privacy respecting. Use something like a search tool instead of displaying users. -->
             <ul id="classes">
                 {% for class in classes|sort(attribute='verified') %}
                     <li class="class {% if not class.verified %}unverified{%endif%}{% if period.period == class.period %} currentperiod{%endif%}" id="{{class.id}}">

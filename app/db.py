@@ -157,7 +157,7 @@ def db_cleanup():
         app.logger.debug(f"Deleted {expired_schedules_count} expired schedules.")
     else:
         app.logger.info(f"Deleted {expired_schedules_count} expired schedules.")
-        
+
     calendar_tokens = db.session.query(Token).filter(Token.scopes == "calendar")
     for token in calendar_tokens:
         token.expire = None

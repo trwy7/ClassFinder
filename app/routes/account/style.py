@@ -1,3 +1,6 @@
+"""
+Routes for user style settings (custom CSS, color hue).
+"""
 import datetime
 from flask import Response, request, render_template
 from app import app
@@ -6,7 +9,7 @@ from app.db import db
 from app.utilities.config import devmode
 from app.utilities.responses import error_response, success_response
 
-light_warm_color = """
+LIGHT_WARM_COLOR = """
 @media (prefers-color-scheme: light) {
     :root {
         --secondary-text-color: black;
@@ -31,7 +34,7 @@ def color_css(color: int = None):
         color = "234" if devmode else "155"
     return Response(
         f":root {{ --user-prefered-color: {color}; }}" +
-        (light_warm_color if 32 <= int(color) <= 188 else ""),
+        (LIGHT_WARM_COLOR if 32 <= int(color) <= 188 else ""),
         mimetype="text/css"
     )
 

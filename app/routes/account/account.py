@@ -34,7 +34,7 @@ def account():
             has_external_tokens = True
             break
     init = "".join([part[0] for part in user.email.split("@")[0].split(".")]).upper()
-    
+
     return render_template(
         "account/account.html",
         user=user,

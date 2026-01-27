@@ -12,14 +12,12 @@ from app.utilities.responses import success_response
 from app.db import Class, User, db
 from app.utilities.config import devmode
 
-CAN_MIGRATE = False
-if devmode and os.path.isfile("data/db.sqlite3") and os.path.isfile("instance/db.sqlite3"):
-    CAN_MIGRATE = True
+CAN_MIGRATE = bool(devmode and os.path.isfile("data/db.sqlite3") and os.path.isfile("instance/db.sqlite3"))
 
 @app.route("/admin")
 @require_login
 @require_role(["admin"])
-def admin():
+def admin_route():
     """
     Display the admin dashboard.
     """
@@ -27,7 +25,12 @@ def admin():
     app.logger.debug(f"Admin page requested by {user.username}")
     app.logger.debug(f"Devmode: {devmode}")
     return render_template(
-        "admin/admin.html", user=user, classes=Class.query.all(), users=User.query.all(), devmode=devmode, period=get_current_period(), can_migrate=CAN_MIGRATE
+        "admin/admin.html",
+        user=user,
+        classes=Class.query.all(),
+        users=User.query.all(),
+        period=get_current_period(),
+        can_migrate=CAN_MIGRATE
     )
 
 @app.route("/admin/copyprod", methods=["POST"])
