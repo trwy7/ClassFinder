@@ -296,7 +296,7 @@ def get_classtimes(day: int=None):
     Returns:
         list: A list of class times.
     """
-    return classtime_dict[get_current_day() if day is None else day]['classtimes']
+    return classtime_dict[get_current_day() if day is None else day].classtimes
 
 def get_classtime_by_period(period: str, passing: bool=False, day: int=None):
     """
@@ -403,7 +403,7 @@ def create_schedule_pdf( # pylint: disable=too-many-arguments, too-many-position
         c.drawString(50, y, readable_days[day])
         y -= 20 if not smalltext else 10
         c.setFont("Helvetica", 12 if not smalltext else 8)
-        classtimes = classtime_dict[day]['classtimes']
+        classtimes = classtime_dict[day].classtimes
         for ctime in classtimes:
             if ctime['passing']:
                 continue

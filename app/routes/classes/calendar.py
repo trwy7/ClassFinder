@@ -8,7 +8,7 @@ from flask import request, send_file, render_template
 from app import app
 from app.utilities.config import canvas_url
 from app.utilities.users import require_login, require_scopes
-from app.utilities.times import get_current_day, get_classtime_by_period, readable_days, get_lunchtimes
+from app.utilities.times import get_current_day, get_classtime_by_period, get_lunchtimes
 from app.utilities.classes import get_today_courses
 
 #GEN_CAL_LENGTH = 91  # Number of days to generate calendar for

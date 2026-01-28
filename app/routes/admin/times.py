@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import render_template, request
 from app import app
 from app.db import Schedule, db
-from app.utilities.times import set_schedule, readable_days
+from app.utilities.times import set_schedule, classtime_dict
 from app.utilities.users import require_login, require_role
 from app.utilities.responses import success_response, error_response
 
@@ -17,7 +17,7 @@ def schedule():
     """
     This route displays the schedule times page.
     """
-    return render_template("schedule.html", schedules=Schedule.query.all(), readable_days=readable_days)
+    return render_template("schedule.html", schedules=Schedule.query.all(), readable_days={did: day.name for did, day in classtime_dict.items()})
 
 
 @app.route("/admin/times/schedule", methods=["POST"])

@@ -11,10 +11,10 @@ from app import app
 neededperiods = []
 lunchperiods = []
 for times in classtime_dict.values():
-    for ctime in times['classtimes']:
-        if ctime["lunchactive"]:
-            lunchperiods.append(ctime["period"])
-        neededperiods.append(ctime["period"])
+    for ctime in times.classtimes:
+        if ctime.lunchactive:
+            lunchperiods.append(ctime.period)
+        neededperiods.append(ctime.period)
 lunchperiods = list(set(lunchperiods))
 neededperiods = sorted(set(neededperiods))
 # TODO: Move most of these functions to a function within a course class
