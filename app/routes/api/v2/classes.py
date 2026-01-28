@@ -33,9 +33,9 @@ def current_classes():
                 "teacher": c.teacher
             } for c in get_today_courses(user)
         },
-        "period": currentperiod['period'] if currentperiod is not None else None,
-        "endtime": int(datetime.combine(datetime.today(), currentperiod['end']).timestamp()) if (currentperiod is not None) else None,
-        "passing": currentperiod['passing'] if currentperiod is not None and 'passing' in currentperiod else None,
+        "period": currentperiod.period if currentperiod is not None else None,
+        "endtime": int(datetime.combine(datetime.today(), currentperiod.end).timestamp()) if (currentperiod is not None) else None,
+        "passing": currentperiod.passing if currentperiod is not None and 'passing' in currentperiod else None,
         "lunch": currentperiod['lunch'] if currentperiod is not None else None,
         "leavingptech": currentperiod.get('leavingptech', False) if currentperiod is not None else None
     })
@@ -70,9 +70,9 @@ def time_until_end():
     """
     currentperiod = get_current_period()
     return success_response(None, {
-        "time": int(datetime.combine(datetime.today(), currentperiod['end']).timestamp()) if (currentperiod is not None) else None,
-        "passing": currentperiod['passing'] if currentperiod is not None and 'passing' in currentperiod else None,
-        "period": currentperiod['period'] if currentperiod is not None else None,
+        "time": int(datetime.combine(datetime.today(), currentperiod.end).timestamp()) if (currentperiod is not None) else None,
+        "passing": currentperiod.passing if currentperiod is not None and 'passing' in currentperiod else None,
+        "period": currentperiod.period if currentperiod is not None else None,
         "leavingptech": currentperiod.get('leavingptech', False) if currentperiod is not None else None
     })
 
@@ -93,11 +93,11 @@ def schedule_today(date=None):
     return success_response(None, {
         "schedule": [
             {
-                "start": datetime.combine(date if date is not None else datetime.today().date(), entry['start']).timestamp(),
-                "end": datetime.combine(date if date is not None else datetime.today().date(), entry['end']).timestamp(),
-                "period": entry['period'],
-                "passing": entry['passing'],
-                "lunchactive": entry['lunchactive'],
+                "start": datetime.combine(date if date is not None else datetime.today().date(), entry.start).timestamp(),
+                "end": datetime.combine(date if date is not None else datetime.today().date(), entry.end).timestamp(),
+                "period": entry.period,
+                "passing": entry.passing,
+                "lunchactive": entry.lunchactive,
                 "class": {
                     "id": entry['class'].id,
                     "displayname": entry['class'].name,

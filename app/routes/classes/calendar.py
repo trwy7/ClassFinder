@@ -110,12 +110,12 @@ def add_class_event(calendar, course, current_date, current_day, ignore_lunch=Fa
         app.logger.warning(f"No class time found for {course.name} on {current_date}")
         return
     app.logger.debug(f"Adding class event for {classtime}")
-    if classtime['lunchactive'] and not ignore_lunch:
+    if classtime.lunchactive and not ignore_lunch:
         add_class_with_lunch_event(calendar, course, classtime, current_date, current_day)
         return
     denver_tz = pytz.timezone('America/Denver')
-    start_time = denver_tz.localize(datetime.combine(current_date, classtime['start']))
-    end_time = denver_tz.localize(datetime.combine(current_date, classtime['end']))
+    start_time = denver_tz.localize(datetime.combine(current_date, classtime.start))
+    end_time = denver_tz.localize(datetime.combine(current_date, classtime.end))
 
     event = Event()
     event.name = course.name
@@ -137,16 +137,16 @@ def add_class_with_lunch_event(calendar, course, classtime, current_date, curren
     app.logger.debug(f"Adding class with lunch event for {course.name} (lunch {course.lunch})")
 
     denver_tz = pytz.timezone('America/Denver')
-    start_time = denver_tz.localize(datetime.combine(current_date, classtime['start']))
-    end_time = denver_tz.localize(datetime.combine(current_date, classtime['end']))
+    start_time = denver_tz.localize(datetime.combine(current_date, classtime.start))
+    end_time = denver_tz.localize(datetime.combine(current_date, classtime.end))
 
     lunchtimes = get_lunchtimes(current_day)
     if course.lunch not in lunchtimes:
         app.logger.debug(f"Invalid lunch type '{course.lunch}' for {course.name}, skipping lunch event")
         add_class_event(calendar, course, current_date, current_day, ignore_lunch=True)
         return
-    lunch_start_time = denver_tz.localize(datetime.combine(current_date, lunchtimes[course.lunch]['start']))
-    lunch_end_time = denver_tz.localize(datetime.combine(current_date, lunchtimes[course.lunch]['end']))
+    lunch_start_time = denver_tz.localize(datetime.combine(current_date, lunchtimes[course.lunch].start))
+    lunch_end_time = denver_tz.localize(datetime.combine(current_date, lunchtimes[course.lunch].end))
 
     app.logger.debug(f"Class time: {start_time.time()} - {end_time.time()}, Lunch: {lunch_start_time.time()} - {lunch_end_time.time()}")
 
@@ -247,8 +247,8 @@ def add_passing_period_event(calendar, course, current_date, current_day):
     """Add a passing period event to the calendar."""
     passing_classtime = get_classtime_by_period(period=course.period, passing=True, day=current_day)
     denver_tz = pytz.timezone('America/Denver')
-    start_time = denver_tz.localize(datetime.combine(current_date, passing_classtime['start']))
-    end_time = denver_tz.localize(datetime.combine(current_date, passing_classtime['end']))
+    start_time = denver_tz.localize(datetime.combine(current_date, passing_classtime.start))
+    end_time = denver_tz.localize(datetime.combine(current_date, passing_classtime.end))
 
     event = Event()
     event.name = "Passing period"

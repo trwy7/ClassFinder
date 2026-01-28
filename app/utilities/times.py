@@ -18,6 +18,9 @@ class ClassTime:
         self.period = period
         self.passing = passing
         self.lunchactive = lunchactive
+    def copy(self):
+        """Create a copy of the ClassTime instance."""
+        return ClassTime(self.period, self.start, self.end, self.passing, self.lunchactive)
 class LunchPeriod:
     """Representation of a lunch period with helpers to access attributes as a mapping."""
     __slots__ = ("start", "end", "period")
@@ -25,6 +28,19 @@ class LunchPeriod:
         self.period = period
         self.start = start
         self.end = end
+    def copy(self):
+        """Create a copy of the LunchPeriod instance."""
+        return LunchPeriod(self.period, self.start, self.end)
+
+class UserClassTime:
+    """Container for a specific user's class time, that can include modifications."""
+    __slots__ = ("start", "end", "period", "passing", "lunchactive")
+    def __init__(self, period: str, name: str, room: str, teacher: str, lunch: str):
+        self.period = period
+        self.name = name
+        self.room = room
+        self.teacher = teacher
+        self.lunch = lunch
 
 class DaySchedule:
     """Container for a day's schedule that supports attribute and mapping access."""
@@ -311,7 +327,7 @@ def get_classtime_by_period(period: str, passing: bool=False, day: int=None):
     """
     classtimes = get_classtimes(day)
     for classtime in classtimes:
-        if classtime['period'] == period and classtime['passing'] == passing:
+        if classtime.period == period and classtime.passing == passing:
             return classtime
     return None
 
@@ -322,7 +338,7 @@ def get_lunchtimes(day: int=None):
     Returns:
         dict: A dictionary of lunch
     """
-    return classtime_dict[get_current_day() if day is None else day]['lunchtimes']
+    return classtime_dict[get_current_day() if day is None else day].lunchtimes
 
 def set_schedule(start: date, end: date, simulated_day: int):
     """
@@ -405,19 +421,19 @@ def create_schedule_pdf( # pylint: disable=too-many-arguments, too-many-position
         c.setFont("Helvetica", 12 if not smalltext else 8)
         classtimes = classtime_dict[day].classtimes
         for ctime in classtimes:
-            if ctime['passing']:
+            if ctime.passing:
                 continue
             course = None
             if user:
                 for ncourse in user.classes:
-                    if ncourse.period == ctime['period']:
+                    if ncourse.period == ctime.period:
                         course = ncourse
                         break
-            start_time = ctime['start'].strftime("%I:%M %p")
-            end_time = ctime['end'].strftime("%I:%M %p")
+            start_time = ctime.start.strftime("%I:%M %p")
+            end_time = ctime.end.strftime("%I:%M %p")
             drawthings = []
             if showperiod:
-                drawthings.append(f"Period {ctime['period'] if ctime['period'] != 'Access' else 'Access'}")
+                drawthings.append(f"Period {ctime.period if ctime.period != 'Access' else 'Access'}")
             if showtime:
                 drawthings.append(f"{start_time} - {end_time}")
             if showclass and course:
@@ -427,10 +443,10 @@ def create_schedule_pdf( # pylint: disable=too-many-arguments, too-many-position
             if drawthings:
                 c.drawString(50, y, " - ".join(drawthings))
                 y -= 15 if not smalltext else 10
-            if showlunch and ctime['lunchactive'] and course and course.lunch:
-                lunchtime = classtime_dict[day]['lunchtimes'][course.lunch]
-                start_time = lunchtime['start'].strftime("%I:%M %p")
-                end_time = lunchtime['end'].strftime("%I:%M %p")
+            if showlunch and ctime.lunchactive and course and course.lunch:
+                lunchtime = classtime_dict[day].lunchtimes[course.lunch]
+                start_time = lunchtime.start.strftime("%I:%M %p")
+                end_time = lunchtime.end.strftime("%I:%M %p")
                 #c.drawString(50, y, f"{course.lunch} lunch" + (f": {start_time} - {end_time}" if showtime else ""))
                 drawthings = []
                 drawthings.append(f"{course.lunch} lunch")
@@ -461,26 +477,26 @@ def get_full_schedule(day: date=None, user: User=None): # For simpler applicatio
     schedule = []
     for ctime in classtimes:
         class_info = {
-            "start": ctime['start'],
-            "end": ctime['end'],
-            "period": ctime['period'],
-            "passing": ctime['passing'],
-            "lunchactive": ctime['lunchactive'],
+            "start": ctime.start,
+            "end": ctime.end,
+            "period": ctime.period,
+            "passing": ctime.passing,
+            "lunchactive": ctime.lunchactive,
             "class": None
         }
         if user:
             for uclass in user.classes:
-                if uclass.period == ctime['period']:
+                if uclass.period == ctime.period:
                     class_info['class'] = uclass
                     break
         schedule.append(class_info)
     # Find lunch period
     for entry in schedule:
-        if entry['lunchactive'] and entry['class'] and entry['class'].lunch:
+        if entry.lunchactive and entry['class'] and entry['class'].lunch:
             lunchtime = get_lunchtimes(day_type)[entry['class'].lunch]
             lunch_entry = {
-                "start": lunchtime['start'],
-                "end": lunchtime['end'],
+                "start": lunchtime.start,
+                "end": lunchtime.end,
                 "period": "Lunch",
                 "passing": False,
                 "lunchactive": True,
@@ -490,24 +506,24 @@ def get_full_schedule(day: date=None, user: User=None): # For simpler applicatio
             # Break the original schedule to mark the period end/start around lunch
             if entry['class'].lunch == 'A':
                 app.logger.debug(f"Processing A lunch for {entry['class'].name}: lunch first, then class")
-                entry['start'] = lunchtime['end']
+                entry.start = lunchtime.end
             elif entry['class'].lunch == 'B':
                 app.logger.debug(f"Processing B lunch for {entry['class'].name}: lunch in middle of class")
                 # Move end time to lunch start
-                original_end = entry['end']
-                entry['end'] = lunchtime['start']
+                original_end = entry.end
+                entry.end = lunchtime.start
                 # Create new entry for post-lunch class time
                 post_lunch_entry = {
-                    "start": lunchtime['end'],
+                    "start": lunchtime.end,
                     "end": original_end,
-                    "period": entry['period'],
-                    "passing": entry['passing'],
-                    "lunchactive": entry['lunchactive'],
+                    "period": entry.period,
+                    "passing": entry.passing,
+                    "lunchactive": entry.lunchactive,
                     "class": entry['class']
                 }
                 schedule.insert(schedule.index(entry) + 2, post_lunch_entry)
             elif entry['class'].lunch == 'C':
                 app.logger.debug(f"Processing C lunch for {entry['class'].name}: class first, then lunch")
-                entry['end'] = lunchtime['start']
+                entry.end = lunchtime.start
             break
     return schedule

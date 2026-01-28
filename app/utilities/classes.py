@@ -32,14 +32,14 @@ def get_current_period(include_delay: bool=True):
     bell_delay = get_bell_delay()
     current_time = datetime.now().time()
     for time in get_classtimes():
-        app.logger.debug(f"Checking period {time['period']}")
+        app.logger.debug(f"Checking period {time.period}")
         if include_delay:
             ttime = time.copy()
-            ttime['start'] = (datetime.combine(datetime.today(), time['start']) + timedelta(seconds=bell_delay)).time()
-            ttime['end'] = (datetime.combine(datetime.today(), time['end']) + timedelta(seconds=bell_delay)).time()
+            ttime.start = (datetime.combine(datetime.today(), time.start) + timedelta(seconds=bell_delay)).time()
+            ttime.end = (datetime.combine(datetime.today(), time.end) + timedelta(seconds=bell_delay)).time()
         else:
             ttime = time.copy()
-        if ttime["start"] <= current_time <= ttime["end"]:
+        if ttime.start <= current_time <= ttime.end:
             app.logger.debug(f"Current period found: {ttime}")
             return ttime
     app.logger.debug("No current period")
@@ -69,19 +69,19 @@ def get_user_current_period(user: User):
     if current_period is None:
         app.logger.debug("No current period")
         return None
-    if not current_period["lunchactive"]:
+    if not current_period.lunchactive:
         app.logger.debug("Lunch not active")
         for course in user.classes:
-            if course.period == current_period["period"]:
-                app.logger.debug(f"Found course {course.name} for period {current_period['period']}")
+            if course.period == current_period.period:
+                app.logger.debug(f"Found course {course.name} for period {current_period.period}")
                 returncourse = course
                 if "PTECH" in course.room:
                     app.logger.debug(f"User {user.username} is in a PTECH class.")
-                    modified_start_time = datetime.combine(datetime.today(), current_period["start"])
-                    modified_end_time = datetime.combine(datetime.today(), current_period["end"])
+                    modified_start_time = datetime.combine(datetime.today(), current_period.start)
+                    modified_end_time = datetime.combine(datetime.today(), current_period.end)
                     app.logger.debug(f"Original start time: {modified_start_time}, Original end time: {modified_end_time}, it is currently {datetime.now()}")
                     # Start the screwery
-                    if current_period['passing']:
+                    if current_period.passing:
                         # Passing periods get 5 more minutes
                         app.logger.debug("We are in a passing period, so PTECH gets 5 extra minutes")
                         modified_end_time += timedelta(minutes=5)
@@ -90,19 +90,19 @@ def get_user_current_period(user: User):
                         app.logger.debug("We are in the first 5 minutes of normal class, so PTECH starts now")
                         modified_end_time = modified_start_time + timedelta(minutes=5)
                         modified_start_time -= timedelta(minutes=5)
-                        current_period['passing'] = True
+                        current_period.passing = True
                     elif (datetime.now() > (modified_end_time - timedelta(minutes=5))):
                         # We are in the last 5 minutes of normal class, so PTECH leaves now
                         app.logger.debug("We are in the last 5 minutes of normal class, so PTECH leaves now")
                         modified_start_time = modified_end_time - timedelta(minutes=5)
                         lastperiod = get_classtimes()[-1]
-                        if lastperiod['start'] == current_period['start']:
+                        if lastperiod.start == current_period.start:
                             # Last period of the day, so PTECH leaves at the end of class, we need to just say they have no class
                             app.logger.debug("This is the last period of the day")
                             return None
                         modified_end_time += timedelta(minutes=5)
                         current_period['leavingptech'] = True
-                        current_period['passing'] = True
+                        current_period.passing = True
                         returncourse = None
                     else:
                         # Normal class time, so PTECH leaves 5 minutes early and starts 5 minutes late
@@ -110,67 +110,67 @@ def get_user_current_period(user: User):
                         modified_start_time += timedelta(minutes=5)
                         modified_end_time -= timedelta(minutes=5)
                     # Save everything back to the dict
-                    current_period['start'] = modified_start_time.time()
-                    current_period['end'] = modified_end_time.time()
-                    app.logger.debug(f"Modified start time: {current_period['start']}, Modified end time: {current_period['end']}")
+                    current_period.start = modified_start_time.time()
+                    current_period.end = modified_end_time.time()
+                    app.logger.debug(f"Modified start time: {current_period.start}, Modified end time: {current_period.end}")
                 else:
                     app.logger.debug(f"User {user.username} is in a non-PTECH class.")
-                    # current_period['start'] += timedelta(seconds=bell_delay)
-                    # current_period['end'] += timedelta(seconds=bell_delay)
-                    modified_start_time = (datetime.combine(datetime.today(), current_period["start"]) + timedelta(seconds=bell_delay)).time()
-                    modified_end_time = (datetime.combine(datetime.today(), current_period["end"]) + timedelta(seconds=bell_delay)).time()
-                    current_period['start'] = modified_start_time
-                    current_period['end'] = modified_end_time
-                    app.logger.debug(f"Modified start time: {current_period['start']}, Modified end time: {current_period['end']}")
+                    # current_period.start += timedelta(seconds=bell_delay)
+                    # current_period.end += timedelta(seconds=bell_delay)
+                    modified_start_time = (datetime.combine(datetime.today(), current_period.start) + timedelta(seconds=bell_delay)).time()
+                    modified_end_time = (datetime.combine(datetime.today(), current_period.end) + timedelta(seconds=bell_delay)).time()
+                    current_period.start = modified_start_time
+                    current_period.end = modified_end_time
+                    app.logger.debug(f"Modified start time: {current_period.start}, Modified end time: {current_period.end}")
                 return current_period | {"lunch": None, "course": returncourse}
-        app.logger.debug(f"No course found for period {current_period['period']} and user {user.username}")
+        app.logger.debug(f"No course found for period {current_period.period} and user {user.username}")
         return current_period | {"lunch": None, "course": None}
     currentcourse = None
     for course in user.classes:
         app.logger.debug(f"Checking course {course.name}")
-        if course.period == current_period["period"]:
+        if course.period == current_period.period:
             app.logger.debug(
-                f"Found course {course.name} for period {current_period['period']}"
+                f"Found course {course.name} for period {current_period.period}"
             )
             currentcourse = course
             break
     if currentcourse is None:
         app.logger.debug(
-            f"No course found for period {current_period['period']} and user {user.username}"
+            f"No course found for period {current_period.period} and user {user.username}"
         )
         return {
             "lunch": None,
-            "period": current_period["period"],
-            "end": current_period["end"],
-            "start": current_period["start"],
+            "period": current_period.period,
+            "end": current_period.end,
+            "start": current_period.start,
             "course": None,
         }
     if currentcourse.lunch is None:
         app.logger.debug(
-            f"User {user.username} is in period {current_period['period']} for course {currentcourse.name}, no lunch has been set."
+            f"User {user.username} is in period {current_period.period} for course {currentcourse.name}, no lunch has been set."
         )
         return current_period | {"lunch": None, "course": currentcourse}
-    if lunchtimes[currentcourse.lunch]["start"] <= current_time <= lunchtimes[currentcourse.lunch]["end"]:
+    if lunchtimes[currentcourse.lunch].start <= current_time <= lunchtimes[currentcourse.lunch].end:
         app.logger.debug(f"User {user.username} is in lunch {currentcourse.lunch}")
         return {
             "lunch": currentcourse.lunch,
             "period": "Lunch",
-            "end": lunchtimes[currentcourse.lunch]["end"],
-            "start": lunchtimes[currentcourse.lunch]["start"],
+            "end": lunchtimes[currentcourse.lunch].end,
+            "start": lunchtimes[currentcourse.lunch].start,
             "course": currentcourse,
         }
-    if current_time < lunchtimes[currentcourse.lunch]["start"]:
+    if current_time < lunchtimes[currentcourse.lunch].start:
         app.logger.debug(
-            f"User {user.username} is in period {current_period['period']} for course {currentcourse.name}, before lunch"
+            f"User {user.username} is in period {current_period.period} for course {currentcourse.name}, before lunch"
         )
         return {
             "lunch": None,
-            "period": current_period["period"],
-            "end": lunchtimes[currentcourse.lunch]["start"],
-            "start": current_period["start"],
+            "period": current_period.period,
+            "end": lunchtimes[currentcourse.lunch].start,
+            "start": current_period.start,
             "course": currentcourse,
         }
-    app.logger.debug(f"Period {current_period['period']} after lunch")
+    app.logger.debug(f"Period {current_period.period} after lunch")
     return current_period | {"lunch": None, "course": currentcourse}
 
 def search_classes(name: str=None, room: str=None, period: int=None, teacher: str=None):
@@ -206,7 +206,7 @@ def get_today_courses(user: User, day: int = None):
         list: A list of courses that the user has scheduled for today.
     """
     app.logger.debug(f"Retrieving today's courses for user {user.username}")
-    user_periods = list(dict.fromkeys([time["period"] for time in get_classtimes(day)]))
+    user_periods = list(dict.fromkeys([time.period for time in get_classtimes(day)]))
     app.logger.debug(f"User {user.username} periods: {user_periods}")
     newcourses = []
     for course in user.classes:

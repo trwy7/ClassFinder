@@ -35,7 +35,7 @@ def get_user_data():
                 "teacher": course.teacher if allow_all else None,
             }
             for course in request.user.classes
-        ], key=lambda x: x["period"])
+        ], key=lambda x: x.period)
     if allow_all or "read-misc" in token_scopes:
         return_data["created_at"] = round(request.user.created_at.timestamp())
         return_data["created_by"] = request.user.created_by
