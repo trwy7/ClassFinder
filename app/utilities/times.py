@@ -301,13 +301,13 @@ def get_day_schedule(user: User | None, day: date | int | None=None, include_del
                 break
         # PTECH check
         if user_class and "PTECH" in user_class.room:
-            mods.append(("sys-ptech-start", "PTECH classes start late start+5m", "start", timedelta(minutes=5)))
-            mods.append(("sys-ptech-end", "PTECH classes end early end-5m", "end", timedelta(minutes=-5)))
+            mods.append(("sys-ptech-start", "PTECH classes start late", "start", timedelta(minutes=5)))
+            mods.append(("sys-ptech-end", "PTECH classes end early", "end", timedelta(minutes=-5)))
         # Add bell delay, only if not in ptech
         elif include_delay and bell_delay != 0.0:
             app.logger.debug(f"Applying bell delay of {bell_delay} seconds to class time {ct.period}")
-            mods.append(("sys-bell-delay-start", f"Bell delay start start+{bell_delay}s", "start", timedelta(seconds=bell_delay)))
-            mods.append(("sys-bell-delay-end", f"Bell delay end end+{bell_delay}s", "end", timedelta(seconds=bell_delay)))
+            mods.append(("sys-bell-delay-start", "Bell delay start", "start", timedelta(seconds=bell_delay)))
+            mods.append(("sys-bell-delay-end", "Bell delay end", "end", timedelta(seconds=bell_delay)))
         uct = UserClassTime(ct, course=user_class, mods=mods)
         # Get the last added class time to determine passing time
         if schedule:

@@ -2,7 +2,7 @@
 This file contains the routes for the class API endpoints.
 These endpoints are used to get information about the user's classes and schedule.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import request
 from app import app
 from app.utilities.users import require_login, require_scopes
@@ -88,28 +88,6 @@ def schedule_today(date=None):
             return error_response("Invalid date format. Use YYYY-MM-DD."), 400
     app.logger.debug(f"Fetching schedule for user {user.username if user else 'guest'} on date {date if date else 'today'}")
     schedule = get_day_schedule(user=user, day=date)
-    app.logger.debug({
-        "schedule": [
-            {
-                "start": datetime.combine(date if date is not None else datetime.today().date(), entry.start).timestamp(),
-                "end": datetime.combine(date if date is not None else datetime.today().date(), entry.end).timestamp(),
-                "period": entry.period,
-                "passing": entry.passing,
-                "lunchactive": entry.lunchactive,
-                "class": {
-                    "id": entry.course.id,
-                    "displayname": entry.course.name,
-                    "name": entry.course.campus_name,
-                    "room": entry.course.room,
-                    "period": entry.course.period,
-                    "lunch": entry.course.lunch,
-                    "verified": entry.course.verified,
-                    "canvasid": entry.course.canvasid,
-                    "teacher": entry.course.teacher
-                } if bool(entry.course) else None
-            } for entry in schedule
-        ]
-    })
     # TODO: Move this to a utility function to avoid duplication across get_current_period, the calendar, and here
     return success_response(None, {
         "schedule": [
@@ -119,6 +97,14 @@ def schedule_today(date=None):
                 "period": entry.period,
                 "passing": entry.passing,
                 "lunchactive": entry.lunchactive,
+                "mods": [
+                    {
+                        "id": mod[0],
+                        "name": mod[1],
+                        "mod": mod[2],
+                        "value": mod[3].total_seconds() if isinstance(mod[3], timedelta) else str(mod[3])
+                    } for mod in entry.mods
+                ],
                 "class": {
                     "id": entry.course.id,
                     "displayname": entry.course.name,
