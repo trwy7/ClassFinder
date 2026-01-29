@@ -398,6 +398,7 @@ def get_active_token():
         else:
             if auth != "":
                 token = auth.split(" ")[1]
+    app.logger.debug(f"Active token from request: {token[0:4] if token else 'None'}")
     return token
 
 def get_active_pwd():
@@ -426,11 +427,15 @@ def check_token_validity(token: str):
     """
     token = Token.query.filter_by(token=token).first()
     if token:
+        app.logger.debug(f"Found token for user {token.user_id}, checking validity")
         if token.expire is not None and token.expire < datetime.now():
+            app.logger.debug("Token has expired")
             return (None, None)
         user = User.query.filter_by(username=token.user_id).first()
         if user:
+            app.logger.debug(f"Token is valid for user {user.username}")
             return (user, token)
+    app.logger.debug("Token is invalid or expired")
     return (None, None)
 
 def check_token_scopes(token: Token, required_scopes: list[list[str]]):
@@ -472,6 +477,7 @@ def auth_user():
         if user and token:
             request.user = user
             request.token = token
+            app.logger.debug(f"Authenticated user {user.username} with token")
             return (user, token)
     cpwd = get_active_pwd()
     if cpwd:
@@ -480,7 +486,9 @@ def auth_user():
             user = User.query.filter_by(username=username).first()
             if user:
                 request.user = user
+                app.logger.debug(f"Authenticated user {user.username} with password")
                 return (user, None)
+    app.logger.debug("No valid authentication found in request")
     return (None, None)
 
 def require_logged_out(f):

@@ -41,7 +41,7 @@ def dashboard():
                 ]
             ),
             canvasurl=canvas_url,
-            haslunch='A' in lunchtimes,
+            haslunch=len(lunchtimes) > 0,
             devmode=devmode
         ),
     )

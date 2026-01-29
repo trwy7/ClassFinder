@@ -266,7 +266,7 @@ def log_response(response):
         app.logger.error("Failed to log request: %s", e)
     # Add Server-Timing header
     try:
-        duration = (datetime.now() - (request.start_time if hasattr(request, 'start_time') else datetime.now())).total_seconds() * 1000
+        duration = (datetime.now() - request.start_time).total_seconds() * 1000
         response.headers["Server-Timing"] = f"app;dur={duration:.2f}"
     except Exception as e: # pylint: disable=broad-exception-caught
         app.logger.error("Failed to set Server-Timing header: %s", e)
