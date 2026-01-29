@@ -101,7 +101,8 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    }
+                    },
+                    credentials: 'include'
                 })
                 .then(response => {
                     if (response.ok) {
@@ -132,7 +133,8 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ color_hue: hue })
+                body: JSON.stringify({ color_hue: hue }),
+                credentials: 'include'
             })
             .then(response => {
                 if (response.ok) {
@@ -153,7 +155,8 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ granted_to: granted_to })
+                    body: JSON.stringify({ granted_to: granted_to }),
+                    credentials: 'include'
                 })
                 .then(response => {
                     if (response.ok) {
@@ -170,7 +173,8 @@
         }
         function getTempPasscode() {
             fetch('/account/temp_passcode', {
-                method: 'GET'
+                method: 'GET',
+                credentials: 'include'
             })
             .then(response => response.json())
             .then(data => {
@@ -230,7 +234,8 @@
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ css: css })
+            body: JSON.stringify({ css: css }),
+            credentials: 'include'
         })
         .then(response => {
             if (response.ok) {
@@ -247,7 +252,10 @@
         });
     }
     function getExistingCSS() {
-        fetch('/user.css?v={{ user.custom_css_last_updated }}')
+        fetch('/user.css?v={{ user.custom_css_last_updated }}', {
+            method: 'GET',
+            credentials: 'include'
+        })
         .then(response => response.text())
         .then(css => {
             document.getElementById('customcssinput').value = css;
