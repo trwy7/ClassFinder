@@ -247,7 +247,7 @@
         });
     }
     function getExistingCSS() {
-        fetch('/user.css')
+        fetch('/user.css?v={{ user.custom_css_last_updated }}')
         .then(response => response.text())
         .then(css => {
             document.getElementById('customcssinput').value = css;
