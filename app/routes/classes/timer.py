@@ -39,8 +39,8 @@ def timer(version=1):
 
     app.logger.debug(f"User: {user}")
 
-    period_start = datetime.combine(datetime.today(), current_period['start'])
-    period_end = datetime.combine(datetime.today(), current_period['end'])
+    period_start = datetime.combine(datetime.today(), current_period.start)
+    period_end = datetime.combine(datetime.today(), current_period.end)
     
     return render_template(
         f'timers/timer_{version}.html',

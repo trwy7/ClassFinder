@@ -154,6 +154,17 @@
     const alSync = urlParams.get('genericMode') === 'true';
     if (alSync) {
         jsStatusElem.textContent = 'Viewing the generic timer.';
+        // Add a go back button, as an "a" with a href
+        const backButton = document.createElement('a');
+        // Keep other URL params except genericMode
+        const curl = new URL(window.location.href);
+        curl.searchParams.delete('genericMode');
+        backButton.href = curl.toString();
+        backButton.textContent = 'Go back';
+        backButton.style.display = 'inline-block';
+        backButton.style.padding = '5px 10px';
+        // jsStatusElem.appendChild(document.createElement('br'));
+        jsStatusElem.appendChild(backButton);
     }
     function uUpdateTimer(){
         if (!runTimer) return;

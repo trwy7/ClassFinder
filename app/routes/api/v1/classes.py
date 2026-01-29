@@ -28,8 +28,8 @@ def apicurrentcourses():
                 'canvasid': c.canvasid
             } for c in today
         },
-        'currentperiod': currentperiod['period'] if currentperiod is not None else None,
-        'nextclass': int(datetime.combine(datetime.today(), currentperiod['end']).timestamp()) if (currentperiod is not None) else None,
+        'currentperiod': currentperiod.period if currentperiod is not None else None,
+        'nextclass': int(datetime.combine(datetime.today(), currentperiod.end).timestamp()) if (currentperiod is not None) else None,
         'dayoff': today == [] or today is None #pylint: disable=use-implicit-booleaness-not-comparison
     })
 
@@ -42,7 +42,7 @@ def apicurrentperiod():
     currentperiod = get_user_current_period(user) if user is not None else get_current_period()
     response = jsonify({
         'status': 'success',
-        'currentperiod': currentperiod['period'] if currentperiod is not None else None,
-        'nextclass': int(datetime.combine(datetime.today(), currentperiod['end']).timestamp()) if (currentperiod is not None) else None,
+        'currentperiod': currentperiod.period if currentperiod is not None else None,
+        'nextclass': int(datetime.combine(datetime.today(), currentperiod.end).timestamp()) if (currentperiod is not None) else None,
     })
     return response

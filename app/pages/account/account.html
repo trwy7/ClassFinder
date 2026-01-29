@@ -30,7 +30,7 @@
             <h2>Tools</h2>
             <div style="margin-top:8px;">
                 {% if needcanvaslink %}<button onclick="window.location.href = '/classes/canvaslink'">Link canvas classes</button>{% endif %}
-                <button onclick="window.location.href = '/classes/exportschedule'">Print your schedule</button>
+                <button onclick="window.location.href = '/classes/schedulepdf'">Print your schedule</button>
                 <button onclick="window.location.href = '/classes/calendar'">Create calendar</button>
             </div>
         </section>
@@ -74,6 +74,7 @@
                 <button onclick="setColor()">Save</button>
             </div>
             <div id="customcss" style="display: block;">
+                <p>Custom CSS</p>
                 <textarea id="customcssinput" rows="25" cols="50"></textarea><br>
                 <button onclick="setCustomCSS()">Save CSS</button>
             </div>
@@ -246,7 +247,7 @@
         });
     }
     function getExistingCSS() {
-        fetch('/user.css')
+        fetch('/user.css?v={{ user.custom_css_last_updated }}')
         .then(response => response.text())
         .then(css => {
             document.getElementById('customcssinput').value = css;

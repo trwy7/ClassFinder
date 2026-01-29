@@ -59,6 +59,9 @@ body {
     background-color: var(--background-color);
     color: var(--text-color);
 }
+body:has(header) {
+    padding-top: 60px;
+}
 body:has(main.twosections) {
     overflow: hidden;
 }
@@ -69,6 +72,7 @@ header {
     width: 100%;
     top: 0;
     z-index: 1000;
+    height: 60px;
     text-shadow: 0px 0px 10px var(--navbar-color);
 }
 #timertext, #timeleft, #timeleftdiv {
@@ -155,29 +159,6 @@ section.leftsection {
 }
 section.rightsection {
     margin-left: 10px;
-}
-@media (max-width: 450px) {
-    main {
-        text-align: center;
-    }
-    main.twosections {
-        flex-direction: column !important;
-        height: auto;
-        top: 0;
-        padding-top: 0;
-        overflow: visible;
-    }
-    main.twosections > section {
-        max-height: none;
-        margin: 0 !important;
-        padding-bottom: 50px;
-    }
-    body:has(main.twosections) {
-        overflow: auto;
-    }
-    main#aboutpage > section.rightsection {
-        display:none;
-    }
 }
 /* Account page */
 input#colorRange::-moz-range-track {
@@ -556,5 +537,23 @@ li.action[onclick]:hover {
         text-align: center;
         white-space: nowrap;
         padding: 8px 12px;
+    }
+    main.twosections > section {
+        max-height: none;
+        margin: 0 !important;
+        padding-bottom: 50px;
+    }
+    main {
+        text-align: center;
+    }
+    main.twosections {
+        flex-direction: column !important;
+        height: auto;
+        top: 0;
+        padding-top: 0;
+        overflow: visible;
+    }
+    body:has(main.twosections) {
+        overflow: auto;
     }
 }

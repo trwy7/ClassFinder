@@ -31,7 +31,7 @@ def dashboard():
             classes=user.classes,
             user=user,
             currentperiod=currentperiod,
-            endtime=None if (currentperiod is None) else datetime.combine(datetime.today(), currentperiod['end']).timestamp(),
+            endtime=None if (currentperiod is None) else datetime.combine(datetime.today(), currentperiod.end).timestamp(),
             currentclasses=get_today_courses(user),
             classestoadd=len(
                 [
@@ -41,12 +41,12 @@ def dashboard():
                 ]
             ),
             canvasurl=canvas_url,
-            haslunch='A' in lunchtimes,
+            haslunch=len(lunchtimes) > 0,
             devmode=devmode
         ),
     )
     # if currentperiod is not None:
-    #     end_time = datetime.combine(datetime.today(), currentperiod['end'])
+    #     end_time = datetime.combine(datetime.today(), currentperiod.end)
     # else:
     #     end_time = datetime.combine(datetime.today(), datetime.strptime("06:00", "%H:%M").time())
     #     end_time += timedelta(days=1)

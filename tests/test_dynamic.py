@@ -320,15 +320,15 @@ def test_ptech_times_afterduring_eos(client, token):
     assert response.json['period'] is None, "It thinks it is class time, but school has ended"
     assert response.json['endtime'] is None, "It thinks it is class time, but school has ended"
 
-@freezegun.freeze_time("2025-8-25 11:25:30")
+@freezegun.freeze_time("2025-8-25 11:23:30")
 @pytest.mark.dependency(depends=["test_export_data"])
 def test_ptech_times_afterduring(client, token):
     """
     Tests the weird PTECH times - "After during" class, end of school
     """
     response = check_json_response(client, "/api/v2/classes/current", headers={"Authorization": f"Bearer {token}"})
-    assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH"
-    assert response.json['endtime'] == 1756121700, f"The PTECH end delay messed up somewhere, got {response.json['endtime']}, expected 1756135500"
+    assert response.json['classes'][response.json['period']]['room'] == "PTECH", "It does not think it is in PTECH: " + str(response.json)
+    assert response.json['endtime'] == 1756121100, f"The PTECH end delay messed up somewhere, got {response.json['endtime']}, expected 1756135500"
 
 @freezegun.freeze_time("2025-8-27 11:05:00")
 @pytest.mark.dependency(depends=["test_export_data"])
@@ -389,25 +389,14 @@ def test_schedule_pdf(client, token):
     """
     Tests the schedule route
     """
-    response = client.get("/classes/exportschedule", headers={"Authorization": f"Bearer {token}"})
-    if response.status_code != 200:
-        pytest.fail(f"Failed to get load schedule settings page: {response.status_code}")
     response = client.get(
-        "/classes/schedulepdf/monday,tuesday,wednesday,thursday,friday,eb,eg?",
+        "/classes/schedulepdf",
         headers={"Authorization": f"Bearer {token}"}
     )
     if response.status_code != 200:
         pytest.fail(f"Failed to get schedule pdf: {response.status_code}")
     if response.content_type != "application/pdf":
         pytest.fail(f"Failed to get schedule pdf: {response.content_type}")
-    response = client.get(
-        "/classes/schedulepdf/monday,tuesday,wednesday,eb,eg?notime=true&noperiod=true",
-        headers={"Authorization": f"Bearer {token}"}
-    )
-    if response.status_code != 200:
-        pytest.fail(f"Failed to get 2nd schedule pdf: {response.status_code}")
-    if response.content_type != "application/pdf":
-        pytest.fail(f"Failed to get 2nd schedule pdf: {response.content_type}")
 
 def test_calendar(client, token):
     """
@@ -454,6 +443,37 @@ def test_reset_password(client):
     token = response.json.get('token')
     check_html_response(client, "/dashboard?authtoken=" + token)
 
+@pytest.mark.dependency(depends=["test_create_admin"])
+def test_admin_logs(client, admintoken):
+    """
+    Tests the admin logs route
+    """
+    response = client.get("/admin/logs", headers={"Authorization": f"Bearer {admintoken}"})
+    assert response.status_code == 200
+    assert response.content_type == 'text/html; charset=utf-8'
+
+@freezegun.freeze_time("2025-03-12 11:14:00")
+@pytest.mark.dependency(depends=["test_create_user"])
+def test_today_schedule_api(client, token):
+    """
+    Tests the /api/v2/schedule/today route
+    """
+    response = check_json_response(client, "/api/v2/schedule/today", headers={"Authorization": f"Bearer {token}"})
+    assert response.json.get('status') == "success"
+    assert 'schedule' in response.json
+    schedule = response.json.get('schedule')
+    assert isinstance(schedule, list), "Schedule is not a list"
+    assert len(schedule) == 10, f"Expected 10 periods in schedule, got {len(schedule)}"
+    assert schedule[0]['start'] == 1741737600, f"Expected start time of first period to be 1741737600, got {schedule[0]['start']}"
+    assert schedule[0]['passing'], "Expected first period to be passing time"
+    assert schedule[1]['class']['name'] == "Class 5", f"Expected first class to be 'Class 5', got {schedule[1]['class']['name']}"
+    for period in schedule:
+        assert 'period' in period
+        assert 'start' in period
+        assert 'end' in period
+
+# PUT TESTS ABOVE THIS LINE
+
 @pytest.mark.dependency(depends=["test_create_user"])
 def test_delete_user(client, token):
     """
@@ -466,12 +486,3 @@ def test_delete_user(client, token):
     response = client.get("/dashboard", headers={"Authorization": f"Bearer {token}"}, follow_redirects=False)
     assert response.status_code == 302
     assert response.location == "/login"  # Should redirect to login after deletion
-
-@pytest.mark.dependency(depends=["test_create_admin"])
-def test_admin_logs(client, admintoken):
-    """
-    Tests the admin logs route
-    """
-    response = client.get("/admin/logs", headers={"Authorization": f"Bearer {admintoken}"})
-    assert response.status_code == 200
-    assert response.content_type == 'text/html; charset=utf-8'

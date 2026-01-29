@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import render_template, request
 from app import app
 from app.db import Schedule, db
-from app.utilities.times import set_schedule, readable_days
+from app.utilities.times import set_schedule, classtime_dict, readable_days
 from app.utilities.users import require_login, require_role
 from app.utilities.responses import success_response, error_response
 

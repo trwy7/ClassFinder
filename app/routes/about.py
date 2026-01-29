@@ -16,9 +16,9 @@ def index():
     Index route, redirects to dashboard if user is logged in, shows basic info about the site.
     """
     currentperiod = get_current_period()
-    app.logger.debug(f"Current period end time: {currentperiod['end'] if currentperiod else 'None'}")
+    app.logger.debug(f"Current period end time: {currentperiod.end if currentperiod else 'None'}")
     return render_template("index.html",
-        endtime=None if (currentperiod is None) else int(datetime.combine(datetime.today(), currentperiod['end']).timestamp())
+        endtime=None if (currentperiod is None) else int(datetime.combine(datetime.today(), currentperiod.end).timestamp())
     )
 
 @app.route("/about")
@@ -27,7 +27,7 @@ def about():
     About route, shows basic info about the site.
     """
     currentperiod = get_current_period()
-    app.logger.debug(f"Current period end time: {currentperiod['end'] if currentperiod else 'None'}")
+    app.logger.debug(f"Current period end time: {currentperiod.end if currentperiod else 'None'}")
     return render_template("about.html",
-        endtime=None if (currentperiod is None) else int(datetime.combine(datetime.today(), currentperiod['end']).timestamp())
+        endtime=None if (currentperiod is None) else int(datetime.combine(datetime.today(), currentperiod.end).timestamp())
     )
