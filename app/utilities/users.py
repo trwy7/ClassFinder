@@ -9,7 +9,7 @@ import functools
 import base64
 import random
 from flask_bcrypt import Bcrypt
-from flask import request, redirect, abort, render_template
+from flask import request, redirect, render_template
 from app.db import db, User, Token, Class
 from app.utilities.responses import error_response
 from app import app
@@ -371,7 +371,7 @@ def set_color(user: User, color_hue: int):
     Returns:
         User: The user with the updated color.
     """
-    if not (0 <= color_hue <= 360):
+    if not 0 <= color_hue <= 360:
         raise ValueError("Color hue must be between 0 and 360")
     user.color_hue = color_hue
     db.session.commit()
@@ -498,7 +498,7 @@ def require_logged_out(f):
     """
     @functools.wraps(f)
     def decorated_function(*args, **kwargs):
-        user, token = auth_user()
+        user, _ = auth_user()
         if user is not None:
             return redirect("/dashboard")
         return f(*args, **kwargs)
@@ -559,7 +559,7 @@ def require_scopes(required_scopes: list[list[str]]): # pylint: disable=dangerou
         def decorated_function(*args, **kwargs):
             user, token = auth_user()
             if user is None:
-                raise Exception("This decorator requires the user to be logged in. Use @require_login before this decorator.")
+                raise RuntimeError("This decorator requires the user to be logged in. Use @require_login before this decorator.")
             if not check_token_scopes(token, required_scopes):
                 return error_response("Forbidden: This token does not have the required scopes"), 403
             return func(*args, **kwargs)
@@ -578,10 +578,9 @@ def require_role(roles: list):
         def decorated_function(*args, **kwargs):
             user, token = auth_user()
             if user is None:
-                raise Exception("This decorator requires the user to be logged in. Use @require_login before this decorator.")
+                raise RuntimeError("This decorator requires the user to be logged in. Use @require_login before this decorator.")
             if user.role not in roles:
                 return render_template("templates/error.html", status_code=403, error_message="Forbidden"), 403
             return f(*args, **kwargs)
         return decorated_function
     return decorator
-
