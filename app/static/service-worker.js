@@ -98,15 +98,13 @@ async function getCurrentPeriod() {
 }
 
 function fetchAndCacheSchedule() {
-    if (navigator.onLine) {
-        fetch(SCHEDULE_API).then(response => {
-            if (response.status === 200) {
-                caches.open(CACHE_NAME).then(cache => {
-                    cache.put(SCHEDULE_API, response);
-                });
-            }
-        });
-    }
+    fetch(SCHEDULE_API, { credentials: 'include' }).then(response => {
+        if (response.status === 200) {
+            caches.open(CACHE_NAME).then(cache => {
+                cache.put(SCHEDULE_API, response);
+            });
+        }
+    });
 }
 
 function cacheConfig() {
@@ -165,7 +163,7 @@ async function getOfflinePageHTML(r="You are offline") {
 <h3 id="periodtime">00:00 AM - 00:00 PM</h3>
 <h1 id="timeleft">Loading...</h1>
 </div>
-<p id="statusmsg" style="position:absolute; bottom: 10px; right: 20px; text-align: right;">${r}</p>
+<p id="statusmsg" style="position:absolute; bottom: 10px; right: 20px; text-align: right;">${r}<br>The current time shown is a best guess.</p>
 </body>
 <script>
     async function updateTimer() {

@@ -16,7 +16,10 @@ def get_status():
     """Returns the current status message."""
     return nstatus
 
-def set_status(new_status):
+def set_status(new_status: str | None):
     """Sets the current status message."""
     global nstatus # pylint: disable=global-statement
-    nstatus = new_status
+    if new_status is None or new_status.strip() == "":
+        nstatus = None
+    else:
+        nstatus = new_status

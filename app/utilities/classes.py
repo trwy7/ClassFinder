@@ -1,7 +1,7 @@
 """
 This module contains utility functions for managing courses, as well as a users relationship with courses.
 """
-from datetime import datetime, timedelta
+from datetime import datetime
 import typing
 import random
 from app.utilities.times import get_day_schedule, classtime_dict, get_classtimes

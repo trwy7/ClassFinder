@@ -160,29 +160,6 @@ section.leftsection {
 section.rightsection {
     margin-left: 10px;
 }
-@media (max-width: 450px) {
-    main {
-        text-align: center;
-    }
-    main.twosections {
-        flex-direction: column !important;
-        height: auto;
-        top: 0;
-        padding-top: 0;
-        overflow: visible;
-    }
-    main.twosections > section {
-        max-height: none;
-        margin: 0 !important;
-        padding-bottom: 50px;
-    }
-    body:has(main.twosections) {
-        overflow: auto;
-    }
-    main#aboutpage > section.rightsection {
-        display:none;
-    }
-}
 /* Account page */
 input#colorRange::-moz-range-track {
     background: linear-gradient(
@@ -560,5 +537,23 @@ li.action[onclick]:hover {
         text-align: center;
         white-space: nowrap;
         padding: 8px 12px;
+    }
+    main.twosections > section {
+        max-height: none;
+        margin: 0 !important;
+        padding-bottom: 50px;
+    }
+    main {
+        text-align: center;
+    }
+    main.twosections {
+        flex-direction: column !important;
+        height: auto;
+        top: 0;
+        padding-top: 0;
+        overflow: visible;
+    }
+    body:has(main.twosections) {
+        overflow: auto;
     }
 }

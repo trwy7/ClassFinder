@@ -203,6 +203,7 @@ classtime_dict = {
     ]),
 }
 del now
+readable_days = {did: day.name for did, day in classtime_dict.items()}
 day_schedule_cache = {}
 # {(user_id, include_delay): (schedule list, day type, user.classes)}
 current_day = (-1, None)  # (day int, date)
@@ -232,7 +233,8 @@ def get_day_schedule(user: User | None, day: date | int | None=None, include_del
     cache_key = user.id if user else "guest"
     cday = get_current_day(day) if isinstance(day, date) or day is None else day
     if (not day) and (cache_key, include_delay) in day_schedule_cache:
-        if cday == day_schedule_cache[(cache_key, include_delay)][1] and list(user.classes if user else []) == day_schedule_cache[(cache_key, include_delay)][2]:
+        if cday == day_schedule_cache[(cache_key, include_delay)][1] and \
+          list(user.classes if user else []) == day_schedule_cache[(cache_key, include_delay)][2]:
             app.logger.debug(f"Using cached schedule for user {cache_key}")
             return day_schedule_cache[(cache_key, include_delay)][0]
     schedule = []
@@ -299,13 +301,13 @@ def get_day_schedule(user: User | None, day: date | int | None=None, include_del
                 break
         # PTECH check
         if user_class and "PTECH" in user_class.room:
-            mods.append(("sys-ptech-start", "PTECH classes start late start+5", "start", timedelta(minutes=5)))
-            mods.append(("sys-ptech-end", "PTECH classes end early end-5", "end", timedelta(minutes=-5)))
+            mods.append(("sys-ptech-start", "PTECH classes start late start+5m", "start", timedelta(minutes=5)))
+            mods.append(("sys-ptech-end", "PTECH classes end early end-5m", "end", timedelta(minutes=-5)))
         # Add bell delay, only if not in ptech
         elif include_delay and bell_delay != 0.0:
             app.logger.debug(f"Applying bell delay of {bell_delay} seconds to class time {ct.period}")
-            mods.append(("sys-bell-delay-start", "Bell delay start", "start", timedelta(seconds=bell_delay)))
-            mods.append(("sys-bell-delay-end", "Bell delay end", "end", timedelta(seconds=bell_delay)))
+            mods.append(("sys-bell-delay-start", f"Bell delay start start+{bell_delay}s", "start", timedelta(seconds=bell_delay)))
+            mods.append(("sys-bell-delay-end", f"Bell delay end end+{bell_delay}s", "end", timedelta(seconds=bell_delay)))
         uct = UserClassTime(ct, course=user_class, mods=mods)
         # Get the last added class time to determine passing time
         if schedule:
@@ -366,23 +368,28 @@ def get_current_day(oday: date=None):
         int: The simulated day of the week.
     """
     global current_day  # pylint: disable=global-statement
-    if current_day[1] == datetime.today().date():
-        return current_day[0]
+    odaymod = False
     if oday is not None:
         app.logger.debug(f"Getting simulated day {oday}")
         day = oday
+        odaymod = True
     else:
         app.logger.debug("Getting current day")
         day = datetime.today().date()
+    if current_day[1] == day:
+        app.logger.debug(f"Using cached current day: {current_day[0]} from date {current_day[1]}")
+        return current_day[0]
     with app.app_context():
         app.logger.debug(f"Getting schedule for {day}")
         schedule = Schedule.query.filter_by(day=day).first()
     if schedule:
         app.logger.debug(f"Schedule found for {day}: {schedule.type}")
-        current_day = (schedule.type, day)
+        if not odaymod:
+            current_day = (schedule.type, day)
         return schedule.type
     app.logger.debug(f"No schedule found for {day}, using current day")
-    current_day = (day.weekday(), day)
+    if not odaymod:
+        current_day = (day.weekday(), day)
     return day.weekday()
 
 def get_classtimes(day: int=None):

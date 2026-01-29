@@ -70,7 +70,7 @@ def time_until_end():
     currentperiod = get_current_period()
     return success_response(None, {
         "time": int(datetime.combine(datetime.today(), currentperiod.end).timestamp()) if (currentperiod is not None) else None,
-        "passing": currentperiod.passing if currentperiod is not None and 'passing' in currentperiod else None,
+        "passing": currentperiod.passing if currentperiod is not None else None,
         "period": currentperiod.period if currentperiod is not None else None
     })
 
