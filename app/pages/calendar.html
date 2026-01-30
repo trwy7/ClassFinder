@@ -5,12 +5,6 @@
 {% block content %} 
     <h1>Create Calendar</h1>
     <div id="calform">
-        <div id="options">
-            <label for="showpassing">Add passing periods</label>
-            <input type="checkbox" id="showpassing" name="showpassing"><br>
-            <label for="showdaytype">Add day type</label>
-            <input type="checkbox" id="showdaytype" name="showdaytype" checked><br>
-        </div>
         <button id="generate" onclick="genCalLink(event)">Generate Calendar Link</button>
         <button id="download" onclick="downloadCal(event)">Download Calendar</button>
     </div>
@@ -35,14 +29,7 @@
         })
         .then(response => response.json())
         .then(token => {
-            const showPassing = document.getElementById('showpassing').checked;
-            const showDayType = document.getElementById('showdaytype').checked;
-            
-            const params = new URLSearchParams();
-            if (showPassing) params.append('passing', '');
-            if (showDayType) params.append('adddaytype', '');
-
-            const calLink = `${window.location.origin}/${token}/calendar.ics${params.toString() ? '?' + params.toString() : ''}`;
+            const calLink = `${window.location.origin}/${token}/calendar.ics`;
             
             // Create HTML with URL and copy button
             document.getElementById('cal-link').innerHTML = `
@@ -77,16 +64,9 @@
         const confirmed = window.confirm("The downloaded calendar will not automatically update with schedule changes, and is based off of the published stem calendar. Are you sure you want to download?");
         
         if (confirmed) {
-            const showPassing = document.getElementById('showpassing').checked;
-            const showDayType = document.getElementById('showdaytype').checked;
-            
-            const params = new URLSearchParams();
-            if (showPassing) params.append('passing', 'true');
-            if (showDayType) params.append('adddaytype', 'true');
-
             // Technically "download" is not a token, but the server defaults to using cookies if this is invalid
             // and if you reached this page, you are logged in, so this is safe
-            const calLink = `${window.location.origin}/download/calendar.ics${params.toString() ? '?' + params.toString() : ''}`;
+            const calLink = `${window.location.origin}/download/calendar.ics`;
             
             window.open(calLink, '_blank');
         }
