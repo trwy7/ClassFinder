@@ -299,14 +299,25 @@ def get_day_schedule(user: User | None, day: date | int | None=None, include_del
             if course.period == ct.period:
                 user_class = course
                 break
+        apply_bell_delay_start = True
+        apply_bell_delay_end = True
         # PTECH check
         if user_class and "PTECH" in user_class.room:
             mods.append(("sys-ptech-start", "PTECH classes start late", "start", timedelta(minutes=5)))
             mods.append(("sys-ptech-end", "PTECH classes end early", "end", timedelta(minutes=-5)))
-        # Add bell delay, only if not in ptech
-        elif include_delay and bell_delay != 0.0:
-            app.logger.debug(f"Applying bell delay of {bell_delay} seconds to class time {ct.period}")
+            apply_bell_delay_start = False
+            apply_bell_delay_end = False
+        # Check for custom delays
+        if user and user.custom_start_delay is not None:
+            mods.append(("usr-custom-start", "User custom start delay", "start", timedelta(seconds=user.custom_start_delay)))
+            apply_bell_delay_start = False
+        if user and user.custom_end_delay is not None:
+            mods.append(("usr-custom-end", "User custom end delay", "end", timedelta(seconds=user.custom_end_delay)))
+            apply_bell_delay_end = False
+        # Add bell delay
+        if include_delay and bell_delay != 0.0 and apply_bell_delay_start:
             mods.append(("sys-bell-delay-start", "Bell delay start", "start", timedelta(seconds=bell_delay)))
+        if include_delay and bell_delay != 0.0 and apply_bell_delay_end:
             mods.append(("sys-bell-delay-end", "Bell delay end", "end", timedelta(seconds=bell_delay)))
         uct = UserClassTime(ct, course=user_class, mods=mods)
         # Get the last added class time to determine passing time
