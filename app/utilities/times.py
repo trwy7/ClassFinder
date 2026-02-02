@@ -485,7 +485,6 @@ def create_schedule_pdf(user: User):
     c = canvas.Canvas(file_path)
     c.setTitle("School Schedule")
     c.setFont("Helvetica", 12)
-    # FIXME: Goes off the page when you only have B lunch
     dayorder_front = ["0", "1", "2", "3", "4", "7"]
     dayorder_back = ["10", "11", "12", "13", "14", "8"]
 
