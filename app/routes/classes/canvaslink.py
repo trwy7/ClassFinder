@@ -10,7 +10,6 @@ from app.utilities.responses import success_response
 from app.utilities.config import canvas_url
 from app.addons.limiter import limiter
 
-
 @app.route("/classes/canvaslink")
 @limiter.limit("4/minute", exempt_when=lambda: request.args.get("token") is None)
 @require_login
@@ -58,7 +57,6 @@ def canvaslink():
             continue
         newcards[card["id"]] = card["shortName"]
     return render_template("canvaslink.html", courses=newcourses, cards=newcards)
-
 
 @app.route("/classes/canvaslink", methods=["POST"])
 @limiter.limit("2/minute")

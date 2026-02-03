@@ -233,8 +233,9 @@ def get_day_schedule(user: User | None, day: date | int | None=None, include_del
     cache_key = user.id if user else "guest"
     cday = get_current_day(day) if isinstance(day, date) or day is None else day
     if (not day) and (cache_key, include_delay) in day_schedule_cache:
-        if cday == day_schedule_cache[(cache_key, include_delay)][1] and \
-          list(user.classes if user else []) == day_schedule_cache[(cache_key, include_delay)][2]:
+        if cday == day_schedule_cache[(cache_key, include_delay)][1]:
+            # FIXME: When a user adds/removes a class, the cache is stale, add a purge_cache function
+            # and call it when needed
             app.logger.debug(f"Using cached schedule for user {cache_key}")
             return day_schedule_cache[(cache_key, include_delay)][0]
     schedule = []
@@ -514,7 +515,6 @@ def create_schedule_pdf(user: User):
     c = canvas.Canvas(file_path)
     c.setTitle("School Schedule")
     c.setFont("Helvetica", 12)
-    # FIXME: Goes off the page when you only have B lunch
     dayorder_front = ["0", "1", "2", "3", "4", "7"]
     dayorder_back = ["10", "11", "12", "13", "14", "8"]
 

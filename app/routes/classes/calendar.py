@@ -65,7 +65,7 @@ def generate_events_for_date_range(cal: Calendar, num_days: int):
                 event.description = uct.course.lunch
             else:
                 event.name = uct.course.name
-                event.description = f"{uct.course.campus_name}\nTaught by {uct.course.teacher} in room {uct.course.room}"
+                event.description = f"{uct.course.campus_name}\nPeriod {uct.period}\nTaught by {uct.course.teacher} in room {uct.course.room}"
                 event.location = uct.course.room
             event.begin = tz.localize(datetime.combine(current_date, uct.start))
             event.end = tz.localize(datetime.combine(current_date, uct.end))
