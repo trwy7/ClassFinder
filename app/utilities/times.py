@@ -142,7 +142,7 @@ classtime_dict = {
         ClassTime("8", time(11, 0), time(11, 55), False),
     ], []),
     9: DaySchedule("Development", [
-        ClassTime("3", (now + timedelta(minutes=10)).time(), (now + timedelta(minutes=15)).time(), False),
+        ClassTime("3", (now + timedelta(seconds=10)).time(), (now + timedelta(minutes=15)).time(), False),
         ClassTime("4", (now + timedelta(minutes=15)).time(), (now + timedelta(minutes=20)).time(), False),
     ], []),
     10: DaySchedule("Delayed Monday", [
