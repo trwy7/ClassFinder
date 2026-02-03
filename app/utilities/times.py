@@ -489,7 +489,7 @@ def clear_user_cache(user: User):
         user (User): The user to clear the cache for.
     """
     cache_key = user.id if user else "guest"
-    for key in day_schedule_cache:
+    for key in list(day_schedule_cache.keys()):
         if key[0] == cache_key:
             del day_schedule_cache[key]
 
