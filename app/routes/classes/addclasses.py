@@ -15,6 +15,7 @@ from app.utilities.classes import (
     get_ptech_class,
     neededperiods,
 )
+from app.utilities.times import clear_user_cache
 from app.db import db
 from app.utilities.config import campus_url
 from app.utilities.responses import error_response, success_response
@@ -87,7 +88,9 @@ def addclasses_post():
         processed = process_class(class_info, user, needed_periods)
         if processed in [None, True]:
             continue
+        clear_user_cache(user)
         return processed  # If an error response is returned, exit early
+    clear_user_cache(user)
     return success_response(
         f"Added {len(classes)} classes to your account. You now have {len(get_periods_of_user_classes(user))} classes.",
     )

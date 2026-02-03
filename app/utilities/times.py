@@ -234,8 +234,6 @@ def get_day_schedule(user: User | None, day: date | int | None=None, include_del
     cday = get_current_day(day) if isinstance(day, date) or day is None else day
     if (not day) and (cache_key, include_delay) in day_schedule_cache:
         if cday == day_schedule_cache[(cache_key, include_delay)][1]:
-            # FIXME: When a user adds/removes a class, the cache is stale, add a purge_cache function
-            # and call it when needed
             app.logger.debug(f"Using cached schedule for user {cache_key}")
             return day_schedule_cache[(cache_key, include_delay)][0]
     schedule = []
