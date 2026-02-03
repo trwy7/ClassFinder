@@ -482,6 +482,24 @@ def day_has_override(day: date) -> bool:
         schedule = Schedule.query.filter_by(day=day).first()
     return schedule is not None and schedule.type != day.weekday()
 
+def clear_user_cache(user: User):
+    """
+    Clear the schedule cache for a specific user.
+
+    Args:
+        user (User): The user to clear the cache for.
+    """
+    cache_key = user.id if user else "guest"
+    for key in day_schedule_cache:
+        if key[0] == cache_key:
+            del day_schedule_cache[key]
+
+def clear_all_cache():
+    """
+    Clear the entire schedule cache.
+    """
+    day_schedule_cache.clear()
+
 def create_schedule_pdf(user: User):
     """
     Create a PDF of the schedule for a user.

@@ -13,6 +13,7 @@ from flask import request, redirect, render_template
 from app.db import db, User, Token, Class
 from app.utilities.responses import error_response
 from app import app
+from app.utilities.times import clear_user_cache
 
 bcrypt = Bcrypt()
 # TODO: Move most of these functions to a function within the user class, but keep the decorators here
@@ -338,6 +339,7 @@ def delete_user(user: User):
     """
     for token in user.tokens:
         delete_token(token)
+    clear_user_cache(user)
     db.session.delete(user)
     db.session.commit()
 
@@ -375,6 +377,28 @@ def set_color(user: User, color_hue: int):
         raise ValueError("Color hue must be between 0 and 360")
     user.color_hue = color_hue
     db.session.commit()
+    return user
+
+def set_custom_delays(user: User, start_delay: int, end_delay: int):
+    """
+    Set the user's custom start and end delays.
+
+    Args:
+        user (User): The user to set the delays for.
+        start_delay (int): The start delay in seconds.
+        end_delay (int): The end delay in seconds.
+
+    Returns:
+        User: The user with the updated delays.
+    """
+    if start_delay is not None and not -300 <= start_delay <= 600:
+        raise ValueError("Start delay must be between -300 and 600 seconds")
+    if end_delay is not None and not -600 <= end_delay <= 300:
+        raise ValueError("End delay must be between -600 and 300 seconds")
+    user.custom_start_delay = start_delay
+    user.custom_end_delay = end_delay
+    db.session.commit()
+    clear_user_cache(user)
     return user
 
 # Verify user

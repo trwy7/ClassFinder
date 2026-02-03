@@ -12,6 +12,7 @@
             <button role="tab" id="tab-classes" aria-controls="panel-classes" aria-selected="false" tabindex="-1" onclick="activateTab('classes')">Classes</button>
             {% endif %}
             <button role="tab" id="tab-custom" aria-controls="panel-custom" aria-selected="false" tabindex="-1" onclick="activateTab('custom')">Customization</button>
+            <button role="tab" id="tab-site-settings" aria-controls="panel-site-settings" aria-selected="false" tabindex="-1" onclick="activateTab('site-settings')">Settings</button>
             <button role="tab" id="tab-manage" aria-controls="panel-manage" aria-selected="false" tabindex="-1" onclick="activateTab('manage')">Manage account</button>
         </nav>
     </aside>
@@ -79,7 +80,30 @@
                 <button onclick="setCustomCSS()">Save CSS</button>
             </div>
         </section>
-
+        <section id="panel-site-settings" role="tabpanel" aria-labelledby="tab-site-settings" hidden>
+            <h2>Settings</h2>
+            <div id="custom-delays">
+                <h4>Manual schedule adjustments</h4>
+                <p>These are in seconds. Setting these removes the set bell delay from the schedule.</p>
+                <!-- TODO: Make these collapsible -->
+                <p>Examples:</p>
+                <ul>
+                    <li>To start your classes 2 minutes earlier, set Start adjustment to -120.</li>
+                    <li>To end your classes 5 minutes later, set End adjustment to 300.</li>
+                    <li>To end your classes early, set End adjustment to a negative number.</li>
+                    <li>To remove any custom adjustments, leave the fields blank.</li>
+                </ul>
+                <div id="delay-start">
+                    <input type="number" id="delay-start-input" min="-300" max="600" value="{{ user.custom_start_delay }}">
+                    <label for="delay-start-input">Start adjustment</label>
+                </div>
+                <div id="delay-end">
+                    <input type="number" id="delay-end-input" min="-600" max="300" value="{{ user.custom_end_delay }}">
+                    <label for="delay-end-input">End adjustment</label>
+                </div>
+                <button onclick="saveDelays(event, document.getElementById('delay-start-input').value, document.getElementById('delay-end-input').value)">Save delays</button>
+            </div>
+        </section>
         <section id="panel-manage" role="tabpanel" aria-labelledby="tab-manage" hidden>
             <h2>Manage account</h2>
             <div>
@@ -265,5 +289,40 @@
         });
     }
     getExistingCSS();
+    function saveDelays(event, startDelay, endDelay) {
+        event.preventDefault();
+        // If the delays are not numbers, set the value to null
+        const start = isNaN(parseInt(startDelay)) ? null : parseInt(startDelay);
+        const end = isNaN(parseInt(endDelay)) ? null : parseInt(endDelay);
+        // Make sure the delays are within the allowed range, including null
+        if (start !== null && (start <= -300 || start >= 600)) {
+            alert("Start delay must be between -300 and 600 seconds");
+            return;
+        }
+        if (end !== null && (end <= -600 || end >= 300)) {
+            alert("End delay must be between -600 and 300 seconds");
+            return;
+        }
+
+        fetch('/account/set_delays', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ start_delay: start, end_delay: end }),
+            credentials: 'include'
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Failed to save delays.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while trying to save the delays.');
+        });
+    }
     </script>
 {% endblock %}
