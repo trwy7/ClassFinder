@@ -70,7 +70,7 @@
         <section id="panel-custom" role="tabpanel" aria-labelledby="tab-custom" hidden>
             <h2>Customization</h2>
             <div id="color-slider" style="display: block;">
-                <label for="colorRange">Color</label>
+                <label for="colorRange">Color</label><br>
                 <input id="colorRange" type="range" min="0" max="360" value="{{user.color_hue|default(155)}}" oninput="updateColor(this.value)" style="width: 60%; background: none;">
                 <button onclick="setColor()">Save</button>
             </div>
