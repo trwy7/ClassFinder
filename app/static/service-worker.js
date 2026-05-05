@@ -208,12 +208,24 @@ async function getOfflinePageHTML(r="You are offline") {
 </head>
 <body>
 <div id="maincontent">
-<h3 id="periodtime">00:00 AM - 00:00 PM</h3>
-<h1 id="timeleft">Loading...</h1>
+<h3 id="periodtime"></h3>
+<h1 id="timeleft"></h1>
 </div>
-<p id="statusmsg" style="position:absolute; bottom: 10px; right: 20px; text-align: right;">${r}<br>The current time shown is a best guess.</p>
+<p id="statusmsg" style="position:absolute; bottom: 10px; right: 20px; text-align: right;">${r}<span id="guessmsg"><br>The timer shown is a best guess.</span></p>
 </body>
 <script>
+    function checkOnlineStatus() {
+        fetch('/ping').then((resp) => {
+            if (resp && resp.status === 200) {
+                location.reload();
+            }
+        }).catch(() => {});
+    }
+    setInterval(checkOnlineStatus, 5000);
+    window.addEventListener('online', () => {
+        console.log("Back online, checking status...");
+        checkOnlineStatus();
+    });
     async function updateTimer() {
         try {
             const cache = await caches.open('${CACHE_NAME}');
@@ -221,6 +233,10 @@ async function getOfflinePageHTML(r="You are offline") {
             if (!response) {
                 document.getElementById('timeleft').innerText = "";
                 document.getElementById('periodtime').innerText = "";
+                const guessMsg = document.getElementById('guessmsg');
+                if (guessMsg) {
+                    guessMsg.remove();
+                }
                 return;
             }
             const data = await response.json();
@@ -228,6 +244,10 @@ async function getOfflinePageHTML(r="You are offline") {
             if (!schedule) {
                 document.getElementById('timeleft').innerText = "";
                 document.getElementById('periodtime').innerText = "";
+                const guessMsg = document.getElementById('guessmsg');
+                if (guessMsg) {
+                    guessMsg.remove();
+                }
                 return;
             }
             const now = Date.now() / 1000;
@@ -274,27 +294,18 @@ async function getOfflinePageHTML(r="You are offline") {
             } else {
                 document.getElementById('timeleft').innerText = "";
                 document.getElementById('periodtime').innerText = "";
+                const guessMsg = document.getElementById('guessmsg');
+                if (guessMsg) {
+                    guessMsg.remove();
+                }
             }
         } catch (e) {
             console.error(e);
             document.getElementById('timeleft').innerText = "Error loading cached data.";
         }
     }
-
-    setInterval(updateTimer, 1000);
     updateTimer();
-    function checkOnlineStatus() {
-        fetch('/ping').then((resp) => {
-            if (resp && resp.status === 200) {
-                location.reload();
-            }
-        }).catch(() => {});
-    }
-    setInterval(checkOnlineStatus, 5000);
-    window.addEventListener('online', () => {
-        console.log("Back online, checking status...");
-        checkOnlineStatus();
-    });
+    setInterval(updateTimer, 1000);
 </script>
 </html>`;
 }
