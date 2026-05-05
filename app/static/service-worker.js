@@ -1,6 +1,23 @@
 // mostly AI
 const CACHE_NAME = 'chronis';
 const SCHEDULE_API = '/api/v2/schedule/today';
+const SCHEDULE_DATE_KEY = 'cachedate';
+
+function getTodayDateString() {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
+
+async function isScheduleCacheStale() {
+    const cache = await caches.open(CACHE_NAME);
+    const dateResponse = await cache.match(SCHEDULE_DATE_KEY);
+    if (!dateResponse) {
+        return true; // No date cached, considered stale
+    }
+    const cachedDate = await dateResponse.text();
+    const today = getTodayDateString();
+    return cachedDate !== today;
+}
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
@@ -9,6 +26,10 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
     self.skipWaiting();
+    // Check if cached schedule is stale and refetch if needed
+    if (navigator.onLine) {
+        event.waitUntil(updateScheduleIfStale());
+    }
     // Poll for schedule updates every 10 minutes while online
     setInterval(fetchAndCacheSchedule, 10 * 60 * 1000);
     fetchAndCacheSchedule();
@@ -41,37 +62,44 @@ self.addEventListener('fetch', async (event) => {
 
     if (event.request.mode === 'navigate') {
         event.respondWith(
-            fetch(event.request).then(async (response) => {
-                if (response.status > 500) {
-                    const nconfig = await caches.open(CACHE_NAME).then(cache => cache.match('/api/v2/chronisconfig')).then(resp => resp ? resp.json() : null);
-                    if (new URL(event.request.url).pathname.startsWith('/canvas') && nconfig && nconfig.canvas_url) {
-                        return Response.redirect(nconfig.canvas_url, 302);
+            (async () => {
+                // Check if schedule cache is stale and refetch if needed
+                if (await isScheduleCacheStale() && navigator.onLine) {
+                    await updateScheduleIfStale();
+                }
+                
+                return fetch(event.request).then(async (response) => {
+                    if (response.status > 500) {
+                        const nconfig = await caches.open(CACHE_NAME).then(cache => cache.match('/api/v2/chronisconfig')).then(resp => resp ? resp.json() : null);
+                        if (new URL(event.request.url).pathname.startsWith('/canvas') && nconfig && nconfig.canvas_url) {
+                            return Response.redirect(nconfig.canvas_url, 302);
+                        }
+                        return new Response(await getOfflinePageHTML("Chronis is offline: " + response.status), {
+                            headers: { 'Content-Type': 'text/html' }
+                        });
                     }
-                    return new Response(await getOfflinePageHTML("Chronis is offline: " + response.status), {
+                    if (response.status === 500) {
+                        const clonedResponse = response.clone();
+                        try {
+                            const text = await clonedResponse.text();
+                            if (text.includes("https://www.cloudflare.com/5xx-error-landing")) {
+                                const nconfig = await caches.open(CACHE_NAME).then(cache => cache.match('/api/v2/chronisconfig')).then(resp => resp ? resp.json() : null);
+                                if (new URL(event.request.url).pathname.startsWith('/canvas') && nconfig && nconfig.canvas_url) {
+                                    return Response.redirect(nconfig.canvas_url, 302);
+                                }
+                                return new Response(await getOfflinePageHTML("Chronis is offline: 500"), {
+                                    headers: { 'Content-Type': 'text/html' }
+                                });
+                            }
+                        } catch (e) {}
+                    }
+                    return response;
+                }).catch(async () => {
+                    return new Response(await getOfflinePageHTML(), {
                         headers: { 'Content-Type': 'text/html' }
                     });
-                }
-                if (response.status === 500) {
-                    const clonedResponse = response.clone();
-                    try {
-                        const text = await clonedResponse.text();
-                        if (text.includes("https://www.cloudflare.com/5xx-error-landing")) {
-                            const nconfig = await caches.open(CACHE_NAME).then(cache => cache.match('/api/v2/chronisconfig')).then(resp => resp ? resp.json() : null);
-                            if (new URL(event.request.url).pathname.startsWith('/canvas') && nconfig && nconfig.canvas_url) {
-                                return Response.redirect(nconfig.canvas_url, 302);
-                            }
-                            return new Response(await getOfflinePageHTML("Chronis is offline: 500"), {
-                                headers: { 'Content-Type': 'text/html' }
-                            });
-                        }
-                    } catch (e) {}
-                }
-                return response;
-            }).catch(async () => {
-                return new Response(await getOfflinePageHTML(), {
-                    headers: { 'Content-Type': 'text/html' }
                 });
-            })
+            })()
         );
         return;
     }
@@ -101,10 +129,30 @@ function fetchAndCacheSchedule() {
     fetch(SCHEDULE_API, { credentials: 'include' }).then(response => {
         if (response.status === 200) {
             caches.open(CACHE_NAME).then(cache => {
-                cache.put(SCHEDULE_API, response);
+                cache.put(SCHEDULE_API, response.clone());
+                // Cache the date this schedule was fetched
+                cache.put(SCHEDULE_DATE_KEY, new Response(getTodayDateString()));
             });
         }
     });
+}
+
+async function updateScheduleIfStale() {
+    if (await isScheduleCacheStale()) {
+        return new Promise((resolve) => {
+            fetch(SCHEDULE_API, { credentials: 'include' }).then(response => {
+                if (response.status === 200) {
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(SCHEDULE_API, response.clone());
+                        cache.put(SCHEDULE_DATE_KEY, new Response(getTodayDateString()));
+                        resolve();
+                    });
+                } else {
+                    resolve();
+                }
+            }).catch(() => resolve());
+        });
+    }
 }
 
 function cacheConfig() {
