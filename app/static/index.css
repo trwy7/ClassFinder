@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 :root {
     --ex-contrast-color: black;
     --primary-color: hsl(var(--user-prefered-color, 155), 100%, 64%);
@@ -16,7 +16,11 @@
     --action-hover-color: hsl(214, 73%, 25%);
     --user-color: hsl(214, 77%, 46%);
     --user-primary-color: hsl(214, 77%, 46%);
-    --highlighted-inner-user-color: hsl(var(--user-prefered-color, 155), 60%, 27%);
+    --highlighted-inner-user-color: hsl(
+        var(--user-prefered-color, 155),
+        60%,
+        27%
+    );
     --listbox-color: hsl(var(--user-prefered-color, 155), 35%, 35%);
 }
 @media (prefers-color-scheme: light) {
@@ -28,7 +32,12 @@
         --tertiary-color: hsl(var(--user-prefered-color, 155), 100%, 67%);
         --background-color: hsl(var(--user-prefered-color, 155), 24%, 91%);
         --navbar-color: hsl(var(--user-prefered-color, 155), 100%, 83%);
-        --navbar-bottom-color: hsla(var(--user-prefered-color, 155), 100%, 83%, 0);
+        --navbar-bottom-color: hsla(
+            var(--user-prefered-color, 155),
+            100%,
+            83%,
+            0
+        );
         --text-color: hsl(var(--user-prefered-color, 155), 30%, 10%);
         --secondary-text-color: white;
         --current-period-color: hsl(var(--user-prefered-color, 155), 100%, 40%);
@@ -36,7 +45,11 @@
         --action-hover-color: hsl(214, 73%, 35%);
         --user-color: hsl(214, 77%, 56%);
         --user-primary-color: hsl(214, 77%, 56%);
-        --highlighted-inner-user-color: hsl(var(--user-prefered-color, 155), 60%, 47%);
+        --highlighted-inner-user-color: hsl(
+            var(--user-prefered-color, 155),
+            60%,
+            47%
+        );
         --listbox-color: hsl(var(--user-prefered-color, 155), 35%, 85%);
     }
     .sidebar [role="tab"][aria-selected="true"] {
@@ -50,12 +63,13 @@
     padding: 0;
     box-sizing: border-box;
 }
-html, body {
+html,
+body {
     height: 100%;
     width: 100%;
 }
 body {
-    font-family: 'Inter', 'Roboto', sans-serif;
+    font-family: "Inter", "Roboto", sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
 }
@@ -66,7 +80,12 @@ body:has(main.twosections) {
     overflow: hidden;
 }
 header {
-    background: linear-gradient(to bottom, var(--navbar-color) 0%, var(--navbar-color) 10%, var(--navbar-bottom-color) 100%);
+    background: linear-gradient(
+        to bottom,
+        var(--navbar-color) 0%,
+        var(--navbar-color) 10%,
+        var(--navbar-bottom-color) 100%
+    );
     padding: 1rem;
     position: fixed;
     width: 100%;
@@ -75,7 +94,9 @@ header {
     height: 60px;
     text-shadow: 0px 0px 10px var(--navbar-color);
 }
-#timertext, #timeleft, #timeleftdiv {
+#timertext,
+#timeleft,
+#timeleftdiv {
     font-family: "Space Mono", monospace;
     font-weight: 700;
     font-style: normal;
@@ -103,33 +124,44 @@ main#aboutpage #cards img {
     top: 50%;
     transform-origin: center center;
     transform: translate(-50%, -50%) rotate(0deg);
-    transition: transform 180ms ease, box-shadow 180ms ease;
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease;
     max-width: 92%;
     height: auto;
     display: block;
     border-radius: 10px;
     border: 2px solid var(--tertiary-color);
-    box-shadow: 0 8px 22px rgba(0,0,0,0.32);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
 }
 
-main#aboutpage #cards img:nth-child(1) { transform: translate(-50%, -115%) rotate(calc(0 * 10deg)); z-index: 1; }
-main#aboutpage #cards img:nth-child(2) { transform: translate(-50%, -73%) rotate(calc(0 * 10deg)); z-index: 2; }
-main#aboutpage #cards img:nth-child(3) { transform: translate(-50%, -50%) rotate(calc(0 * 10deg)); z-index: 3; }
+main#aboutpage #cards img:nth-child(1) {
+    transform: translate(-50%, -115%) rotate(calc(0 * 10deg));
+    z-index: 1;
+}
+main#aboutpage #cards img:nth-child(2) {
+    transform: translate(-50%, -73%) rotate(calc(0 * 10deg));
+    z-index: 2;
+}
+main#aboutpage #cards img:nth-child(3) {
+    transform: translate(-50%, -50%) rotate(calc(0 * 10deg));
+    z-index: 3;
+}
 
 /* main#aboutpage #cards:hover img {
     box-shadow: 0 10px 28px rgba(0,0,0,0.38);
 } */
 main#aboutpage #cards img:nth-child(1):hover {
     transform: translate(-50%, -125%) rotate(0deg) scale(1.02);
-    box-shadow: 0 10px 28px rgba(0,0,0,0.38);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
 }
 main#aboutpage #cards img:nth-child(2):hover {
     transform: translate(-50%, -83%) rotate(0deg) scale(1.02);
-    box-shadow: 0 10px 28px rgba(0,0,0,0.38);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
 }
 main#aboutpage #cards img:nth-child(3):hover {
     transform: translate(-50%, -60%) rotate(0deg) scale(1.02);
-    box-shadow: 0 10px 28px rgba(0,0,0,0.38);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
 }
 /* main#aboutpage #cards:hover img:nth-last-child(1) {
     transform: translate(-50%, -54%) rotate(0deg) scale(1.02);
@@ -201,7 +233,7 @@ header ul li a {
     color: var(--text-color);
 }
 header ul li a:after {
-    content: '';
+    content: "";
     display: block;
     height: 2px;
     background-color: var(--primary-color);
@@ -227,14 +259,20 @@ header nav ul {
     height: 100%;
 }
 /* Forms */
-.centered, .hcenter, main:has(form), main#error {
+.centered,
+.hcenter,
+main:has(form),
+main#error {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
 }
-input[type='text'], input[type='email'], input[type='password'], input[type='number'] {
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"] {
     padding: 0.5rem;
     margin: 0.5rem;
     border: 2px solid var(--secondary-color);
@@ -250,7 +288,8 @@ textarea {
     background-color: var(--tertiary-color);
     color: var(--text-color);
 }
-button, input[type="submit"] {
+button,
+input[type="submit"] {
     margin: 0.5rem 0.25rem;
     margin-top: 10px;
     margin-bottom: 10px;
@@ -263,16 +302,19 @@ button, input[type="submit"] {
     border: 2px solid var(--secondary-color);
     min-width: 100px;
 }
-button.danger, input[type="submit"].danger {
+button.danger,
+input[type="submit"].danger {
     --secondary-color: hsl(0, 70%, 50%);
     --tertiary-color: hsl(0, 60%, 40%);
     --navbar-color: hsl(0, 50%, 30%);
 }
-button:disabled, input[type="submit"]:disabled {
+button:disabled,
+input[type="submit"]:disabled {
     background-color: var(--secondary-color);
     cursor: not-allowed;
 }
-button:hover, input[type="submit"]:hover {
+button:hover,
+input[type="submit"]:hover {
     background-color: var(--navbar-color);
 }
 input[type="date"] {
@@ -305,17 +347,26 @@ ul {
     list-style: none;
 }
 /* List grid (e.g. classes and user page) */
-#classes, #users, ul.actions, #schedules, #tokens {
+#classes,
+#users,
+ul.actions,
+#schedules,
+#tokens {
     /* margin-top: 20px; */
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 20px;
 }
- ul.actions {
+ul.actions {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 2px;
 }
-.class, .user, .classuser, .schedule, li.action, .token {
+.class,
+.user,
+.classuser,
+.schedule,
+li.action,
+.token {
     padding: 7px;
     background-color: var(--listbox-color);
     border-radius: 5px;
@@ -338,7 +389,7 @@ main.passing classwrapper:has(.class.currentperiod) {
     position: relative;
 }
 main.passing classwrapper:has(.class.currentperiod)::before {
-    content: '';
+    content: "";
     position: absolute;
     top: -4px;
     left: -4px;
@@ -367,12 +418,13 @@ main.passing classwrapper:has(.class.currentperiod)::before {
     }
 }
 @property --angle {
-    syntax: '<angle>';
+    syntax: "<angle>";
     inherits: false;
     initial-value: 360deg;
 }
 
-.classuser, li.action {
+.classuser,
+li.action {
     font-size: 88%;
     padding: 10px;
     margin: 5px;
@@ -395,18 +447,21 @@ li.action[onclick]:hover {
     color: var(--text-color);
     font-weight: normal;
 }
-.class[onclick]:hover:not(:has(li[onclick]:hover)), .user[onclick]:hover:not(:has(li[onclick]:hover)) {
+.class[onclick]:hover:not(:has(li[onclick]:hover)),
+.user[onclick]:hover:not(:has(li[onclick]:hover)) {
     background-color: var(--tertiary-color);
     cursor: pointer;
 }
-.class li[onclick]:hover, .user li[onclick]:hover {
+.class li[onclick]:hover,
+.user li[onclick]:hover {
     background-color: var(--action-hover-color);
     cursor: pointer;
 }
 .class li.classuser.highlight {
     background-color: var(--highlighted-inner-user-color);
 }
-.class.unverified {
+.class.unverified,
+.user.unverified {
     background-color: #9e4343;
 }
 .hidden-text {
@@ -422,14 +477,21 @@ li.action[onclick]:hover {
     width: 50px;
     aspect-ratio: 1;
     border-radius: 50%;
-    background: 
-      radial-gradient(farthest-side,var(--primary-color) 94%,#0000) top/8px 8px no-repeat,
-      conic-gradient(#0000 30%,var(--primary-color));
-    -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+    background:
+        radial-gradient(farthest-side, var(--primary-color) 94%, #0000) top/8px
+            8px no-repeat,
+        conic-gradient(#0000 30%, var(--primary-color));
+    -webkit-mask: radial-gradient(
+        farthest-side,
+        #0000 calc(100% - 8px),
+        #000 0
+    );
     animation: l13 1s infinite linear;
 }
-@keyframes l13{ 
-    100%{transform: rotate(1turn)}
+@keyframes l13 {
+    100% {
+        transform: rotate(1turn);
+    }
 }
 /* Timer Progress Bar Styles */
 .progress-container {
@@ -441,7 +503,11 @@ li.action[onclick]:hover {
 
 .progress-bar {
     height: 20px;
-    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    background: linear-gradient(
+        90deg,
+        var(--primary-color) 0%,
+        var(--secondary-color) 100%
+    );
     border-radius: 10px;
     width: 0%;
 }
@@ -487,7 +553,11 @@ li.action[onclick]:hover {
     width: 220px;
     min-width: 180px;
     padding: 1rem;
-    background: linear-gradient(180deg, var(--navbar-color), var(--navbar-bottom-color));
+    background: linear-gradient(
+        180deg,
+        var(--navbar-color),
+        var(--navbar-bottom-color)
+    );
     border-radius: 8px;
     align-self: start;
     height: fit-content;
@@ -509,12 +579,12 @@ li.action[onclick]:hover {
     transition: background-color 0.15s;
 }
 .sidebar [role="tab"]:hover {
-    background-color: rgba(255,255,255,0.03);
+    background-color: rgba(255, 255, 255, 0.03);
 }
 .sidebar [role="tab"][aria-selected="true"] {
     background-color: var(--primary-color);
     color: var(--background-color);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 .sidebar [role="tab"]:focus {
     outline: 3px solid color-mix(in srgb, var(--primary-color) 40%, transparent);

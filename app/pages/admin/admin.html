@@ -39,7 +39,7 @@
             <h2>Users</h2>
             <ul id="users">
                 {% for nuser in users %}
-                    <li class="user" id="{{nuser.username}}">{{nuser.username}}<p style="font-size: 75%;">{{nuser.role}}<br>{{nuser.id}}</p>
+                    <li class="user{% if nuser.requires_reverification %} unverified{%endif%}" id="{{nuser.username}}">{{nuser.username}}<p style="font-size: 75%;">{{nuser.role}}<br>{{nuser.id}}</p>
                         <ul class="actions">
                             {% if nuser.role == 'testing' %}
                             <li class="action" onclick="window.location.href = '/admin/account/{{nuser.username}}/login'">Login</li>
