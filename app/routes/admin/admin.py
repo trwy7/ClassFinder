@@ -1,6 +1,7 @@
 """
 Basic admin route
 """
+
 from shutil import copyfile
 import os
 import datetime
@@ -12,7 +13,12 @@ from app.utilities.responses import success_response
 from app.db import Class, User, db
 from app.utilities.config import devmode
 
-CAN_MIGRATE = bool(devmode and os.path.isfile("data/db.sqlite3") and os.path.isfile("instance/db.sqlite3"))
+CAN_MIGRATE = bool(
+    devmode
+    and os.path.isfile("data/db.sqlite3")
+    and os.path.isfile("instance/db.sqlite3")
+)
+
 
 @app.route("/admin")
 @require_login
@@ -30,8 +36,9 @@ def admin_route():
         classes=Class.query.all(),
         users=User.query.all(),
         period=get_current_period(),
-        can_migrate=CAN_MIGRATE
+        can_migrate=CAN_MIGRATE,
     )
+
 
 @app.route("/admin/copyprod", methods=["POST"])
 @require_login
@@ -48,9 +55,12 @@ def copy_prod_to_dev():
         dev_bell_delay_path = os.environ.get("BELL_DELAY_PATH")
         if os.path.isfile(prod_bell_delay_path) and os.path.isfile(dev_bell_delay_path):
             copyfile(prod_bell_delay_path, dev_bell_delay_path)
-            app.logger.info(f"Copied bell delay from {prod_bell_delay_path} to {dev_bell_delay_path}")
+            app.logger.info(
+                f"Copied bell delay from {prod_bell_delay_path} to {dev_bell_delay_path}"
+            )
     app.logger.info("Production database copied over development database.")
     return success_response("Production database copied over development database.")
+
 
 @app.route("/admin/newsemester", methods=["POST"])
 @require_login
@@ -60,6 +70,10 @@ def new_semester():
     Start a new semester by deleting all classes.
     """
     app.logger.warning("Starting new semester, requested by " + request.user.username)
+    dbfile = app.config["SQLALCHEMY_DATABASE_URI"].replace("sqlite:///", "")
+    newfile = dbfile.replace(
+        ".", f"_backup_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}."
+    )
     dbfile = app.config["SQLALCHEMY_DATABASE_URI"].replace("sqlite:///","")
     newfile = dbfile.replace(".",f"_backup_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.")
     app.logger.info(f"Copying database to {newfile}")
@@ -72,7 +86,7 @@ def new_semester():
         remove_class(course)
     for user in get_all_users():
         if user.requires_reverification:
-            app.logger.info(f"Deleting user: {user.username}")
+            app.logger.info(f"Deleting unverified user: {user.username}")
             delete_user(user)
     for user in get_all_users():
         user.requires_reverification = True

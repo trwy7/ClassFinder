@@ -200,7 +200,7 @@ def log_request():
     params = str(params)
     if len(params) > 50:
         params = params[:50] + "..."
-    app.logger.debug(f"Processing {method_color}{request.method}{reset_color} {request.path} with {params}")
+    app.logger.debug(f"Processing {method_color}{request.method}{reset_color} {request.path} for {request.user} with {params}")
     request.start_time = datetime.now()
 
 @app.after_request

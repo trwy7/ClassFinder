@@ -71,49 +71,51 @@ class DaySchedule:
         self.lunchtimes = lunchtimes
 
 classtime_dict = {
-    0: DaySchedule("Monday", [
-        ClassTime("1", time(8, 0), time(9, 45), False),
-        ClassTime("3", time(9, 50), time(11, 30), False),
-        ClassTime("5", time(11, 35), time(13, 45), True),
-        ClassTime("7", time(13, 50), time(15, 30), False),
+    0: DaySchedule("Blue", [
+        ClassTime("1", time(8, 0), time(9, 30), False),
+        ClassTime("3", time(9, 35), time(11, 5), False),
+        ClassTime("5", time(11, 10), time(13, 10), True),
+        ClassTime("Access", time(13, 15), time(13, 55), False),
+        ClassTime("7", time(14, 0), time(15, 30), False),
     ], [
-        LunchPeriod("A", time(11, 35), time(12, 5)),
-        LunchPeriod("B", time(12, 15), time(12, 45)),
-        LunchPeriod("C", time(13, 10), time(13, 45)),
+        LunchPeriod("A", time(11, 10), time(11, 40)),
+        LunchPeriod("B", time(11, 55), time(12, 25)),
+        LunchPeriod("C", time(12, 40), time(13, 10)),
     ]),
-    1: DaySchedule("Tuesday", [
-        ClassTime("2", time(8, 0), time(9, 45), False),
-        ClassTime("4", time(9, 50), time(11, 30), False),
-        ClassTime("6", time(11, 35), time(13, 45), True),
-        ClassTime("8", time(13, 50), time(15, 30), False),
+    1: DaySchedule("Gold", [
+        ClassTime("2", time(8, 0), time(9, 30), False),
+        ClassTime("4", time(9, 35), time(11, 5), False),
+        ClassTime("6", time(11, 10), time(13, 10), True),
+        ClassTime("Access", time(13, 15), time(13, 55), False),
+        ClassTime("8", time(14, 0), time(15, 30), False),
     ], [
-        LunchPeriod("A", time(11, 35), time(12, 5)),
-        LunchPeriod("B", time(12, 15), time(12, 45)),
-        LunchPeriod("C", time(13, 10), time(13, 45)),
+        LunchPeriod("A", time(11, 10), time(11, 40)),
+        LunchPeriod("B", time(11, 55), time(12, 25)),
+        LunchPeriod("C", time(12, 40), time(13, 10)),
     ]),
-    2: DaySchedule("Wednesday", [
-        ClassTime("1", time(8, 0), time(9, 20), False),
-        ClassTime("3", time(9, 25), time(10, 45), False),
-        ClassTime("Access", time(10, 50), time(12, 0), False),
-        ClassTime("5", time(12, 5), time(14, 5), True),
-        ClassTime("7", time(14, 10), time(15, 30), False),
+    2: DaySchedule("Blue", [
+        ClassTime("1", time(8, 0), time(9, 30), False),
+        ClassTime("3", time(9, 35), time(11, 5), False),
+        ClassTime("5", time(11, 10), time(13, 10), True),
+        ClassTime("Access", time(13, 15), time(13, 55), False),
+        ClassTime("7", time(14, 0), time(15, 30), False),
     ], [
-        LunchPeriod("A", time(12, 5), time(12, 35)),
-        LunchPeriod("B", time(12, 40), time(13, 10)),
-        LunchPeriod("C", time(13, 30), time(14, 5)),
+        LunchPeriod("A", time(11, 10), time(11, 40)),
+        LunchPeriod("B", time(11, 55), time(12, 25)),
+        LunchPeriod("C", time(12, 40), time(13, 10)),
     ]),
-    3: DaySchedule("Thursday", [
-        ClassTime("2", time(8, 0), time(9, 20), False),
-        ClassTime("4", time(9, 25), time(10, 45), False),
-        ClassTime("Access", time(10, 50), time(12, 0), False),
-        ClassTime("6", time(12, 5), time(14, 5), True),
-        ClassTime("8", time(14, 10), time(15, 30), False),
+    3: DaySchedule("Gold", [
+        ClassTime("2", time(8, 0), time(9, 30), False),
+        ClassTime("4", time(9, 35), time(11, 5), False),
+        ClassTime("6", time(11, 10), time(13, 10), True),
+        ClassTime("Access", time(13, 15), time(13, 55), False),
+        ClassTime("8", time(14, 0), time(15, 30), False),
     ], [
-        LunchPeriod("A", time(12, 5), time(12, 35)),
-        LunchPeriod("B", time(12, 40), time(13, 10)),
-        LunchPeriod("C", time(13, 30), time(14, 5)),
+        LunchPeriod("A", time(11, 10), time(11, 40)),
+        LunchPeriod("B", time(11, 55), time(12, 25)),
+        LunchPeriod("C", time(12, 40), time(13, 10)),
     ]),
-    4: DaySchedule("Friday", [
+    4: DaySchedule("Silver", [
         ClassTime("1", time(8, 0), time(8, 45), False),
         ClassTime("2", time(8, 50), time(9, 35), False),
         ClassTime("3", time(9, 40), time(10, 25), False),
@@ -145,7 +147,7 @@ classtime_dict = {
         ClassTime("3", (now + timedelta(seconds=10)).time(), (now + timedelta(minutes=15)).time(), False),
         ClassTime("4", (now + timedelta(minutes=15)).time(), (now + timedelta(minutes=20)).time(), False),
     ], []),
-    10: DaySchedule("Delayed Monday", [
+    10: DaySchedule("Delayed Monday Unused and not complete", [
         ClassTime("1", time(10, 0), time(11, 15), False),
         ClassTime("3", time(11, 20), time(12, 30), False),
         ClassTime("5", time(12, 35), time(14, 15), True),
@@ -513,8 +515,9 @@ def create_schedule_pdf(user: User):
     c = canvas.Canvas(file_path)
     c.setTitle("School Schedule")
     c.setFont("Helvetica", 12)
-    dayorder_front = ["0", "1", "2", "3", "4", "7"]
-    dayorder_back = ["10", "11", "12", "13", "14", "8"]
+    dayorder_front = ["0", "1", "4", "7", "8"]
+    #dayorder_back = ["10", "11", "12", "13", "14", "8"]
+    dayorder_back = []
 
     page_width = c._pagesize[0]  # pylint: disable=protected-access
     layout = {"margin": 50, "start_y": 800, "header_gap": 20, "line_gap": 15, "block_gap": 10}
@@ -558,12 +561,13 @@ def create_schedule_pdf(user: User):
         y = _draw_day(did, y)
 
     # Page 2: back days, drawn starting at the same y positions as their front counterparts.
-    c.showPage()
-    c.setTitle("School Schedule")
-    c.setFont("Helvetica", 12)
+    if dayorder_back:
+        c.showPage()
+        c.setTitle("School Schedule")
+        c.setFont("Helvetica", 12)
 
-    for y_start, did in zip(front_y_positions, map(int, dayorder_back), strict=True):
-        _draw_day(did, y_start, right_align=True)
+        for y_start, did in zip(front_y_positions, map(int, dayorder_back), strict=True):
+            _draw_day(did, y_start, right_align=True)
 
     c.save()
     return file_path

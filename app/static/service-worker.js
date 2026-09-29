@@ -2,6 +2,7 @@
 const CACHE_NAME = 'chronis';
 const SCHEDULE_API = '/api/v2/schedule/today';
 const SCHEDULE_DATE_KEY = 'cachedate';
+let scheduleUpdatePromise = null;
 
 function getTodayDateString() {
     const today = new Date();
@@ -21,18 +22,12 @@ async function isScheduleCacheStale() {
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
-    cacheConfig();
+    event.waitUntil(cacheConfig());
 });
 
 self.addEventListener('activate', (event) => {
     self.skipWaiting();
-    // Check if cached schedule is stale and refetch if needed
-    if (navigator.onLine) {
-        event.waitUntil(updateScheduleIfStale());
-    }
-    // Poll for schedule updates every 10 minutes while online
-    setInterval(fetchAndCacheSchedule, 10 * 60 * 1000);
-    fetchAndCacheSchedule();
+    event.waitUntil(updateScheduleIfStale());
 });
 
 self.addEventListener('fetch', async (event) => {
@@ -41,21 +36,15 @@ self.addEventListener('fetch', async (event) => {
     // Cache the schedule API specifically
     if (url.pathname === SCHEDULE_API) {
         event.respondWith(
-            fetch(event.request)
-                .then((response) => {
-                    // Clone and cache the response if successful
-                    if (response.status === 200) {
-                        const responseClone = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseClone);
-                        });
-                    }
-                    return response;
-                })
-                .catch(() => {
-                    // Fallback to cache if offline
-                    return caches.match(event.request);
-                })
+            (async () => {
+                await updateScheduleIfStale();
+                const cache = await caches.open(CACHE_NAME);
+                const cachedResponse = await cache.match(SCHEDULE_API);
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                return fetchAndCacheSchedule(true);
+            })()
         );
         return;
     }
@@ -64,7 +53,7 @@ self.addEventListener('fetch', async (event) => {
         event.respondWith(
             (async () => {
                 // Check if schedule cache is stale and refetch if needed
-                if (await isScheduleCacheStale() && navigator.onLine) {
+                if (await isScheduleCacheStale()) {
                     await updateScheduleIfStale();
                 }
                 
@@ -94,8 +83,9 @@ self.addEventListener('fetch', async (event) => {
                         } catch (e) {}
                     }
                     return response;
-                }).catch(async () => {
-                    return new Response(await getOfflinePageHTML(), {
+                }).catch(async (e) => {
+                    console.error("Page fetch failed: ", e);
+                    return new Response(await getOfflinePageHTML("Chronis cannot be reached: " + e), {
                         headers: { 'Content-Type': 'text/html' }
                     });
                 });
@@ -125,45 +115,51 @@ async function getCurrentPeriod() {
     return null;
 }
 
-function fetchAndCacheSchedule() {
-    fetch(SCHEDULE_API, { credentials: 'include' }).then(response => {
+async function fetchAndCacheSchedule(fallbackToCache = false) {
+    try {
+        const response = await fetch(SCHEDULE_API, { credentials: 'include' });
         if (response.status === 200) {
-            caches.open(CACHE_NAME).then(cache => {
-                cache.put(SCHEDULE_API, response.clone());
-                // Cache the date this schedule was fetched
-                cache.put(SCHEDULE_DATE_KEY, new Response(getTodayDateString()));
-            });
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put(SCHEDULE_API, response.clone());
+            await cache.put(SCHEDULE_DATE_KEY, new Response(getTodayDateString()));
+            return response;
         }
-    });
-}
-
-async function updateScheduleIfStale() {
-    if (await isScheduleCacheStale()) {
-        return new Promise((resolve) => {
-            fetch(SCHEDULE_API, { credentials: 'include' }).then(response => {
-                if (response.status === 200) {
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(SCHEDULE_API, response.clone());
-                        cache.put(SCHEDULE_DATE_KEY, new Response(getTodayDateString()));
-                        resolve();
-                    });
-                } else {
-                    resolve();
-                }
-            }).catch(() => resolve());
-        });
+        if (fallbackToCache) {
+            return (await caches.match(SCHEDULE_API)) || response;
+        }
+        return response;
+    } catch (error) {
+        const cachedResponse = await caches.match(SCHEDULE_API);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
+        throw error;
     }
 }
 
-function cacheConfig() {
-    if (navigator.onLine) {
-        fetch('/api/v2/chronisconfig').then(response => {
-            if (response.status === 200) {
-                caches.open(CACHE_NAME).then(cache => {
-                    cache.put('/api/v2/chronisconfig', response);
-                });
-            }
-        });
+async function updateScheduleIfStale() {
+    if (!(await isScheduleCacheStale())) {
+        return;
+    }
+    if (!scheduleUpdatePromise) {
+        scheduleUpdatePromise = fetchAndCacheSchedule()
+            .catch(() => undefined)
+            .finally(() => {
+                scheduleUpdatePromise = null;
+            });
+    }
+    await scheduleUpdatePromise;
+}
+
+async function cacheConfig() {
+    try {
+        const response = await fetch('/api/v2/chronisconfig');
+        if (response.status === 200) {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put('/api/v2/chronisconfig', response);
+        }
+    } catch (error) {
+        console.error("Config fetch failed: ", error);
     }
 }
 

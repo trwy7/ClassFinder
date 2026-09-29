@@ -24,7 +24,7 @@
         {% endif %}
     </div>
 
-    <div id="passingstatus">{% if period is not none and period.passing and period.course %}Go to {{period.course.name}} in room {{period.course.room}}{% endif %}</div>
+    <div id="passingstatus">{% if period is not none and period.passing and period.course and not period.period == "lunch" %}Go to {{period.course.name}} in room {{period.course.room}}{% elif period.period == "lunch" %}Go to lunch{% elif period is not none and period.course is not none %}{{period.course.name}} in room {{period.course.room}}{% endif %}</div>
 
 <script>
 /* Old-device compatible ES5 JS. No fetch, no promises, no modern features. */

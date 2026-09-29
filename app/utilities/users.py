@@ -122,10 +122,8 @@ def create_token( # pylint: disable=too-many-arguments, too-many-positional-argu
     else:
         if nexpiry is None:
             nexpiry = datetime.now()
-            if tokentype in ("api", "app"):
+            if tokentype in ("api", "app", "refresh"):
                 nexpiry += timedelta(days=60)
-            elif tokentype == "refresh":
-                nexpiry += timedelta(days=31)
             elif tokentype == "system":
                 nexpiry += timedelta(days=14)
             elif tokentype == "admin":
