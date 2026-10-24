@@ -36,7 +36,7 @@ def leave_all_classes():
     user = request.user
     if not allow_leave:
         return error_response("Leaving classes is disabled")
-    
+
     classes = user.classes.copy()  # Copy to avoid modifying the list while iterating
 
     for course in classes:

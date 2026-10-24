@@ -27,7 +27,11 @@ def timer(version=1):
     Handles the timer page
     """
     if version not in valid_versions:
-        return render_template("templates/error.html", status_code=404, error_message="That timer does not exist. You may use: " + ", ".join([str(i) for i in valid_versions])), 404
+        versions = ", ".join(str(item) for item in valid_versions)
+        message = f"That timer does not exist. You may use: {versions}"
+        return render_template(
+            "templates/error.html", status_code=404, error_message=message
+        ), 404
 
     user = request.user
 
@@ -41,7 +45,7 @@ def timer(version=1):
 
     period_start = datetime.combine(datetime.today(), current_period.start)
     period_end = datetime.combine(datetime.today(), current_period.end)
-    
+
     return render_template(
         f'timers/timer_{version}.html',
         period_end=int(period_end.timestamp() * 1000),

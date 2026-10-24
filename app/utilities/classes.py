@@ -89,7 +89,7 @@ def get_today_courses(user: User, day: int = None):
     )
     return newcourses
 
-def add_class(name: str, period: int, room: str, created_by: str, teacher: str, campusname: str = None, commit: bool = True):
+def add_class(name: str, period: int, room: str, created_by: str, teacher: str, campusname: str = None, commit: bool = True):  # pylint: disable=too-many-arguments,too-many-positional-arguments
     """
     Add a new class to the database.
     

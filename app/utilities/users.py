@@ -534,7 +534,7 @@ def require_login(_func=None):
         cur = func
         # Walk the __wrapped__ chain to find a marker set by require_scopes
         while cur is not None:
-            if getattr(cur, "_required_scopes", None) is not None:
+            if cur.__dict__.get("_required_scopes") is not None:
                 return True
             cur = getattr(cur, "__wrapped__", None)
         return False
@@ -551,7 +551,10 @@ def require_login(_func=None):
                         return "", 401
                     return error_response("Unauthorized"), 401
                 resp = redirect("/login")
-                resp.set_cookie("redirect_to", request.path + ("?" + request.query_string.decode("utf-8") if request.query_string else ""))
+                redirect_target = request.path
+                if request.query_string:
+                    redirect_target += "?" + request.query_string.decode("utf-8")
+                resp.set_cookie("redirect_to", redirect_target)
                 return resp
 
             # If a token was used for auth and it has scopes, disallow it unless the endpoint requires scopes
@@ -560,7 +563,11 @@ def require_login(_func=None):
                     if request.path.startswith("/api/plain/"):
                         return "Forbidden: This token has scopes and cannot be used for this request", 403
                     return error_response("Forbidden: This token has scopes and cannot be used for this request"), 403
-                return render_template("templates/error.html", status_code=403, error_message="Forbidden: This token has scopes and cannot be used for this request"), 403
+                return render_template(
+                    "templates/error.html",
+                    status_code=403,
+                    error_message="Forbidden: This token has scopes and cannot be used for this request",
+                ), 403
 
             return f(*args, **kwargs)
         return decorated_function

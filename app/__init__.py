@@ -62,15 +62,15 @@ def check_verify_required(): # pylint: disable=inconsistent-return-statements
             if request.path.startswith("/api/plain"):
                 return
             return error_response("Email re-verification required"), 403
-        if request.path.startswith("/timer") or \
-            request.path.startswith("/account/verify") or \
-            request.path.startswith("/logout") or \
-            request.path.startswith("/account/delete") or \
-            request.path.startswith("/static/") or \
-            request.path.endswith("/calendar.ics") or \
-            request.path == "/favicon.ico" or \
-            request.path.endswith(".css") or \
-            request.path.endswith(".js"):
+        allowed_prefixes = (
+            "/timer", "/account/verify", "/logout", "/account/delete", "/static/"
+        )
+        allowed_suffixes = ("/calendar.ics", ".css", ".js")
+        if (
+            any(request.path.startswith(prefix) for prefix in allowed_prefixes)
+            or request.path.endswith(allowed_suffixes)
+            or request.path == "/favicon.ico"
+        ):
             return
         return redirect("/account/verify")
 

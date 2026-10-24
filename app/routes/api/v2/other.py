@@ -1,3 +1,5 @@
+"""Miscellaneous API v2 routes."""
+
 from datetime import datetime, timezone
 from flask import jsonify, request
 from app import app

@@ -55,7 +55,11 @@ def internal_server_error(e):
             error_details_log = e.__class__.__name__
         os.makedirs(f"{os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')}", exist_ok=True)
         # Check if there are any existing logs with the same error type, filename, and line number
-        existing_logs = [log for log in os.listdir(os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')) if log.startswith(error_details_log) and log.endswith(".error.log")]
+        log_dir = os.environ.get("LOG_DIR", "logs" if not devmode else "devlogs")
+        existing_logs = [
+            log for log in os.listdir(log_dir)
+            if log.startswith(error_details_log) and log.endswith(".error.log")
+        ]
         if existing_logs:
             app.logger.debug(f"Found existing logs for {error_details_log}, adding error code to existing log.")
             with open(f"{os.environ.get('LOG_DIR', 'logs' if not devmode else 'devlogs')}/{existing_logs[0]}", "r+", encoding="utf-8") as f:
@@ -89,7 +93,7 @@ def internal_server_error(e):
         error_message="Internal server error",
         error_details=error_details_vis
     ), 500
-    
+
 @app.errorhandler(405)
 def method_not_allowed(e): # pylint: disable=unused-argument
     """

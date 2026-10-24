@@ -9,7 +9,7 @@ from app import app
 from app.db import Schedule, db, User, Class
 
 now = datetime.now()
-class ClassTime:
+class ClassTime:  # pylint: disable=too-few-public-methods
     """Representation of a class time slot with helpers to access attributes as a mapping."""
     __slots__ = ("start", "end", "period", "passing", "lunchactive")
     def __init__(self, period: str, start: time, end: time, lunchactive: bool):
@@ -20,7 +20,7 @@ class ClassTime:
     def copy(self):
         """Create a copy of the ClassTime instance."""
         return ClassTime(self.period, self.start, self.end, self.lunchactive)
-class LunchPeriod:
+class LunchPeriod:  # pylint: disable=too-few-public-methods
     """Representation of a lunch period with helpers to access attributes as a mapping."""
     __slots__ = ("start", "end", "period")
     def __init__(self, period: str, start: time, end: time):
@@ -31,10 +31,10 @@ class LunchPeriod:
         """Create a copy of the LunchPeriod instance."""
         return LunchPeriod(self.period, self.start, self.end)
 
-class UserClassTime:
+class UserClassTime:  # pylint: disable=too-many-instance-attributes,too-few-public-methods
     """Container for a specific user's class time, that can include modifications."""
     __slots__ = ("start", "end", "period", "passing", "lunchactive", "mods", "course", "lunch", "original_classtime")
-    def __init__(self, classtime: ClassTime, course: Class=None, passing: tuple=False, mods: list=None, period: str=None):
+    def __init__(self, classtime: ClassTime, course: Class=None, passing: tuple=False, mods: list=None, period: str=None):  # pylint: disable=too-many-arguments,too-many-positional-arguments
         if mods is None:
             mods = []
         if mods and passing:
@@ -62,7 +62,7 @@ class UserClassTime:
         self.lunch = course.lunch if course else None
         self.original_classtime = classtime.copy()
 
-class DaySchedule:
+class DaySchedule:  # pylint: disable=too-few-public-methods
     """Container for a day's schedule that supports attribute and mapping access."""
     __slots__ = ("name", "classtimes", "lunchtimes")
     def __init__(self, name: str, classtimes: list[ClassTime], lunchtimes: list[LunchPeriod]):
@@ -222,7 +222,7 @@ current_day = (-1, None)  # (day int, date)
 
 bell_delay = 0.0 # pylint: disable=invalid-name # This is not a constant, but it gets flagged as one.
 
-def get_day_schedule(user: User | None, day: date | int | None=None, include_delay: bool = True) -> list:
+def get_day_schedule(user: User | None, day: date | int | None=None, include_delay: bool = True) -> list:  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """
     Get the schedule for a specific user. Includes any modifications, including PTECH, lunch, and custom mods.
 

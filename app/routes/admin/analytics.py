@@ -39,7 +39,7 @@ def logs():
         start_time=start_init_time.strftime("%Y-%m-%d %H:%M:%S"),
     )
 
-def calculate_analytics(request_logs):
+def calculate_analytics(request_logs):  # pylint: disable=too-many-locals
     """
     Calculate analytics from the request logs.
     

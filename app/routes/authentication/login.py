@@ -41,7 +41,8 @@ def login_post():
     username = request.json.get("username")
     password = request.json.get("password")
     if check_password(username, password):
-        response = success_response("Login Successful", {"redirect_to": "/dashboard" if not request.cookies.get("redirect_to") else request.cookies.get("redirect_to")})
+        redirect_to = request.cookies.get("redirect_to") or "/dashboard"
+        response = success_response("Login Successful", {"redirect_to": redirect_to})
         response.set_cookie(
             "token",
             create_token(username, 'refresh').token,
