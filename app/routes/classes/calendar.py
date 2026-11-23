@@ -32,7 +32,7 @@ def calendar_req(authtoken=None): # pylint: disable=unused-argument
 
     # Generate events
     gen_cal_length = (app.config.get("END_OF_SEMESTER") - date.today()).days if app.config.get("END_OF_SEMESTER") else 91
-    generate_events_for_date_range(cal, gen_cal_length + 5)
+    generate_events_for_date_range(cal, gen_cal_length + 5, redact="redact" in request.args)  # Add 5 extra days to account for weekends
 
     # Export the calendar
     #calendar_path = f"/tmp/{request.user.id}_calendar.ics"
@@ -41,7 +41,7 @@ def calendar_req(authtoken=None): # pylint: disable=unused-argument
     #return send_file(calendar_path, as_attachment=True, download_name="calendar.ics", mimetype="text/calendar")
     return Response(cal.serialize(), mimetype="text/calendar", headers={"Content-Disposition": 'attachment; filename="calendar.ics"'})
 
-def generate_events_for_date_range(cal: Calendar, num_days: int):
+def generate_events_for_date_range(cal: Calendar, num_days: int, redact: bool = False):
     """Generate calendar events for a date range."""
     for day_offset in range(num_days):
         current_date = date.today() + timedelta(days=day_offset)
@@ -62,11 +62,15 @@ def generate_events_for_date_range(cal: Calendar, num_days: int):
             event = Event()
             if uct.period == "Lunch":
                 event.name = "Lunch"
-                event.description = uct.course.lunch
+                event.description = uct.course.lunch + " Lunch"
             else:
                 event.name = uct.course.name
-                event.description = f"{uct.course.campus_name}\nPeriod {uct.period}\nTaught by {uct.course.teacher} in room {uct.course.room}"
-                event.location = uct.course.room
+                if redact:
+                    event.description = f"Period {uct.period}"
+                else:
+                    event.description = f"{uct.course.campus_name}\nPeriod {uct.period}\nTaught by {uct.course.teacher} in room {uct.course.room}"
+                if not redact:
+                    event.location = uct.course.room
             event.begin = tz.localize(datetime.combine(current_date, uct.start))
             event.end = tz.localize(datetime.combine(current_date, uct.end))
             cal.events.add(event)
